@@ -1,5 +1,5 @@
 // Workouts tab: routines -> weeks -> workouts -> exercises -> sets (the plan), plus the History segment.
-import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet } from './ui.js';
+import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet, modeBanner } from './ui.js';
 import { notesList, addNote, canAddNote } from './notes.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
@@ -247,7 +247,7 @@ export function workoutView({ routineId, weekId, workoutId }) {
   if (!loc) return notFound('Workout');
   const { routine, week, workout } = loc;
   const st = S.statusOfWorkout(workout.id);
-  const content = h('div', { class: 'page' });
+  const content = h('div', { class: 'page' }, modeBanner('plan', 'Planning', 'Set up exercises and target sets. Nothing here is logged until you start the workout.'));
 
   if (!workout.items.length) content.append(emptyState('No exercises yet', 'Add the exercises for this workout, then set the sets, reps and any target weight.'));
   workout.items.forEach((item, i) => content.append(itemCard(workout, item, i)));
@@ -264,7 +264,7 @@ export function workoutView({ routineId, weekId, workoutId }) {
   if (st.done && !st.active) bar.push(h('button', { class: 'btn btn-lg', text: `Last log · ${fmtDate(st.done.startedAt)}`, onclick: () => nav.push(sessionView, { sessionId: st.done.id }) }));
 
   return {
-    title: workout.name, subtitle: `${routine.name} · ${week.name}`, color: workout.color ?? 0,
+    title: workout.name, subtitle: `${routine.name} · ${week.name}`, color: workout.color ?? 0, mode: 'plan',
     actions: [iconBtn('more', 'Workout options', () => workoutMenu(routine, week, workout))],
     content, footer: h('div', { class: 'footer-bar' }, bar),
   };
@@ -281,7 +281,7 @@ function itemCard(workout, item, index) {
       h('input', { class: 'num', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'kg (optional)', 'aria-label': 'Target weight in kilograms', value: set.weight ?? '', oninput: (e) => { set.weight = e.target.value.trim() === '' ? null : parseNum(e.target.value); S.touch(); } }),
       iconBtn('x', 'Remove set', () => { item.sets = item.sets.filter((x) => x !== set); S.touch(); nav.refresh(); }, 'icon-btn-sm'));
   });
-  return h('section', { class: 'card entry' },
+  return h('section', { class: `card entry entry-plan wk wk-${workout.color ?? 0}` },
     h('div', { class: 'entry-head' },
       h('button', { class: 'entry-name', text: ex?.name || 'Deleted exercise', onclick: () => itemMenu(workout, item, index) }),
       iconBtn('more', 'Exercise options', () => itemMenu(workout, item, index))),

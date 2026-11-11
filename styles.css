@@ -103,7 +103,7 @@ h1, h2, h3, p { margin: 0; }
 /* ---- App shell ---- */
 #app {
   height: 100vh; height: 100dvh;
-  display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto;
   max-width: 640px; margin: 0 auto;
 }
 #hdr {
@@ -379,3 +379,35 @@ button.row-card .row-main { padding: 0; }
 .select-sm { min-height: 40px; font-size: 14px; font-weight: 500; }
 .row-title .wk-dot { margin-right: 8px; vertical-align: 1px; }
 .backup-banner .btn { white-space: nowrap; flex: none; }
+
+/* ---- Compact picker (replaces the large native dropdown) ---- */
+.picker-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 40px; padding: 0 12px; background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; font-weight: 500; text-align: left; color: var(--ink); }
+.picker-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.picker-btn .ic { color: var(--muted); flex: none; }
+.is-compact .choice { min-height: 44px; }
+.is-compact .choice-label { font-size: 14.5px; font-weight: 500; }
+
+/* ---- Header: shaded bar, bolder title ---- */
+#hdr { background: var(--hdr-bg); border-bottom: 1px solid var(--line); box-shadow: 0 2px 10px rgba(0,0,0,.25); }
+#hdr.wk { background: color-mix(in srgb, var(--wk) 42%, var(--hdr-bg)); border-bottom: 3px solid var(--wk); }
+.hdr-title h1 { font-size: 22px; font-weight: 750; color: var(--hdr-ink); letter-spacing: -0.015em; }
+.hdr-sub { font-size: 13.5px; font-weight: 500; color: var(--hdr-sub); }
+#hdr .icon-btn, #hdr .hdr-back, #hdr .hdr-home { color: var(--hdr-ink); }
+:root { --hdr-bg: #24262b; --hdr-ink: #ffffff; --hdr-sub: #d3d6dd; }
+:root[data-theme='light'] { --hdr-bg: #2b2f38; --hdr-ink: #ffffff; --hdr-sub: #dde0e7; }
+
+/* ---- Planning vs doing ---- */
+.mode { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; font-size: 13.5px; }
+.mode-main { display: flex; flex-direction: column; min-width: 0; }
+.mode-title { font-weight: 700; font-size: 14px; }
+.mode-sub { color: var(--ink2); font-size: 12.5px; }
+.mode-plan { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface)) 0 10px, var(--surface) 10px 20px); border: 1px dashed var(--muted); }
+.mode-log { background: color-mix(in srgb, #2fbf71 18%, var(--surface)); border: 1px solid #2fbf71; }
+.mode-review { background: var(--surface); border: 1px solid var(--line); }
+.banner-dot { width: 12px; height: 12px; border-radius: 50%; background: #2fbf71; flex: none; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .banner-dot { animation: none; } }
+.entry.wk { border-left: 6px solid var(--wk); }
+.entry-plan { border-style: dashed; border-left-style: solid; background: var(--surface); }
+.entry-log { background: color-mix(in srgb, var(--wk) 10%, var(--surface)); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.entry .entry-name { font-size: 18px; }

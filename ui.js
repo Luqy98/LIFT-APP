@@ -45,6 +45,8 @@ const ICONS = {
   up: 'M6 14l6-6 6 6',
   down: 'M6 10l6 6 6-6',
   finger: 'M12 11v3c0 3-1 5-2.5 7M8 14c0-2.2 1.8-4 4-4s4 1.8 4 4c0 2.5-.5 4.500-1.500 6.500M5 12a7 7 0 0114 0c0 2 0 3.500-.5 5M8.500 5.500A7 7 0 0112 5',
+  home: 'M4 11l8-7 8 7M6 9.500V20h12V9.500M10 20v-5h4v5',
+  pencil: 'M4 20l1-4L16 5l3 3L8 19l-4 1zM14 7l3 3',
   lock: 'M7 11V8a5 5 0 0110 0v3M6 11h12v9H6z',
   history: 'M4 12a8 8 0 108-8M4 4v5h5M12 8v4l3 2',
   dash: 'M5 20V10M12 20V4M19 20v-7',
@@ -175,11 +177,11 @@ export function formDialog({ title, message, fields = [], checks = [], ok = 'Sav
 }
 
 /** options: [{label, sub, value, danger, selected}] -> chosen value | null */
-export function choiceSheet({ title, message, options, cancel = true }) {
+export function choiceSheet({ title, message, options, cancel = true, compact = false }) {
   return new Promise((resolve) => {
     let finished = false;
     const finish = (v) => { if (!finished) { finished = true; resolve(v); } };
-    const list = h('div', { class: 'choice-list' }, options.map((o) =>
+    const list = h('div', { class: 'choice-list' + (compact ? ' is-compact' : '') }, options.map((o) =>
       h('button', {
         class: 'choice' + (o.danger ? ' is-danger' : '') + (o.selected ? ' is-selected' : ''), disabled: o.disabled,
         onclick: () => { finish(o.value); close(); },
@@ -252,4 +254,23 @@ export function colorSheet(current, names) {
       h('button', { class: 'btn btn-block', text: 'Cancel', onclick: () => { finish(null); close(); } })),
     { title: 'Workout colour', onClose: () => finish(null) });
   });
+}
+
+/** A compact picker button: shows the current choice and opens a small-text list. options: [[value, label]] */
+export function pickerField(label, options, value, onchange) {
+  const cur = options.find(([v]) => String(v) === String(value));
+  return h('button', {
+    type: 'button', class: 'picker-btn', 'aria-label': label, 'aria-haspopup': 'dialog',
+    onclick: async () => {
+      const v = await choiceSheet({ title: label, compact: true, options: options.map(([val, text]) => ({ label: text, value: String(val), selected: String(val) === String(value) })) });
+      if (v != null) onchange(v);
+    },
+  }, h('span', { class: 'picker-text', text: cur ? cur[1] : '' }), icon('down', 16));
+}
+
+/** Strip at the top of a workout screen that says which mode you are in. kind: 'plan' | 'log' | 'review' */
+export function modeBanner(kind, title, sub) {
+  const lead = kind === 'plan' ? icon('pencil', 18) : kind === 'log' ? h('span', { class: 'banner-dot' }) : icon('check', 18);
+  return h('div', { class: 'mode mode-' + kind }, lead,
+    h('div', { class: 'mode-main' }, h('span', { class: 'mode-title', text: title }), h('span', { class: 'mode-sub', text: sub })));
 }

@@ -3,6 +3,6 @@
 export function applyTheme(t = 'dark') {
   document.documentElement.dataset.theme = t;
   try { localStorage.setItem('gymlog-theme', t); } catch { /* ignore */ }
-  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--hdr-bg').trim();
   if (bg) document.querySelector('meta[name=theme-color]')?.setAttribute('content', bg);
 }

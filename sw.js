@@ -1,5 +1,5 @@
 // Offline app shell. Cache-first for the app's own files; never touches the network for anything else.
-const CACHE = 'gymlog-v1.2.1';
+const CACHE = 'gymlog-v1.3.0';
 const FILES = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest',
   'app.js', 'calc.js', 'charts.js', 'backup.js', 'notes.js', 'crypto.js', 'db.js', 'nav.js', 'picker.js', 'store.js',

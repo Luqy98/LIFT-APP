@@ -42,6 +42,13 @@ export function switchTab(id) {
   render({ restore: true });
 }
 export const refresh = () => render({ keep: true });
+/** Jump straight to the first screen of a tab (default: the current one), clearing the back stack. */
+export function goHome(tabId = tab) {
+  stacks[tab].length = 1;
+  stacks[tabId].length = 1;
+  tab = tabId;
+  render({ scroll: 0 });
+}
 export function resetAll() {
   for (const k of Object.keys(stacks)) stacks[k].length = 1;
   tab = 'dashboard';
@@ -70,9 +77,12 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
     h('div', { class: 'hdr-title' },
       h('h1', { text: view.title || '' }),
       view.subtitle ? h('div', { class: 'hdr-sub', id: 'hdr-sub', text: view.subtitle }) : null),
-    h('div', { class: 'hdr-actions' }, view.actions || []));
+    h('div', { class: 'hdr-actions' },
+      depth > 1 ? iconBtn('home', `Back to start of ${TABS.find((x) => x.id === tab).label}`, () => goHome(), 'hdr-home') : null,
+      view.actions || []));
   $('hdr').replaceChildren(...hdrKids);
   $('hdr').className = view.color != null ? 'wk wk-' + view.color : '';
+  $('app').dataset.mode = view.mode || '';
 
   main.replaceChildren(view.content);
   main.scrollTop = keep ? kept : restore ? item.scroll || 0 : scroll;

@@ -1,5 +1,5 @@
 // Dashboard: overview + per-exercise analysis (estimated 1RM, heaviest set, rep records).
-import { h, card, tile, emptyState } from './ui.js';
+import { h, card, tile, emptyState, pickerField } from './ui.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { FORMULAS, repRecords, fmt, fmtW, fmtSign, fmtVol, fmtDate, setLabel, typeInfo } from './calc.js';
@@ -50,12 +50,10 @@ export function dashboardView() {
   const slots = S.slotsForExercise(dash.exerciseId);
   if (dash.slotId !== 'all' && !slots.some((x) => x.slotId === dash.slotId)) dash.slotId = 'all';
 
-  const movementSelect = h('select', { class: 'select select-full select-sm', 'aria-label': 'Exercise', value: dash.exerciseId,
-    onchange: (e) => { dash.exerciseId = e.target.value; dash.slotId = 'all'; nav.refresh(); } },
-  [...have.keys()].map((id) => h('option', { value: id, text: S.exerciseName(id) })));
-  const scopeSelect = h('select', { class: 'select select-full select-sm', 'aria-label': 'Workout', value: dash.slotId,
-    onchange: (e) => { dash.slotId = e.target.value; nav.refresh(); } },
-  h('option', { value: 'all', text: 'All workouts' }), slots.map((x) => h('option', { value: x.slotId, text: x.name })));
+  const movementSelect = pickerField('Exercise', [...have.keys()].map((id) => [id, S.exerciseName(id)]), dash.exerciseId,
+    (v) => { dash.exerciseId = v; dash.slotId = 'all'; nav.refresh(); });
+  const scopeSelect = pickerField('Workout', [['all', 'All workouts'], ...slots.map((x) => [x.slotId, x.name])], dash.slotId,
+    (v) => { dash.slotId = v; nav.refresh(); });
   const ranges = h('div', { class: 'seg seg-scroll', role: 'group', 'aria-label': 'Time range' }, RANGES.map(([id, , label]) =>
     h('button', { type: 'button', class: 'seg-btn' + (dash.range === id ? ' is-on' : ''), 'aria-pressed': String(dash.range === id), text: label, onclick: () => { dash.range = id; nav.refresh(); } })));
 
