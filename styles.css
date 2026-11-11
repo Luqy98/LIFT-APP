@@ -598,3 +598,4 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .lock-input::placeholder { letter-spacing: 0; font-size: 15px; }
 
 @media (min-width: 641px) { #app { border-left: 1px solid var(--line); border-right: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 70%, transparent); } }
+.ver { padding: 0; }

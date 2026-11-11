@@ -33,6 +33,15 @@ async function changePasscode() {
   if (v) toast('Passcode changed');
 }
 
+async function checkUpdate() {
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (!reg) { toast('Updates aren’t available in this browser window.'); return; }
+    await reg.update();
+    toast(reg.installing || reg.waiting ? 'Update found. It will ask you to reload.' : `You're on the latest version (${VERSION}).`, { ms: 4000 });
+  } catch { toast('Couldn’t check. Are you online?'); }
+}
+
 async function enableFingerprint() {
   if (!(await WA.fingerprintAvailable())) { toast('This phone has no fingerprint or screen lock set up for Chrome.', { ms: 6000 }); return; }
   const v = await formDialog({
@@ -93,6 +102,10 @@ export function settingsRoot() {
     .catch(() => { persistLine.textContent = ''; });
 
   const content = h('div', { class: 'page' },
+    card('About',
+      h('div', { class: 'row-between' },
+        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: `Version ${VERSION}` }), h('span', { class: 'row-sub', text: 'Shown here so you can tell when an update has installed' })),
+        h('button', { class: 'btn btn-sm', text: 'Check for update', onclick: checkUpdate }))),
     card('Security',
       selectField('Lock after leaving the app', [[0, 'Immediately'], [1, '1 minute'], [5, '5 minutes'], [15, '15 minutes'], [30, '30 minutes']], st.autoLockMin, (v) => set('autoLockMin', +v)),
       h('div', { class: 'row-between' },
