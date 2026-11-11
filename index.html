@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en-GB" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- No network access from the page at all: no scripts, styles, fonts or requests from anywhere else. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#0d0d0d">
+  <meta name="color-scheme" content="dark light">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Gym Log</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="theme-boot.js"></script>
+</head>
+<body>
+  <div id="lock" hidden></div>
+  <div id="app" hidden>
+    <header id="hdr"></header>
+    <main id="main"></main>
+    <div id="footer" hidden></div>
+    <nav id="tabs" aria-label="Main"></nav>
+  </div>
+  <div id="layer"></div>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="cover" hidden><div class="cover-mark">Gym Log</div></div>
+  <noscript>Gym Log needs JavaScript to run.</noscript>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+// Logging a workout, editing past logs, per-movement history (locked to one workout), and the history list.
+import { h, icon, iconBtn, confirmDialog, choiceSheet, toast, setTick, segmented, card, tile, emptyState } from './ui.js';
+import * as S from './store.js';
+import * as nav from './nav.js';
+import {
+  SET_TYPES, typeInfo, parseNum, fmt, fmtW, fmtDate, fmtDateLong, fmtDuration, fmtVol, fmtMonth, setLabel,
+  setStats, toLocalInput, FORMULAS,
+} from './calc.js';
+import { pickMovement } from './picker.js';
+import { lineChart, dataTable } from './charts.js';
+import { workoutView } from './views-workouts.js';
+
+// ---- Rest timer (kept across re-renders) --------------------------------------
+let rest = null; // { end:ms }
+function startRest() {
+  const sec = S.data.settings.restSec;
+  rest = sec > 0 ? { end: Date.now() + sec * 1000 } : null;
+}
+
+// ---- Starting / resuming -------------------------------------------------------
+export async function startWorkout(workoutId) {
+  const act = S.activeSession();
+  if (act && act.workoutId === workoutId) { nav.push(sessionView, { sessionId: act.id }); return; }
+  if (act) {
+    const choice = await choiceSheet({
+      title: 'A workout is already in progress',
+      message: `“${S.workoutName(act)}” hasn’t been finished.`,
+      options: [
+        { label: `Resume “${S.workoutName(act)}”`, value: 'resume' },
+        { label: 'Discard it and start this one', value: 'discard', danger: true },
+      ],
+    });
+    if (!choice) return;
+    if (choice === 'resume') { nav.push(sessionView, { sessionId: act.id }); return; }
+    S.deleteSession(act);
+    rest = null;
+  }
+  const s = S.startSession(workoutId);
+  if (s) nav.push(sessionView, { sessionId: s.id });
+}
+
+export function activeBanner() {
+  const act = S.activeSession();
+  if (!act) return null;
+  return h('button', { class: 'banner', onclick: () => nav.push(sessionView, { sessionId: act.id }) },
+    h('span', { class: 'banner-dot' }),
+    h('span', { class: 'banner-main' },
+      h('span', { class: 'banner-title', text: 'Workout in progress' }),
+      h('span', { class: 'banner-sub', text: `${S.workoutName(act)} · ${S.weekName(act)}` })),
+    h('span', { class: 'banner-go', text: 'Resume' }));
+}
+
+// ---- The workout log screen ------------------------------------------------------
+export function sessionView({ sessionId }) {
+  const s = S.sessionById(sessionId);
+  if (!s) return { title: 'Workout', content: emptyState('This log no longer exists', 'It may have been deleted.') };
+  const active = !s.finishedAt;
+  const prevMap = S.previousFor(s);
+
+  const subtitle = () => (active
+    ? `${fmtDuration(Date.now() - new Date(s.startedAt))} · ${S.routineName(s)} · ${S.weekName(s)}`
+    : `${fmtDateLong(s.startedAt)} · ${S.routineName(s)} · ${S.weekName(s)}`);
+
+  if (active) {
+    setTick(() => {
+      const sub = document.getElementById('hdr-sub');
+      if (sub) sub.textContent = subtitle();
+      if (rest) {
+        const left = Math.ceil((rest.end - Date.now()) / 1000);
+        if (left <= 0) { rest = null; navigator.vibrate?.([200, 100, 200]); toast('Rest over'); nav.refresh(); }
+        else { const el = document.getElementById('rest-time'); if (el) el.textContent = fmtDuration(left * 1000); }
+      }
+    });
+  } else rest = null;
+
+  const content = h('div', { class: 'page' });
+  if (!active) content.append(summaryCard(s));
+
+  if (!s.entries.length) content.append(emptyState('No movements yet', 'Add the first movement to start logging sets.'));
+  s.entries.forEach((entry, i) => content.append(entryCard(s, entry, i, prevMap.get(entry.id), active)));
+
+  content.append(
+    h('button', { class: 'btn btn-block btn-ghost', onclick: async () => {
+      const id = await pickMovement();
+      if (id) { S.addEntry(s, id); nav.refresh(); }
+    } }, icon('plus', 18), h('span', { text: 'Add movement' })),
+    h('label', { class: 'field' },
+      h('span', { class: 'field-label', text: 'Notes' }),
+      h('textarea', { class: 'notes', rows: 3, placeholder: 'How did it feel? Anything to remember next time?', value: s.note || '',
+        oninput: (e) => { s.note = e.target.value; S.touchSession(s); } })),
+    active
+      ? h('button', { class: 'btn btn-primary btn-block btn-lg', text: 'Finish workout', onclick: () => finish(s) })
+      : null);
+
+  const actions = [];
+  if (active) actions.push(h('button', { class: 'btn btn-primary btn-sm', text: 'Finish', onclick: () => finish(s) }));
+  actions.push(iconBtn('more', 'Workout options', () => sessionMenu(s, active)));
+
+  const footer = active && rest
+    ? h('div', { class: 'rest' },
+      h('div', { class: 'rest-label', text: 'Rest' }),
+      h('div', { class: 'rest-time', id: 'rest-time', text: fmtDuration(Math.max(0, rest.end - Date.now())) }),
+      h('button', { class: 'btn btn-sm', text: '−15', onclick: () => { rest.end -= 15000; nav.refresh(); } }),
+      h('button', { class: 'btn btn-sm', text: '+15', onclick: () => { rest.end += 15000; nav.refresh(); } }),
+      h('button', { class: 'btn btn-sm', text: 'Skip', onclick: () => { rest = null; nav.refresh(); } }))
+    : null;
+
+  return { title: S.workoutName(s), subtitle: subtitle(), actions, content, footer };
+}
+
+function summaryCard(s) {
+  let vol = 0, sets = 0;
+  for (const e of s.entries) { const st = setStats(e.sets, S.calcOpts()); vol += st.volume; sets += st.sets; }
+  const mins = s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : 0;
+  const prs = S.prsForSession(s);
+  return card(null,
+    h('div', { class: 'tiles tiles-3' }, tile('Sets', String(sets)), tile('Volume', fmtVol(vol)), tile('Duration', mins > 0 && mins < 600 ? `${mins} min` : '–')),
+    prs.length ? h('div', { class: 'prs' }, prs.map((p) => h('div', { class: 'pr' },
+      h('span', { class: 'pr-tag', text: 'New best' }),
+      h('span', { text: `${S.exerciseName(p.exerciseId)}: est. 1RM ${fmt(p.e1rm)} kg (+${fmt(p.gain)})` })))) : null,
+    h('label', { class: 'field' },
+      h('span', { class: 'field-label', text: 'Date and time' }),
+      h('input', { type: 'datetime-local', value: toLocalInput(s.startedAt), onchange: (e) => {
+        if (!e.target.value) return;
+        S.setSessionDate(s, new Date(e.target.value).toISOString());
+        nav.refresh();
+      } })));
+}
+
+function entryCard(s, entry, index, prev, active) {
+  const name = S.exerciseName(entry.exerciseId, entry.exerciseName);
+  let n = 0;
+  const rows = entry.sets.map((set, i) => {
+    const label = set.type === 'normal' ? String(++n) : typeInfo(set.type).short;
+    return setRow(s, entry, set, i, prev?.sets, active, label);
+  });
+  return h('section', { class: 'card entry' },
+    h('div', { class: 'entry-head' },
+      h('button', { class: 'entry-name', onclick: () => entryMenu(s, entry, index), text: name }),
+      h('button', { class: 'btn btn-sm btn-ghost', 'aria-label': `History of ${name} in this workout`, onclick: () => nav.push(movementHistoryView, { exerciseId: entry.exerciseId, slotId: s.slotId }) },
+        icon('history', 18), h('span', { text: 'History' }))),
+    prev ? h('div', { class: 'entry-prev', text: `Previous: ${fmtDate(prev.session.startedAt)} · ${S.weekName(prev.session)}` }) : null,
+    h('div', { class: 'sets' },
+      h('div', { class: 'srow srow-head' }, h('span', { text: 'Set' }), h('span', { text: 'Previous' }), h('span', { text: 'kg' }), h('span', { text: 'Reps' }), h('span', {})),
+      rows),
+    h('button', { class: 'btn btn-block btn-ghost btn-add', text: '+ Add set', onclick: () => { S.addSessionSet(s, entry); nav.refresh(); } }));
+}
+
+function numInput({ value, placeholder, mode, label, onValue }) {
+  return h('input', {
+    class: 'num', type: 'text', inputmode: mode, autocomplete: 'off', placeholder, 'aria-label': label,
+    value: value ?? '', onfocus: (e) => e.target.select(),
+    oninput: (e) => onValue(e.target.value.trim() === '' ? null : parseNum(e.target.value)),
+  });
+}
+
+function setRow(s, entry, set, idx, prevSets, active, label) {
+  const ps = prevSets?.[idx];
+  const phW = set.tw != null ? fmtW(set.tw) : ps ? fmtW(ps.weight) : '';
+  const phR = set.tr ? String(set.tr) : ps ? fmt(parseNum(ps.reps), 0) : '';
+  const t = typeInfo(set.type);
+  return h('div', { class: 'srow' + (set.done ? ' is-done' : '') },
+    h('button', { class: 'pill pill-' + set.type, 'aria-label': `Set ${label}, ${t.label}. Change type`, onclick: () => setMenu(s, entry, set), text: label }),
+    h('div', { class: 'prev', text: ps ? setLabel(ps) : '–' }),
+    numInput({ value: set.weight, placeholder: phW, mode: 'decimal', label: 'Weight in kilograms', onValue: (v) => { set.weight = v; S.touchSession(s); } }),
+    numInput({ value: set.reps, placeholder: phR, mode: 'numeric', label: 'Reps', onValue: (v) => { set.reps = v; S.touchSession(s); } }),
+    h('button', {
+      class: 'tick' + (set.done ? ' is-on' : ''), 'aria-label': set.done ? 'Mark set not done' : 'Mark set done', 'aria-pressed': String(!!set.done),
+      onclick: () => {
+        if (!set.done) {
+          if (set.weight == null) { const v = set.tw ?? ps?.weight; if (v != null) set.weight = parseNum(v); }
+          if (set.reps == null) { const v = parseNum(set.tr) ?? parseNum(ps?.reps); if (v != null) set.reps = v; }
+          if (set.reps == null) { toast('Enter the reps first'); return; }
+          if (set.weight == null) set.weight = 0; // bodyweight
+          set.done = true;
+          if (active) startRest();
+        } else set.done = false;
+        S.touchSession(s);
+        nav.refresh();
+      },
+    }, icon('check', 20)));
+}
+
+async function setMenu(s, entry, set) {
+  const v = await choiceSheet({
+    title: 'Set type',
+    options: [
+      ...SET_TYPES.map((t) => ({ label: t.label, sub: t.hint, value: t.id, selected: set.type === t.id })),
+      { label: 'Delete this set', value: '__delete', danger: true },
+    ],
+  });
+  if (!v) return;
+  if (v === '__delete') entry.sets = entry.sets.filter((x) => x !== set);
+  else set.type = v;
+  S.touchSession(s);
+  nav.refresh();
+}
+
+async function entryMenu(s, entry, index) {
+  const v = await choiceSheet({
+    title: S.exerciseName(entry.exerciseId, entry.exerciseName),
+    options: [
+      { label: 'History in this workout', value: 'history' },
+      { label: 'Replace movement', value: 'replace' },
+      { label: 'Move up', value: 'up', disabled: index === 0 },
+      { label: 'Move down', value: 'down', disabled: index === s.entries.length - 1 },
+      { label: 'Remove from this workout', value: 'remove', danger: true },
+    ],
+  });
+  if (!v) return;
+  if (v === 'history') nav.push(movementHistoryView, { exerciseId: entry.exerciseId, slotId: s.slotId });
+  else if (v === 'replace') {
+    const id = await pickMovement({ title: 'Replace with' });
+    if (!id) return;
+    entry.exerciseId = id; entry.exerciseName = S.exerciseName(id);
+    S.touchSession(s); nav.refresh();
+  } else if (v === 'up' || v === 'down') {
+    const i = s.entries.indexOf(entry), j = i + (v === 'up' ? -1 : 1);
+    [s.entries[i], s.entries[j]] = [s.entries[j], s.entries[i]];
+    S.touchSession(s); nav.refresh();
+  } else if (v === 'remove') {
+    if (entry.sets.some((x) => x.done) && !(await confirmDialog({ title: 'Remove this movement?', message: 'Its logged sets in this workout will be deleted.', ok: 'Remove', danger: true }))) return;
+    s.entries = s.entries.filter((x) => x !== entry);
+    S.touchSession(s); nav.refresh();
+  }
+}
+
+async function sessionMenu(s, active) {
+  const loc = S.locateWorkout(s.workoutId);
+  const v = await choiceSheet({
+    title: 'Workout options',
+    options: [
+      ...(loc ? [{ label: 'Open workout plan', value: 'plan' }] : []),
+      active ? { label: 'Discard this workout', value: 'delete', danger: true } : { label: 'Delete this log', value: 'delete', danger: true },
+    ],
+  });
+  if (v === 'plan') nav.push(workoutView, { routineId: loc.routine.id, weekId: loc.week.id, workoutId: loc.workout.id });
+  if (v === 'delete') {
+    const ok = await confirmDialog({
+      title: active ? 'Discard this workout?' : 'Delete this log?',
+      message: active ? 'Nothing you entered so far will be kept.' : 'It will be removed from your history and charts. This can’t be undone.',
+      ok: active ? 'Discard' : 'Delete', danger: true,
+    });
+    if (!ok) return;
+    S.deleteSession(s);
+    rest = null;
+    nav.pop();
+  }
+}
+
+async function finish(s) {
+  const loose = S.filledButUndone(s);
+  let mode = 'drop';
+  if (loose.length) {
+    const c = await choiceSheet({
+      title: `${loose.length} ${loose.length === 1 ? 'set has' : 'sets have'} numbers but no tick`,
+      options: [
+        { label: 'Count them as done', value: 'count' },
+        { label: 'Leave them out', value: 'drop' },
+      ],
+    });
+    if (!c) return;
+    mode = c;
+  }
+  const wouldBeDone = S.doneSetCount(s) + (mode === 'count' ? loose.filter((x) => x.reps != null).length : 0);
+  if (!wouldBeDone) {
+    const ok = await confirmDialog({ title: 'No sets logged', message: 'Nothing has been ticked off. Discard this workout instead?', ok: 'Discard', cancel: 'Keep logging', danger: true });
+    if (ok) { S.deleteSession(s); rest = null; nav.pop(); }
+    return;
+  }
+  S.finishSession(s, mode);
+  rest = null;
+  toast('Workout saved');
+  nav.refresh();
+}
+
+// ---- Per-movement history, locked to one workout -----------------------------------
+export function movementHistoryView(params) {
+  const { exerciseId, slotId } = params;
+  const all = !!params.all;
+  const name = S.exerciseName(exerciseId);
+  const wName = S.slotName(slotId);
+  const hist = S.historyFor(exerciseId, all ? null : slotId);
+  const pts = hist.filter((r) => r.stats.e1rm != null).reverse();
+  const best = hist.reduce((b, r) => (r.stats.e1rm != null && (b == null || r.stats.e1rm > b.stats.e1rm) ? r : b), null);
+  const heaviest = hist.reduce((b, r) => (r.stats.top && (b == null || r.stats.top.weight > b.stats.top.weight) ? r : b), null);
+
+  const content = h('div', { class: 'page' },
+    segmented([['slot', `${wName} only`], ['all', 'All workouts']], all ? 'all' : 'slot', (v) => { params.all = v === 'all'; nav.refresh(); }),
+    h('p', { class: 'hint', text: all
+      ? 'Every logged session of this movement, whichever workout it was in.'
+      : `Only sessions of “${wName}”, so rep work and heavy singles never get mixed up.` }));
+
+  if (!hist.length) {
+    content.append(emptyState('Nothing logged yet', all ? 'Finish a workout with this movement to see its history.' : `You haven’t finished “${wName}” with this movement yet.`));
+  } else {
+    content.append(
+      h('div', { class: 'tiles tiles-3' },
+        tile('Best est. 1RM', best ? `${fmt(best.stats.e1rm)} kg` : '–', best ? fmtDate(best.date) : ''),
+        tile('Heaviest set', heaviest ? `${fmtW(heaviest.stats.top.weight)} kg` : '–', heaviest ? `× ${fmt(heaviest.stats.top.reps, 0)}` : ''),
+        tile('Sessions', String(hist.length), '')));
+    if (pts.length > 1) {
+      content.append(card('Estimated 1RM',
+        lineChart({
+          label: `Estimated 1RM for ${name}`, unit: ' kg',
+          points: pts.map((r) => ({ t: +new Date(r.date), y: r.stats.e1rm, title: `${fmt(r.stats.e1rm)} kg`, detail: `${fmtDate(r.date)} · from ${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}` })),
+        }),
+        dataTable(['Date', 'Est. 1RM (kg)'], pts.map((r) => [fmtDate(r.date), fmt(r.stats.e1rm)]))));
+    }
+    content.append(h('div', { class: 'list' }, hist.map((r) => h('button', { class: 'hist-row', onclick: () => nav.push(sessionView, { sessionId: r.session.id }) },
+      h('div', { class: 'hist-top' },
+        h('span', { class: 'hist-date', text: fmtDate(r.date) }),
+        h('span', { class: 'hist-where', text: all ? `${S.workoutName(r.session)} · ${S.weekName(r.session)}` : S.weekName(r.session) }),
+        h('span', { class: 'hist-e1', text: r.stats.e1rm != null ? `${fmt(r.stats.e1rm)} kg` : '' })),
+      h('div', { class: 'chips' }, r.sets.map((x) => h('span', { class: 'chip chip-' + x.type, text: (x.type !== 'normal' ? typeInfo(x.type).short + ' ' : '') + setLabel(x) }))),
+      icon('right', 18)))));
+  }
+  return { title: name, subtitle: all ? 'All workouts' : wName, content };
+}
+
+// ---- History list (Workouts tab) --------------------------------------------------------
+const hf = { routineId: 'all' };
+export function historyContent() {
+  const all = S.sessionsDesc();
+  if (!all.length) return emptyState('No workouts logged yet', 'Start a workout from a routine and finish it. It will show up here, and you can amend it any time.');
+  const routines = new Map();
+  for (const s of all) routines.set(s.routineId, S.routineName(s));
+  if (hf.routineId !== 'all' && !routines.has(hf.routineId)) hf.routineId = 'all';
+  const list = all.filter((s) => hf.routineId === 'all' || s.routineId === hf.routineId);
+
+  const out = [];
+  if (routines.size > 1) {
+    out.push(h('select', { class: 'select select-full', 'aria-label': 'Filter by routine', value: hf.routineId, onchange: (e) => { hf.routineId = e.target.value; nav.refresh(); } },
+      h('option', { value: 'all', text: 'All routines' }), [...routines].map(([id, nm]) => h('option', { value: id, text: nm }))));
+  }
+  let month = '';
+  for (const s of list) {
+    const m = fmtMonth(s.startedAt);
+    if (m !== month) { month = m; out.push(h('h3', { class: 'month', text: m })); }
+    let vol = 0, sets = 0;
+    for (const e of s.entries) { const st = setStats(e.sets, S.calcOpts()); vol += st.volume; sets += st.sets; }
+    out.push(h('button', { class: 'row-card row-btn', onclick: () => nav.push(sessionView, { sessionId: s.id }) },
+      h('span', { class: 'row-main' },
+        h('span', { class: 'row-title', text: S.workoutName(s) }),
+        h('span', { class: 'row-sub', text: `${S.routineName(s)} · ${S.weekName(s)}` })),
+      h('span', { class: 'row-side' },
+        h('span', { class: 'row-date', text: s.finishedAt ? fmtDate(s.startedAt) : 'In progress' }),
+        h('span', { class: 'row-sub', text: s.finishedAt ? `${sets} sets · ${fmtVol(vol)}` : '' }))));
+  }
+  return h('div', { class: 'list' }, out);
+}
