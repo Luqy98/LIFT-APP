@@ -6,12 +6,13 @@ import { fmtDate } from './calc.js';
 
 const W = 340, PAD = { l: 40, r: 14, t: 14, b: 26 };
 
-function niceScale(min, max, count = 4) {
+function niceScale(min, max, count = 4, integer = false) {
   if (min === max) { const pad = Math.abs(min) * 0.05 || 1; min -= pad; max += pad; }
   const raw = (max - min) / count;
   const mag = 10 ** Math.floor(Math.log10(raw));
   const norm = raw / mag;
-  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+  let step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+  if (integer) step = Math.max(1, Math.ceil(step));
   const lo = Math.floor(min / step) * step;
   const hi = Math.ceil(max / step) * step;
   const ticks = [];
@@ -105,7 +106,7 @@ export function lineChart({ points, height = 190, unit = '', zeroBase = false, l
 }
 
 /** points: [{ label, y, title, detail }] in display order (oldest first). */
-export function barChart({ points, height = 170, label = 'Chart' }) {
+export function barChart({ points, height = 170, label = 'Chart', integer = false }) {
   const H = height;
   const wrap = h('div', { class: 'chart' });
   const tip = h('div', { class: 'chart-tip' });
@@ -114,7 +115,7 @@ export function barChart({ points, height = 170, label = 'Chart' }) {
   if (!points.length) { wrap.append(h('div', { class: 'chart-empty', text: 'No data in this range yet.' })); return wrap; }
 
   const shown = points.slice(-40);
-  const { ticks, hi: y1 } = niceScale(0, Math.max(...shown.map((p) => p.y), 1));
+  const { ticks, hi: y1 } = niceScale(0, Math.max(...shown.map((p) => p.y), 1), 4, integer);
   const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
   const slot = iw / shown.length;
   const bw = Math.min(24, Math.max(3, slot - 2));

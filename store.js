@@ -8,7 +8,7 @@
 // bench press on a rep day never mixes with a bench press on a heavy-single day.
 
 import * as C from './crypto.js';
-import { setStats, e1rm } from './calc.js';
+import { setStats, e1rm, weekStart, WORKOUT_COLORS } from './calc.js';
 
 export const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
@@ -100,6 +100,45 @@ async function load() {
   data.settings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
   sessionMap = map;
   if (data.activeSessionId && !sessionMap.has(data.activeSessionId)) data.activeSessionId = null;
+  migrate();
+}
+
+/** Brings data saved by older versions up to date (workout colours, per-log notes). */
+function migrate() {
+  let planChanged = false;
+  for (const r of data.routines) {
+    const bySlot = new Map();
+    for (const wk of r.weeks) for (const w of wk.workouts) if (w.color != null && !bySlot.has(w.slotId)) bySlot.set(w.slotId, w.color);
+    for (const wk of r.weeks) {
+      for (const w of wk.workouts) {
+        if (w.color != null) continue;
+        let c = bySlot.get(w.slotId);
+        if (c == null) { c = freeColor(wk); bySlot.set(w.slotId, c); }
+        w.color = c;
+        planChanged = true;
+      }
+    }
+  }
+  // Notes live on exercises. Move any workout-level or log-level notes from earlier versions onto the first exercise.
+  const moveNotes = (from, items) => {
+    const text = { ...(from.notes || {}) };
+    if (from.note) { text.general = text.general || from.note; }
+    delete from.note;
+    if (!Object.keys(text).length) { delete from.notes; return false; }
+    const first = items[0];
+    if (!first) return false;   // nothing to attach to yet; keep it where it is
+    first.notes = { ...text, ...(first.notes || {}) };
+    delete from.notes;
+    return true;
+  };
+  for (const r of data.routines) for (const wk of r.weeks) for (const w of wk.workouts) if (w.notes && moveNotes(w, w.items)) planChanged = true;
+  if (planChanged) touch();
+  for (const s of sessionMap.values()) {
+    let changed = false;
+    if ((s.notes || s.note) && moveNotes(s, s.entries)) changed = true;
+    if (s.color == null) { s.color = colorForSlot(s.slotId) ?? 0; changed = true; }
+    if (changed) touchSession(s);
+  }
 }
 
 export async function lock() {
@@ -179,9 +218,9 @@ async function doSave() {
   if (put.length || del.length) await db.batch('records', put, del);
 }
 
-// ---- Movement library ------------------------------------------------------
+// ---- Exercise library ------------------------------------------------------
 export const exerciseById = (id) => data.exercises.find((e) => e.id === id);
-export const exerciseName = (id, fallback = 'Deleted movement') => exerciseById(id)?.name ?? fallback;
+export const exerciseName = (id, fallback = 'Deleted exercise') => exerciseById(id)?.name ?? fallback;
 export const findExerciseByName = (name, exceptId) => {
   const n = norm(name).toLowerCase();
   return data.exercises.find((e) => e.id !== exceptId && e.name.toLowerCase() === n);
@@ -213,7 +252,7 @@ export function exerciseUsage(id) {
   for (const s of sessionMap.values()) logs += s.entries.filter((e) => e.exerciseId === id).length;
   return { plan, logs };
 }
-/** Deletes an unused movement; archives one that has history so past logs stay intact. -> 'deleted' | 'archived' */
+/** Deletes an unused exercise; archives one that has history so past logs stay intact. -> 'deleted' | 'archived' */
 export function removeExercise(id) {
   const u = exerciseUsage(id);
   if (u.plan || u.logs) { exerciseById(id).archived = true; touch(); return 'archived'; }
@@ -223,15 +262,15 @@ export function removeExercise(id) {
 }
 export function restoreExercise(id) { exerciseById(id).archived = false; touch(); }
 
-// ---- Plan: routines, weeks, workouts, movements, sets ----------------------
+// ---- Plan: routines, weeks, workouts, exercises, sets ----------------------
 export const mkSet = (o = {}) => ({ id: uid(), type: 'normal', reps: '', weight: null, ...o });
 export const mkItem = (exerciseId) => ({ id: uid(), exerciseId, sets: [mkSet({ reps: '10' }), mkSet({ reps: '10' }), mkSet({ reps: '10' })] });
-const mkWorkout = (name, slotId = uid()) => ({ id: uid(), slotId, name, items: [] });
+const mkWorkout = (name, color = 0, slotId = uid()) => ({ id: uid(), slotId, name, color, items: [] });
 const mkWeek = (name) => ({ id: uid(), name, workouts: [] });
 
 const cloneWorkout = (w, keepSlot) => ({
-  id: uid(), slotId: keepSlot ? w.slotId : uid(), name: w.name,
-  items: w.items.map((it) => ({ id: uid(), exerciseId: it.exerciseId, sets: it.sets.map((s) => ({ ...s, id: uid() })) })),
+  id: uid(), slotId: keepSlot ? w.slotId : uid(), name: w.name, color: w.color ?? 0,
+  items: w.items.map((it) => ({ id: uid(), exerciseId: it.exerciseId, ...(it.notes ? { notes: { ...it.notes } } : {}), sets: it.sets.map((s) => ({ ...s, id: uid() })) })),
 });
 const cloneWeek = (wk, name, keepSlots) => ({ id: uid(), name, workouts: wk.workouts.map((w) => cloneWorkout(w, keepSlots)) });
 
@@ -259,7 +298,7 @@ export function addRoutine(name, { weeks = 0, perWeek = 0 } = {}) {
   const slots = Array.from({ length: perWeek }, () => uid());
   for (let w = 1; w <= weeks; w++) {
     const wk = mkWeek('Week ' + w);
-    slots.forEach((sid, i) => wk.workouts.push(mkWorkout('Workout ' + (i + 1), sid)));
+    slots.forEach((sid, i) => wk.workouts.push(mkWorkout('Workout ' + (i + 1), i % WORKOUT_COLORS.length, sid)));
     r.weeks.push(wk);
   }
   data.routines.push(r);
@@ -310,10 +349,29 @@ export function duplicateWeek(routineId, weekId) {
 
 export function addWorkout(routineId, weekId, name) {
   const wk = weekById(routineId, weekId);
-  const w = mkWorkout(norm(name) || 'Workout ' + (wk.workouts.length + 1));
+  const w = mkWorkout(norm(name) || 'Workout ' + (wk.workouts.length + 1), freeColor(wk));
   wk.workouts.push(w);
   touch();
   return w;
+}
+/** First palette colour not yet used by a workout in this week (cycles when all are used). */
+function freeColor(wk) {
+  const used = wk.workouts.map((w) => w.color);
+  for (let i = 0; i < WORKOUT_COLORS.length; i++) if (!used.includes(i)) return i;
+  return wk.workouts.length % WORKOUT_COLORS.length;
+}
+/** Colour of a workout slot, the same in every week. */
+export function colorForSlot(slotId) {
+  for (const r of data.routines) for (const wk of r.weeks) for (const w of wk.workouts) if (w.slotId === slotId && w.color != null) return w.color;
+  return null;
+}
+/** Colour index for a logged session (follows the plan, falls back to the colour it had when logged). */
+export const sessionColor = (s) => locateWorkout(s.workoutId)?.workout.color ?? colorForSlot(s.slotId) ?? s.color ?? 0;
+export function setWorkoutColor(routineId, workoutId, color) {
+  const r = routineById(routineId);
+  const target = locateWorkout(workoutId).workout;
+  for (const wk of r.weeks) for (const w of wk.workouts) if (w.id === workoutId || w.slotId === target.slotId) w.color = color;
+  touch();
 }
 export function renameWorkout(routineId, workoutId, name, applyToAllWeeks) {
   name = norm(name);
@@ -343,6 +401,8 @@ export function duplicateWorkout(routineId, weekId, workoutId) {
 export function linkWorkoutSlot(workoutId, slotId) {
   const { workout } = locateWorkout(workoutId);
   workout.slotId = slotId;
+  const c = colorForSlot(slotId);
+  if (c != null) workout.color = c;
   for (const s of sessionMap.values()) if (s.workoutId === workoutId) { s.slotId = slotId; touchSession(s); }
   touch();
 }
@@ -377,9 +437,9 @@ export function startSession(workoutId) {
   const s = {
     id: uid(), routineId: routine.id, weekId: week.id, workoutId: workout.id, slotId: workout.slotId,
     routineName: routine.name, weekName: week.name, workoutName: workout.name,
-    startedAt: now(), finishedAt: null, note: '',
+    startedAt: now(), finishedAt: null, color: workout.color ?? 0,
     entries: workout.items.map((it) => ({
-      id: uid(), exerciseId: it.exerciseId, exerciseName: exerciseName(it.exerciseId),
+      id: uid(), exerciseId: it.exerciseId, exerciseName: exerciseName(it.exerciseId), notes: it.notes ? { ...it.notes } : {},
       sets: it.sets.map((p) => ({ id: uid(), type: p.type, weight: null, reps: null, done: false, tw: p.weight ?? null, tr: p.reps ?? '' })),
     })),
   };
@@ -448,7 +508,22 @@ export function slotName(slotId) {
 // ---- Queries ---------------------------------------------------------------
 export const calcOpts = () => ({ formula: data.settings.formula, maxReps: data.settings.maxReps });
 
-/** Finished logs containing this movement, newest first. slotId = null means every workout. */
+/** Finished workouts per week, oldest first, ending with the current week. Weeks start on Monday. */
+export function weeklyCounts(n = 12) {
+  const key = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const cur = weekStart(new Date());
+  const buckets = [];
+  for (let i = n - 1; i >= 0; i--) { const d = new Date(cur); d.setDate(d.getDate() - 7 * i); buckets.push({ start: d, count: 0 }); }
+  const byKey = new Map(buckets.map((b) => [key(b.start), b]));
+  for (const s of allSessions()) {
+    if (!s.finishedAt) continue;
+    const b = byKey.get(key(weekStart(s.startedAt)));
+    if (b) b.count++;
+  }
+  return buckets;
+}
+
+/** Finished logs containing this exercise, newest first. slotId = null means every workout. */
 export function historyFor(exerciseId, slotId = null) {
   const out = [];
   for (const s of sessionsDesc((x) => x.finishedAt && (!slotId || x.slotId === slotId))) {
@@ -459,7 +534,7 @@ export function historyFor(exerciseId, slotId = null) {
   return out;
 }
 
-/** For a log being filled in or viewed: entryId -> the same movement's sets from the previous log of the SAME workout slot. */
+/** For a log being filled in or viewed: entryId -> the same exercise's sets from the previous log of the SAME workout slot. */
 export function previousFor(session) {
   const prev = sessionsDesc((x) => x.finishedAt && x.slotId === session.slotId && x.id !== session.id && x.startedAt < session.startedAt)[0];
   const res = new Map();
@@ -565,6 +640,7 @@ export async function applyBackup(p) {
   data.settings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
   sessionMap = new Map(p.sessions.map((s) => [s.id, s]));
   if (data.activeSessionId && !sessionMap.has(data.activeSessionId)) data.activeSessionId = null;
+  migrate();
   dirty.add('meta');
   for (const id of [...oldIds, ...sessionMap.keys()]) dirty.add('session:' + id);
   await flush();

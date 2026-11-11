@@ -6,7 +6,7 @@ import { h, icon, iconBtn, backHandlers, ensureGuard, clearTick } from './ui.js'
 export const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dash' },
   { id: 'workouts', label: 'Workouts', icon: 'lift' },
-  { id: 'movements', label: 'Movements', icon: 'list' },
+  { id: 'movements', label: 'Exercises', icon: 'list' },
   { id: 'settings', label: 'Settings', icon: 'gear' },
 ];
 
@@ -72,6 +72,7 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
       view.subtitle ? h('div', { class: 'hdr-sub', id: 'hdr-sub', text: view.subtitle }) : null),
     h('div', { class: 'hdr-actions' }, view.actions || []));
   $('hdr').replaceChildren(...hdrKids);
+  $('hdr').className = view.color != null ? 'wk wk-' + view.color : '';
 
   main.replaceChildren(view.content);
   main.scrollTop = keep ? kept : restore ? item.scroll || 0 : scroll;

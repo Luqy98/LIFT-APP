@@ -1,4 +1,4 @@
-// Dashboard: overview + per-movement analysis (estimated 1RM, heaviest set, volume, rep records).
+// Dashboard: overview + per-exercise analysis (estimated 1RM, heaviest set, rep records).
 import { h, card, tile, emptyState } from './ui.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
@@ -31,19 +31,29 @@ export function dashboardView() {
     tile('Volume', fmtVol(ov.volume), 'last 30 days')));
 
   if (!have.size) {
-    content.append(emptyState('Your charts will appear here', 'Finish a workout and each movement you trained gets an estimated 1RM trend, volume and rep records.',
+    content.append(emptyState('Your charts will appear here', 'Finish a workout and each exercise you trained gets an estimated 1RM trend, heaviest set and rep records.',
       h('button', { class: 'btn btn-primary', text: 'Go to workouts', onclick: () => nav.switchTab('workouts') })));
     return { title: 'Dashboard', content };
   }
+
+  const weeks = S.weeklyCounts(12);
+  const unit = (n) => `${n} ${n === 1 ? 'workout' : 'workouts'}`;
+  content.append(card('Workouts per week',
+    h('p', { class: 'card-note', text: 'Weeks start on Monday · last 12 weeks' }),
+    barChart({
+      label: 'Workouts per week', integer: true,
+      points: weeks.map((w) => ({ label: fmtDate(w.start.toISOString()), y: w.count, title: unit(w.count), detail: `Week of ${fmtDate(w.start.toISOString())}` })),
+    }),
+    dataTable(['Week starting (Mon)', 'Workouts'], weeks.map((w) => [fmtDate(w.start.toISOString()), String(w.count)]))));
 
   if (!dash.exerciseId || !have.has(dash.exerciseId)) { dash.exerciseId = [...have.keys()][0]; dash.slotId = 'all'; }
   const slots = S.slotsForExercise(dash.exerciseId);
   if (dash.slotId !== 'all' && !slots.some((x) => x.slotId === dash.slotId)) dash.slotId = 'all';
 
-  const movementSelect = h('select', { class: 'select select-full', 'aria-label': 'Movement', value: dash.exerciseId,
+  const movementSelect = h('select', { class: 'select select-full select-sm', 'aria-label': 'Exercise', value: dash.exerciseId,
     onchange: (e) => { dash.exerciseId = e.target.value; dash.slotId = 'all'; nav.refresh(); } },
   [...have.keys()].map((id) => h('option', { value: id, text: S.exerciseName(id) })));
-  const scopeSelect = h('select', { class: 'select select-full', 'aria-label': 'Workout', value: dash.slotId,
+  const scopeSelect = h('select', { class: 'select select-full select-sm', 'aria-label': 'Workout', value: dash.slotId,
     onchange: (e) => { dash.slotId = e.target.value; nav.refresh(); } },
   h('option', { value: 'all', text: 'All workouts' }), slots.map((x) => h('option', { value: x.slotId, text: x.name })));
   const ranges = h('div', { class: 'seg seg-scroll', role: 'group', 'aria-label': 'Time range' }, RANGES.map(([id, , label]) =>
@@ -88,14 +98,6 @@ export function dashboardView() {
     }),
     dataTable(['Date', 'Weight (kg)', 'Reps'], topRows.map((r) => [fmtDate(r.date), fmtW(r.stats.top.weight), fmt(r.stats.top.reps, 0)]))));
 
-  content.append(card('Volume',
-    h('p', { class: 'card-note', text: 'Weight × reps across all working sets' }),
-    barChart({
-      label: `Volume for ${name}`,
-      points: rows.map((r) => ({ label: fmtDate(r.date), y: r.stats.volume, title: fmtVol(r.stats.volume), detail: `${fmtDate(r.date)} · ${r.stats.sets} ${r.stats.sets === 1 ? 'set' : 'sets'} · ${fmt(r.stats.reps, 0)} ${r.stats.reps === 1 ? 'rep' : 'reps'}` })),
-    }),
-    dataTable(['Date', 'Volume (kg)', 'Sets'], rows.map((r) => [fmtDate(r.date), String(Math.round(r.stats.volume)), String(r.stats.sets)]))));
-
   const recs = repRecords(hist.map((r) => ({ date: r.date, sets: r.sets }))).slice(0, 12);
   if (recs.length) {
     content.append(card('Rep records',
@@ -106,7 +108,7 @@ export function dashboardView() {
   }
 
   content.append(card('Recent sessions',
-    h('div', { class: 'list' }, hist.slice(0, 6).map((r) => h('button', { class: 'hist-row', onclick: () => nav.push(sessionView, { sessionId: r.session.id }) },
+    h('div', { class: 'list' }, hist.slice(0, 6).map((r) => h('button', { class: `hist-row wk wk-${S.sessionColor(r.session)}`, onclick: () => nav.push(sessionView, { sessionId: r.session.id }) },
       h('div', { class: 'hist-top' },
         h('span', { class: 'hist-date', text: fmtDate(r.date) }),
         h('span', { class: 'hist-where', text: `${S.workoutName(r.session)} · ${S.weekName(r.session)}` }),

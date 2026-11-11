@@ -1,4 +1,4 @@
-// Logging a workout, editing past logs, per-movement history (locked to one workout), and the history list.
+// Logging a workout, editing past logs, per-exercise history (locked to one workout), and the history list.
 import { h, icon, iconBtn, confirmDialog, choiceSheet, toast, setTick, segmented, card, tile, emptyState } from './ui.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
@@ -7,7 +7,7 @@ import {
   setStats, toLocalInput, FORMULAS,
 } from './calc.js';
 import { pickMovement } from './picker.js';
-import { lineChart, dataTable } from './charts.js';
+import { notesList, addNote, canAddNote } from './notes.js';
 import { workoutView } from './views-workouts.js';
 
 // ---- Rest timer (kept across re-renders) --------------------------------------
@@ -76,18 +76,14 @@ export function sessionView({ sessionId }) {
   const content = h('div', { class: 'page' });
   if (!active) content.append(summaryCard(s));
 
-  if (!s.entries.length) content.append(emptyState('No movements yet', 'Add the first movement to start logging sets.'));
+  if (!s.entries.length) content.append(emptyState('No exercises yet', 'Add the first exercise to start logging sets.'));
   s.entries.forEach((entry, i) => content.append(entryCard(s, entry, i, prevMap.get(entry.id), active)));
 
   content.append(
     h('button', { class: 'btn btn-block btn-ghost', onclick: async () => {
       const id = await pickMovement();
       if (id) { S.addEntry(s, id); nav.refresh(); }
-    } }, icon('plus', 18), h('span', { text: 'Add movement' })),
-    h('label', { class: 'field' },
-      h('span', { class: 'field-label', text: 'Notes' }),
-      h('textarea', { class: 'notes', rows: 3, placeholder: 'How did it feel? Anything to remember next time?', value: s.note || '',
-        oninput: (e) => { s.note = e.target.value; S.touchSession(s); } })),
+    } }, icon('plus', 18), h('span', { text: 'Add exercise' })),
     active
       ? h('button', { class: 'btn btn-primary btn-block btn-lg', text: 'Finish workout', onclick: () => finish(s) })
       : null);
@@ -105,7 +101,7 @@ export function sessionView({ sessionId }) {
       h('button', { class: 'btn btn-sm', text: 'Skip', onclick: () => { rest = null; nav.refresh(); } }))
     : null;
 
-  return { title: S.workoutName(s), subtitle: subtitle(), actions, content, footer };
+  return { title: S.workoutName(s), subtitle: subtitle(), color: S.sessionColor(s), actions, content, footer };
 }
 
 function summaryCard(s) {
@@ -139,6 +135,7 @@ function entryCard(s, entry, index, prev, active) {
       h('button', { class: 'entry-name', onclick: () => entryMenu(s, entry, index), text: name }),
       h('button', { class: 'btn btn-sm btn-ghost', 'aria-label': `History of ${name} in this workout`, onclick: () => nav.push(movementHistoryView, { exerciseId: entry.exerciseId, slotId: s.slotId }) },
         icon('history', 18), h('span', { text: 'History' }))),
+    notesList(entry, () => S.touchSession(s), () => nav.refresh()),
     prev ? h('div', { class: 'entry-prev', text: `Previous: ${fmtDate(prev.session.startedAt)} · ${S.weekName(prev.session)}` }) : null,
     h('div', { class: 'sets' },
       h('div', { class: 'srow srow-head' }, h('span', { text: 'Set' }), h('span', { text: 'Previous' }), h('span', { text: 'kg' }), h('span', { text: 'Reps' }), h('span', {})),
@@ -200,15 +197,17 @@ async function entryMenu(s, entry, index) {
   const v = await choiceSheet({
     title: S.exerciseName(entry.exerciseId, entry.exerciseName),
     options: [
+      ...(canAddNote(entry) ? [{ label: 'Add note', value: 'note', sub: 'Lifting cues or a general note' }] : []),
       { label: 'History in this workout', value: 'history' },
-      { label: 'Replace movement', value: 'replace' },
+      { label: 'Replace exercise', value: 'replace' },
       { label: 'Move up', value: 'up', disabled: index === 0 },
       { label: 'Move down', value: 'down', disabled: index === s.entries.length - 1 },
       { label: 'Remove from this workout', value: 'remove', danger: true },
     ],
   });
   if (!v) return;
-  if (v === 'history') nav.push(movementHistoryView, { exerciseId: entry.exerciseId, slotId: s.slotId });
+  if (v === 'note') await addNote(entry, () => S.touchSession(s), () => nav.refresh());
+  else if (v === 'history') nav.push(movementHistoryView, { exerciseId: entry.exerciseId, slotId: s.slotId });
   else if (v === 'replace') {
     const id = await pickMovement({ title: 'Replace with' });
     if (!id) return;
@@ -219,7 +218,7 @@ async function entryMenu(s, entry, index) {
     [s.entries[i], s.entries[j]] = [s.entries[j], s.entries[i]];
     S.touchSession(s); nav.refresh();
   } else if (v === 'remove') {
-    if (entry.sets.some((x) => x.done) && !(await confirmDialog({ title: 'Remove this movement?', message: 'Its logged sets in this workout will be deleted.', ok: 'Remove', danger: true }))) return;
+    if (entry.sets.some((x) => x.done) && !(await confirmDialog({ title: 'Remove this exercise?', message: 'Its logged sets in this workout will be deleted.', ok: 'Remove', danger: true }))) return;
     s.entries = s.entries.filter((x) => x !== entry);
     S.touchSession(s); nav.refresh();
   }
@@ -274,40 +273,31 @@ async function finish(s) {
   nav.refresh();
 }
 
-// ---- Per-movement history, locked to one workout -----------------------------------
+// ---- Per-exercise history, locked to one workout -----------------------------------
 export function movementHistoryView(params) {
   const { exerciseId, slotId } = params;
   const all = !!params.all;
   const name = S.exerciseName(exerciseId);
   const wName = S.slotName(slotId);
   const hist = S.historyFor(exerciseId, all ? null : slotId);
-  const pts = hist.filter((r) => r.stats.e1rm != null).reverse();
   const best = hist.reduce((b, r) => (r.stats.e1rm != null && (b == null || r.stats.e1rm > b.stats.e1rm) ? r : b), null);
   const heaviest = hist.reduce((b, r) => (r.stats.top && (b == null || r.stats.top.weight > b.stats.top.weight) ? r : b), null);
 
   const content = h('div', { class: 'page' },
     segmented([['slot', `${wName} only`], ['all', 'All workouts']], all ? 'all' : 'slot', (v) => { params.all = v === 'all'; nav.refresh(); }),
     h('p', { class: 'hint', text: all
-      ? 'Every logged session of this movement, whichever workout it was in.'
-      : `Only sessions of “${wName}”, so rep work and heavy singles never get mixed up.` }));
+      ? 'Every logged session of this exercise, whichever workout it was in.'
+      : `Only sessions of “${wName}”, so history from your other workouts never gets mixed in.` }));
 
   if (!hist.length) {
-    content.append(emptyState('Nothing logged yet', all ? 'Finish a workout with this movement to see its history.' : `You haven’t finished “${wName}” with this movement yet.`));
+    content.append(emptyState('Nothing logged yet', all ? 'Finish a workout with this exercise to see its history.' : `You haven’t finished “${wName}” with this exercise yet.`));
   } else {
     content.append(
       h('div', { class: 'tiles tiles-3' },
         tile('Best est. 1RM', best ? `${fmt(best.stats.e1rm)} kg` : '–', best ? fmtDate(best.date) : ''),
         tile('Heaviest set', heaviest ? `${fmtW(heaviest.stats.top.weight)} kg` : '–', heaviest ? `× ${fmt(heaviest.stats.top.reps, 0)}` : ''),
         tile('Sessions', String(hist.length), '')));
-    if (pts.length > 1) {
-      content.append(card('Estimated 1RM',
-        lineChart({
-          label: `Estimated 1RM for ${name}`, unit: ' kg',
-          points: pts.map((r) => ({ t: +new Date(r.date), y: r.stats.e1rm, title: `${fmt(r.stats.e1rm)} kg`, detail: `${fmtDate(r.date)} · from ${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}` })),
-        }),
-        dataTable(['Date', 'Est. 1RM (kg)'], pts.map((r) => [fmtDate(r.date), fmt(r.stats.e1rm)]))));
-    }
-    content.append(h('div', { class: 'list' }, hist.map((r) => h('button', { class: 'hist-row', onclick: () => nav.push(sessionView, { sessionId: r.session.id }) },
+    content.append(h('div', { class: 'list' }, hist.map((r) => h('button', { class: `hist-row wk wk-${S.sessionColor(r.session)}`, onclick: () => nav.push(sessionView, { sessionId: r.session.id }) },
       h('div', { class: 'hist-top' },
         h('span', { class: 'hist-date', text: fmtDate(r.date) }),
         h('span', { class: 'hist-where', text: all ? `${S.workoutName(r.session)} · ${S.weekName(r.session)}` : S.weekName(r.session) }),
@@ -315,7 +305,7 @@ export function movementHistoryView(params) {
       h('div', { class: 'chips' }, r.sets.map((x) => h('span', { class: 'chip chip-' + x.type, text: (x.type !== 'normal' ? typeInfo(x.type).short + ' ' : '') + setLabel(x) }))),
       icon('right', 18)))));
   }
-  return { title: name, subtitle: all ? 'All workouts' : wName, content };
+  return { title: name, subtitle: all ? 'All workouts' : wName, color: all ? undefined : S.sessionColor(hist[0]?.session || { slotId }), content };
 }
 
 // ---- History list (Workouts tab) --------------------------------------------------------
@@ -339,7 +329,7 @@ export function historyContent() {
     if (m !== month) { month = m; out.push(h('h3', { class: 'month', text: m })); }
     let vol = 0, sets = 0;
     for (const e of s.entries) { const st = setStats(e.sets, S.calcOpts()); vol += st.volume; sets += st.sets; }
-    out.push(h('button', { class: 'row-card row-btn', onclick: () => nav.push(sessionView, { sessionId: s.id }) },
+    out.push(h('button', { class: `row-card row-btn wk wk-${S.sessionColor(s)}`, onclick: () => nav.push(sessionView, { sessionId: s.id }) },
       h('span', { class: 'row-main' },
         h('span', { class: 'row-title', text: S.workoutName(s) }),
         h('span', { class: 'row-sub', text: `${S.routineName(s)} · ${S.weekName(s)}` })),

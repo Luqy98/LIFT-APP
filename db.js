@@ -1,6 +1,6 @@
 // Thin IndexedDB wrapper. Two stores:
 //   vault   -> the wrapped data key + lockout counters (no personal data)
-//   records -> encrypted records: 'meta' (plans, movements, settings) and 'session:<id>' (one per workout log)
+//   records -> encrypted records: 'meta' (plans, exercises, settings) and 'session:<id>' (one per workout log)
 
 export async function openDb(name = 'gymlog') {
   const db = await new Promise((resolve, reject) => {

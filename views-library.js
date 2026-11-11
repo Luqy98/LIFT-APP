@@ -1,4 +1,4 @@
-// Movements tab: the shared library every workout draws from, so "Bench Press" is one movement everywhere.
+// Exercises tab: the shared library every workout draws from, so "Bench Press" is one exercise everywhere.
 import { h, iconBtn, formDialog, choiceSheet, confirmDialog, toast, emptyState } from './ui.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
@@ -9,13 +9,13 @@ const lib = { q: '' };
 
 async function addMovement() {
   const v = await formDialog({
-    title: 'New movement', fields: [{ key: 'name', label: 'Movement name', placeholder: 'e.g. Pause Bench Press', capitalize: 'words' }],
-    ok: 'Add', validate: (f) => (!f.name.trim() ? 'Give the movement a name.' : null),
+    title: 'New exercise', fields: [{ key: 'name', label: 'Exercise name', placeholder: 'e.g. Pause Bench Press', capitalize: 'words' }],
+    ok: 'Add', validate: (f) => (!f.name.trim() ? 'Give the exercise a name.' : null),
   });
   if (!v) return;
   const existed = S.findExerciseByName(v.name);
   S.addExercise(v.name);
-  toast(existed ? 'That movement already exists' : 'Movement added');
+  toast(existed ? 'That exercise already exists' : 'Exercise added');
   nav.refresh();
 }
 
@@ -32,9 +32,9 @@ async function movementMenu(e, stats) {
   });
   if (v === 'rename') {
     const x = await formDialog({
-      title: 'Rename movement', message: 'Every workout and past log using it shows the new name.',
-      fields: [{ key: 'name', label: 'Movement name', value: e.name, capitalize: 'words' }],
-      validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : S.findExerciseByName(f.name, e.id) ? 'You already have a movement with that name.' : null),
+      title: 'Rename exercise', message: 'Every workout and past log using it shows the new name.',
+      fields: [{ key: 'name', label: 'Exercise name', value: e.name, capitalize: 'words' }],
+      validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : S.findExerciseByName(f.name, e.id) ? 'You already have an exercise with that name.' : null),
     });
     if (x) { S.renameExercise(e.id, x.name); nav.refresh(); }
   } else if (v === 'dash') {
@@ -63,7 +63,7 @@ export function movementsRoot() {
           h('span', { class: 'row-title', text: e.name }),
           h('span', { class: 'row-sub', text: st ? `Trained ${st.count} ${st.count === 1 ? 'time' : 'times'} · last ${fmtDate(st.last)}` : 'Not logged yet' })),
         iconBtn('more', `Options for ${e.name}`, () => movementMenu(e, st)));
-    }) : [h('p', { class: 'hint', text: q ? 'No match. Add it with the + button.' : 'No movements yet.' })]));
+    }) : [h('p', { class: 'hint', text: q ? 'No match. Add it with the + button.' : 'No exercises yet.' })]));
 
     const arch = S.data.exercises.filter((e) => e.archived).sort((a, b) => a.name.localeCompare(b.name));
     archivedBox.replaceChildren(...(arch.length ? [h('details', { class: 'archived' },
@@ -75,12 +75,12 @@ export function movementsRoot() {
   draw();
 
   const search = h('input', {
-    type: 'search', class: 'search', placeholder: 'Search movements', autocomplete: 'off', value: lib.q, 'aria-label': 'Search movements',
+    type: 'search', class: 'search', placeholder: 'Search exercises', autocomplete: 'off', value: lib.q, 'aria-label': 'Search exercises',
     oninput: (e) => { lib.q = e.target.value; draw(); },
   });
   return {
-    title: 'Movements', subtitle: `${S.data.exercises.filter((e) => !e.archived).length} in your library`,
-    actions: [iconBtn('plus', 'New movement', addMovement)],
+    title: 'Exercises', subtitle: `${S.data.exercises.filter((e) => !e.archived).length} in your library`,
+    actions: [iconBtn('plus', 'New exercise', addMovement)],
     content: h('div', { class: 'page' }, search, list, archivedBox),
   };
 }

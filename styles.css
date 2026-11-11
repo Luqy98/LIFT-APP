@@ -3,9 +3,9 @@
 :root {
   color-scheme: dark;
   --bg: #0d0d0d;
-  --surface: #1a1a19;
-  --surface2: #242422;
-  --line: #2c2c2a;
+  --surface: #1d1d1b;
+  --surface2: #282826;
+  --line: #33332f;
   --axis: #383835;
   --ink: #f0efec;
   --ink2: #c3c2b7;
@@ -23,6 +23,9 @@
   --c-drop: #9085e9;
   --c-failure: #e66767;
   --c-backoff: #199e70;
+  --wk0: #5b9dff; --wk1: #a78bfa; --wk2: #f472b6; --wk3: #fb923c; --wk4: #4ade80; --wk5: #38bdf8;
+  --note-cues: #f5b942;
+  --note-general: #6fc3c0;
   --radius: 14px;
   --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
@@ -48,6 +51,9 @@
   --c-drop: #6250d6;
   --c-failure: #e34948;
   --c-backoff: #1baf7a;
+  --wk0: #2563eb; --wk1: #7c3aed; --wk2: #db2777; --wk3: #ea580c; --wk4: #16a34a; --wk5: #0284c7;
+  --note-cues: #b45309;
+  --note-general: #0f766e;
   --shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
 }
 @media (prefers-color-scheme: light) {
@@ -73,6 +79,9 @@
     --c-drop: #6250d6;
     --c-failure: #e34948;
     --c-backoff: #1baf7a;
+  --wk0: #2563eb; --wk1: #7c3aed; --wk2: #db2777; --wk3: #ea580c; --wk4: #16a34a; --wk5: #0284c7;
+  --note-cues: #b45309;
+  --note-general: #0f766e;
     --shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
   }
 }
@@ -333,3 +342,40 @@ button.row-card .row-main { padding: 0; }
 .row-title { font-weight: 600; }
 .backup-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--accent-soft); color: var(--ink); }
 .backup-banner p { font-size: 14px; }
+
+/* ---- Workout colours: each workout carries its own colour wherever it appears ---- */
+.wk-0 { --wk: var(--wk0); } .wk-1 { --wk: var(--wk1); } .wk-2 { --wk: var(--wk2); }
+.wk-3 { --wk: var(--wk3); } .wk-4 { --wk: var(--wk4); } .wk-5 { --wk: var(--wk5); }
+.row-card.wk, .hist-row.wk {
+  background: color-mix(in srgb, var(--wk) 15%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--wk) 55%, transparent);
+}
+.hist-row.wk { border-radius: 12px; }
+.wk .row-title, .wk .hist-date { color: color-mix(in srgb, var(--wk) 65%, var(--ink)); }
+.wk .chip { background: color-mix(in srgb, var(--wk) 8%, var(--surface)); border-color: color-mix(in srgb, var(--wk) 30%, var(--line)); }
+.wk .chip-1rm { border-color: color-mix(in srgb, var(--c-1rm) 70%, transparent); }
+.wk .chip-amrap { border-color: color-mix(in srgb, var(--c-amrap) 70%, transparent); }
+.wk .chip-drop { border-color: color-mix(in srgb, var(--c-drop) 70%, transparent); }
+.wk .chip-failure { border-color: color-mix(in srgb, var(--c-failure) 70%, transparent); }
+.wk .chip-backoff { border-color: color-mix(in srgb, var(--c-backoff) 70%, transparent); }
+#hdr.wk { border-bottom: 3px solid var(--wk); }
+.wk-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--wk); flex: none; }
+.swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.swatch { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 12px; border-radius: 12px; border: 2px solid transparent; background: color-mix(in srgb, var(--wk) 18%, var(--surface2)); font-weight: 600; }
+.swatch.is-on { border-color: var(--wk); }
+
+/* ---- Notes (only shown once added) ---- */
+.notes-block { display: flex; flex-direction: column; gap: 8px; }
+.note { display: block; width: 100%; text-align: left; border-radius: 12px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--nc) 50%, transparent); background: color-mix(in srgb, var(--nc) 13%, var(--surface)); }
+.note-cues { --nc: var(--note-cues); }
+.note-general { --nc: var(--note-general); }
+.note-label { display: block; font-size: 12.5px; font-weight: 700; color: var(--nc); margin-bottom: 2px; }
+.note-text { display: block; white-space: pre-wrap; overflow-wrap: anywhere; }
+.note-cues .note-text { font-size: 15px; color: var(--ink); }
+.note-general .note-text { font-size: 13px; font-style: italic; color: var(--ink2); }
+.btn-add-note { align-self: flex-start; }
+
+/* ---- Smaller selects used as pickers on the dashboard ---- */
+.select-sm { min-height: 40px; font-size: 14px; font-weight: 500; }
+.row-title .wk-dot { margin-right: 8px; vertical-align: 1px; }
+.backup-banner .btn { white-space: nowrap; flex: none; }

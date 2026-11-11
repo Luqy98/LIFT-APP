@@ -1,16 +1,16 @@
-// Movement picker: search the library, or create a new movement on the spot.
+// Exercise picker: search the library, or create a new exercise on the spot.
 import { h, sheet } from './ui.js';
 import * as S from './store.js';
 
 /** -> exerciseId | null */
-export function pickMovement({ title = 'Add movement' } = {}) {
+export function pickMovement({ title = 'Add exercise' } = {}) {
   return new Promise((resolve) => {
     let finished = false;
     const finish = (v) => { if (!finished) { finished = true; resolve(v); } };
     const list = h('div', { class: 'picker-list' });
     const search = h('input', {
-      type: 'search', class: 'search', placeholder: 'Search or create a movement', autocomplete: 'off',
-      autocapitalize: 'words', enterkeyhint: 'search', 'aria-label': 'Search movements',
+      type: 'search', class: 'search', placeholder: 'Search or create an exercise', autocomplete: 'off',
+      autocapitalize: 'words', enterkeyhint: 'search', 'aria-label': 'Search exercises',
     });
     const choose = (id) => { finish(id); close(); };
     const render = () => {
@@ -22,10 +22,10 @@ export function pickMovement({ title = 'Add movement' } = {}) {
       const out = [];
       if (q && !S.findExerciseByName(q)) {
         out.push(h('button', { class: 'choice choice-create', onclick: () => choose(S.addExercise(q).id) },
-          h('span', { class: 'choice-main' }, h('span', { class: 'choice-label', text: `Create “${q}”` }), h('span', { class: 'choice-sub', text: 'Adds it to your movement library' }))));
+          h('span', { class: 'choice-main' }, h('span', { class: 'choice-label', text: `Create “${q}”` }), h('span', { class: 'choice-sub', text: 'Adds it to your exercise library' }))));
       }
       rows.forEach((e) => out.push(h('button', { class: 'choice', onclick: () => choose(e.id) }, h('span', { class: 'choice-main' }, h('span', { class: 'choice-label', text: e.name })))));
-      if (!out.length) out.push(h('p', { class: 'sheet-msg', text: 'No movements yet. Type a name to create one.' }));
+      if (!out.length) out.push(h('p', { class: 'sheet-msg', text: 'No exercises yet. Type a name to create one.' }));
       list.replaceChildren(...out);
     };
     search.addEventListener('input', render);

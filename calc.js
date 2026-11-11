@@ -44,7 +44,7 @@ export function parseNum(v) {
 }
 
 /**
- * Summary of one movement's sets within one session.
+ * Summary of one exercise's sets within one session.
  * Only ticked sets count; warm-ups are ignored; drop sets count for volume but not for 1RM.
  */
 export function setStats(sets, opts) {
@@ -112,4 +112,15 @@ export function toLocalInput(iso) {
   const d = new Date(iso);
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+// ---- Workout colours and weeks ----------------------------------------------
+export const WORKOUT_COLORS = ['Blue', 'Violet', 'Pink', 'Orange', 'Green', 'Sky'];
+
+/** Local midnight on the Monday that starts the week containing `d`. */
+export function weekStart(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
 }

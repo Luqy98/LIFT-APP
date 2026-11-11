@@ -149,11 +149,13 @@ export function formDialog({ title, message, fields = [], checks = [], ok = 'Sav
     },
     message ? h('p', { class: 'sheet-msg', text: message }) : null,
     fields.map((f) => {
-      const inp = h('input', {
-        type: f.type || 'text', value: f.value ?? '', placeholder: f.placeholder || '', inputmode: f.inputmode,
-        autocomplete: f.autocomplete || 'off', autocapitalize: f.capitalize || 'sentences', enterkeyhint: 'done',
-        min: f.min, max: f.max, step: f.step,
-      });
+      const inp = f.multiline
+        ? h('textarea', { rows: f.rows || 4, value: f.value ?? '', placeholder: f.placeholder || '', autocapitalize: f.capitalize || 'sentences', autocomplete: 'off' })
+        : h('input', {
+          type: f.type || 'text', value: f.value ?? '', placeholder: f.placeholder || '', inputmode: f.inputmode,
+          autocomplete: f.autocomplete || 'off', autocapitalize: f.capitalize || 'sentences', enterkeyhint: 'done',
+          min: f.min, max: f.max, step: f.step,
+        });
       inputs[f.key] = inp;
       return h('label', { class: 'field' }, h('span', { class: 'field-label', text: f.label }), inp, f.hint ? h('span', { class: 'field-hint', text: f.hint }) : null);
     }),
@@ -167,7 +169,7 @@ export function formDialog({ title, message, fields = [], checks = [], ok = 'Sav
       h('button', { type: 'button', class: 'btn', text: 'Cancel', onclick: () => { finish(null); close(); } }),
       submit));
     const { close } = sheet(form, { title, onClose: () => finish(null) });
-    const first = form.querySelector('input:not([type=checkbox])');
+    const first = form.querySelector('input:not([type=checkbox]), textarea');
     if (first) requestAnimationFrame(() => { first.focus(); if (first.select && first.value) first.select(); });
   });
 }
@@ -237,3 +239,17 @@ export const pickFile = () => new Promise((resolve) => {
   inp.addEventListener('cancel', () => resolve(null));
   inp.click();
 });
+
+/** Colour picker sheet. names: label per palette index. Resolves the chosen index or null. */
+export function colorSheet(current, names) {
+  return new Promise((resolve) => {
+    let finished = false;
+    const finish = (v) => { if (!finished) { finished = true; resolve(v); } };
+    const grid = h('div', { class: 'swatches' }, names.map((name, i) =>
+      h('button', { class: `swatch wk wk-${i}` + (i === current ? ' is-on' : ''), 'aria-pressed': String(i === current), onclick: () => { finish(i); close(); } },
+        h('span', { class: 'wk-dot' }), h('span', { text: name }))));
+    const { close } = sheet(h('div', {}, h('p', { class: 'sheet-msg', text: 'Used for this workout in every week, in history and on the dashboard.' }), grid,
+      h('button', { class: 'btn btn-block', text: 'Cancel', onclick: () => { finish(null); close(); } })),
+    { title: 'Workout colour', onClose: () => finish(null) });
+  });
+}

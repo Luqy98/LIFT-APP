@@ -1,8 +1,9 @@
-// Workouts tab: routines -> weeks -> workouts -> movements -> sets (the plan), plus the History segment.
-import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState } from './ui.js';
+// Workouts tab: routines -> weeks -> workouts -> exercises -> sets (the plan), plus the History segment.
+import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet } from './ui.js';
+import { notesList, addNote, canAddNote } from './notes.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
-import { SET_TYPES, typeInfo, parseNum, fmtW, fmtDate } from './calc.js';
+import { SET_TYPES, typeInfo, parseNum, fmtW, fmtDate, WORKOUT_COLORS } from './calc.js';
 import { pickMovement } from './picker.js';
 import { activeBanner, startWorkout, historyContent, sessionView, movementHistoryView } from './views-session.js';
 
@@ -34,7 +35,7 @@ export function workoutsRoot() {
 
 function routinesContent() {
   if (!S.data.routines.length) {
-    return emptyState('Plan your first routine', 'A routine is made of weeks, each week of workouts, each workout of movements and sets. You control every level.',
+    return emptyState('Plan your first routine', 'A routine is made of weeks, each week of workouts, each workout of exercises and sets. You control every level.',
       h('button', { class: 'btn btn-primary', text: 'Create a routine', onclick: newRoutine }));
   }
   return h('div', { class: 'list' }, S.data.routines.map((r) => {
@@ -118,7 +119,7 @@ async function addWeek(r) {
     const v = await choiceSheet({
       title: 'Add week',
       options: [
-        { label: `Copy ${last.name}`, sub: 'Same workouts, movements and planned sets. Workout history stays linked.', value: 'copy' },
+        { label: `Copy ${last.name}`, sub: 'Same workouts, exercises and planned sets. Workout history stays linked.', value: 'copy' },
         { label: 'Blank week', value: 'blank' },
       ],
     });
@@ -161,15 +162,15 @@ export function weekView({ routineId, weekId }) {
   const wk = S.weekById(routineId, weekId);
   if (!r || !wk) return notFound('Week');
   const content = h('div', { class: 'page' });
-  if (!wk.workouts.length) content.append(emptyState('No workouts in this week', 'Add the workouts you’ll do, then fill each with movements.'));
+  if (!wk.workouts.length) content.append(emptyState('No workouts in this week', 'Add the workouts you’ll do, then fill each with exercises.'));
   else {
     content.append(h('div', { class: 'list' }, wk.workouts.map((w) => {
       const st = S.statusOfWorkout(w.id);
       const sets = w.items.reduce((n, it) => n + it.sets.length, 0);
-      return h('div', { class: 'row-card' },
+      return h('div', { class: `row-card wk wk-${w.color ?? 0}` },
         h('button', { class: 'row-main row-btn', onclick: () => nav.push(workoutView, { routineId, weekId, workoutId: w.id }) },
-          h('span', { class: 'row-title', text: w.name }),
-          h('span', { class: 'row-sub', text: w.items.length ? `${plural(w.items.length, 'movement')} · ${plural(sets, 'set')}` : 'No movements yet' })),
+          h('span', { class: 'row-title' }, h('span', { class: 'wk-dot' }), h('span', { text: w.name })),
+          h('span', { class: 'row-sub', text: w.items.length ? `${plural(w.items.length, 'exercise')} · ${plural(sets, 'set')}` : 'No exercises yet' })),
         st.active ? h('span', { class: 'status status-live', text: 'In progress' })
           : st.done ? h('span', { class: 'status status-done' }, icon('check', 14), h('span', { text: fmtDate(st.done.startedAt) })) : null,
         iconBtn('more', `Options for ${w.name}`, () => workoutMenu(r, wk, w)));
@@ -203,6 +204,7 @@ async function workoutMenu(r, wk, w) {
     title: w.name,
     options: [
       { label: 'Rename', value: 'rename' },
+      { label: 'Colour', value: 'color', sub: WORKOUT_COLORS[w.color ?? 0] },
       { label: 'Duplicate', value: 'dup', sub: 'A separate workout with its own history' },
       ...(links.length ? [{ label: 'Share history with another workout…', value: 'link', sub: 'Previous values and history carry over between them' }] : []),
       { label: 'Move up', value: 'up', disabled: i === 0 },
@@ -219,6 +221,9 @@ async function workoutMenu(r, wk, w) {
       validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : null),
     });
     if (x) { S.renameWorkout(r.id, w.id, x.name, !!x.all); nav.refresh(); }
+  } else if (v === 'color') {
+    const c = await colorSheet(w.color ?? 0, WORKOUT_COLORS);
+    if (c != null) { S.setWorkoutColor(r.id, w.id, c); nav.refresh(); }
   } else if (v === 'dup') { S.duplicateWorkout(r.id, wk.id, w.id); nav.refresh(); }
   else if (v === 'link') {
     const pick = await choiceSheet({
@@ -236,7 +241,7 @@ async function workoutMenu(r, wk, w) {
   }
 }
 
-// ---- Workout: movements and planned sets -------------------------------------------------------
+// ---- Workout: exercises and planned sets -------------------------------------------------------
 export function workoutView({ routineId, weekId, workoutId }) {
   const loc = S.locateWorkout(workoutId);
   if (!loc) return notFound('Workout');
@@ -244,12 +249,12 @@ export function workoutView({ routineId, weekId, workoutId }) {
   const st = S.statusOfWorkout(workout.id);
   const content = h('div', { class: 'page' });
 
-  if (!workout.items.length) content.append(emptyState('No movements yet', 'Add the movements for this workout, then set the sets, reps and any target weight.'));
+  if (!workout.items.length) content.append(emptyState('No exercises yet', 'Add the exercises for this workout, then set the sets, reps and any target weight.'));
   workout.items.forEach((item, i) => content.append(itemCard(workout, item, i)));
   content.append(h('button', { class: 'btn btn-block btn-ghost', onclick: async () => {
     const id = await pickMovement();
     if (id) { workout.items.push(S.mkItem(id)); S.touch(); nav.refresh(); }
-  } }, icon('plus', 18), h('span', { text: 'Add movement' })));
+  } }, icon('plus', 18), h('span', { text: 'Add exercise' })));
 
   const bar = [];
   bar.push(h('button', {
@@ -259,7 +264,7 @@ export function workoutView({ routineId, weekId, workoutId }) {
   if (st.done && !st.active) bar.push(h('button', { class: 'btn btn-lg', text: `Last log · ${fmtDate(st.done.startedAt)}`, onclick: () => nav.push(sessionView, { sessionId: st.done.id }) }));
 
   return {
-    title: workout.name, subtitle: `${routine.name} · ${week.name}`,
+    title: workout.name, subtitle: `${routine.name} · ${week.name}`, color: workout.color ?? 0,
     actions: [iconBtn('more', 'Workout options', () => workoutMenu(routine, week, workout))],
     content, footer: h('div', { class: 'footer-bar' }, bar),
   };
@@ -278,8 +283,9 @@ function itemCard(workout, item, index) {
   });
   return h('section', { class: 'card entry' },
     h('div', { class: 'entry-head' },
-      h('button', { class: 'entry-name', text: ex?.name || 'Deleted movement', onclick: () => itemMenu(workout, item, index) }),
-      iconBtn('more', 'Movement options', () => itemMenu(workout, item, index))),
+      h('button', { class: 'entry-name', text: ex?.name || 'Deleted exercise', onclick: () => itemMenu(workout, item, index) }),
+      iconBtn('more', 'Exercise options', () => itemMenu(workout, item, index))),
+    notesList(item, () => S.touch(), () => nav.refresh()),
     h('div', { class: 'sets' },
       h('div', { class: 'srow srow-plan srow-head' }, h('span', { text: 'Set' }), h('span', { text: 'Target reps' }), h('span', { text: 'Target kg' }), h('span', {})),
       rows),
@@ -298,16 +304,18 @@ async function planSetType(item, set) {
 async function itemMenu(workout, item, index) {
   const ex = S.exerciseById(item.exerciseId);
   const v = await choiceSheet({
-    title: ex?.name || 'Movement',
+    title: ex?.name || 'Exercise',
     options: [
+      ...(canAddNote(item) ? [{ label: 'Add note', value: 'note', sub: 'Lifting cues or a general note' }] : []),
       { label: 'History in this workout', value: 'history' },
-      { label: 'Replace movement', value: 'replace' },
+      { label: 'Replace exercise', value: 'replace' },
       { label: 'Move up', value: 'up', disabled: index === 0 },
       { label: 'Move down', value: 'down', disabled: index === workout.items.length - 1 },
       { label: 'Remove from workout', value: 'remove', danger: true },
     ],
   });
-  if (v === 'history') nav.push(movementHistoryView, { exerciseId: item.exerciseId, slotId: workout.slotId });
+  if (v === 'note') await addNote(item, () => S.touch(), () => nav.refresh());
+  else if (v === 'history') nav.push(movementHistoryView, { exerciseId: item.exerciseId, slotId: workout.slotId });
   else if (v === 'replace') {
     const id = await pickMovement({ title: 'Replace with' });
     if (id) { item.exerciseId = id; S.touch(); nav.refresh(); }
