@@ -38,10 +38,6 @@ export function dashboardView() {
     tile('Sets', String(wp.sets), pct(wp.setsPct) || 'this week', wp.setsPct == null ? '' : wp.setsPct >= 0 ? 'up' : 'down'),
     tile('Top 1RM', top ? `${fmt(top.best)} kg` : '–', top ? (top.delta != null ? `▲ +${fmt(top.delta)} kg` : S.exerciseName(top.exerciseId)) : 'no lifts yet', top && top.delta != null ? 'up' : ''),
     tile('Sessions', String(ov.month), 'last 30 days')));
-  if (routines.length > 1) {
-    content.append(h('div', { class: 'controls' }, pickerField('Show lifts from', [['all', 'All routines'], ...routines.map((r) => [r.id, r.name])], dash.routineId,
-      (v) => { dash.routineId = v; dash.exerciseId = null; dash.slotId = 'all'; nav.refresh(); })));
-  }
   if (lifts.length) content.append(liftsCard(lifts));
 
   if (!have.size) {
@@ -61,17 +57,15 @@ export function dashboardView() {
     dataTable(['Week starting (Mon)', 'Workouts'], weeks.map((w) => [fmtDate(w.start.toISOString()), String(w.count)]))));
 
   if (!dash.exerciseId || !have.has(dash.exerciseId)) { dash.exerciseId = [...have.keys()][0]; dash.slotId = 'all'; }
-  const slots = S.slotsForExercise(dash.exerciseId, rid);
-  if (dash.slotId !== 'all' && !slots.some((x) => x.slotId === dash.slotId)) dash.slotId = 'all';
-
+  dash.slotId = 'all';
   const movementSelect = pickerField('Exercise', [...have.keys()].map((id) => [id, S.exerciseName(id)]), dash.exerciseId,
-    (v) => { dash.exerciseId = v; dash.slotId = 'all'; nav.refresh(); });
-  const scopeSelect = pickerField('Workout', [['all', 'All workouts'], ...slots.map((x) => [x.slotId, x.name])], dash.slotId,
-    (v) => { dash.slotId = v; nav.refresh(); });
+    (v) => { dash.exerciseId = v; nav.refresh(); });
+  const routineSelect = pickerField('Routine', [['all', 'All routines'], ...routines.map((r) => [r.id, r.name])], dash.routineId,
+    (v) => { dash.routineId = v; dash.exerciseId = null; nav.refresh(); });
   const ranges = h('div', { class: 'seg seg-scroll', role: 'group', 'aria-label': 'Time range' }, RANGES.map(([id, , label]) =>
     h('button', { type: 'button', class: 'seg-btn' + (dash.range === id ? ' is-on' : ''), 'aria-pressed': String(dash.range === id), text: label, onclick: () => { dash.range = id; nav.refresh(); } })));
 
-  content.append(h('div', { class: 'controls' }, movementSelect, slots.length > 1 ? scopeSelect : null, ranges));
+  content.append(h('div', { class: 'controls' }, movementSelect, routines.length > 1 ? routineSelect : null, ranges));
 
   // ---- data
   const hist = S.historyFor(dash.exerciseId, dash.slotId === 'all' ? null : dash.slotId, rid); // newest first
