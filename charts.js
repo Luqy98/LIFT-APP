@@ -134,15 +134,21 @@ export function barChart({ points, height = 170, label = 'Chart', integer = fals
     const x = PAD.l + slot * i + (slot - bw) / 2;
     const y = Y(p.y);
     const r = Math.min(4, bw / 2, base - y);
-    const path = s('path', {
-      class: 'bar' + (p.deload ? ' bar-deload' : ''),
-      d: `M${x},${base} L${x},${y + r} Q${x},${y} ${x + r},${y} L${x + bw - r},${y} Q${x + bw},${y} ${x + bw},${y + r} L${x + bw},${base} Z`,
-    });
-    svg.append(path);
-    return path;
+    const top = (cls, y0, y1, round) => {
+      const rr = round ? Math.min(4, bw / 2, y1 - y0) : 0;
+      const el = s('path', { class: 'bar ' + cls, d: `M${x},${y1} L${x},${y0 + rr} Q${x},${y0} ${x + rr},${y0} L${x + bw - rr},${y0} Q${x + bw},${y0} ${x + bw},${y0 + rr} L${x + bw},${y1} Z` });
+      svg.append(el);
+      return el;
+    };
+    const d = Math.min(p.deload || 0, p.y);
+    if (d <= 0) return [top('', y, base, true)];
+    if (d >= p.y) return [top('bar-deload', y, base, true)];
+    const ySplit = Y(p.y - d);
+    // normal workouts at the bottom, the deload workout(s) stacked on top with a hairline gap
+    return [top('', ySplit + 1, base, false), top('bar-deload', y, ySplit - 1, true)];
   });
   const show = (i) => {
-    bars.forEach((b, j) => b.classList.toggle('is-sel', i === j));
+    bars.forEach((grp, j) => grp.forEach((b) => b.classList.toggle('is-sel', i === j)));
     const p = shown[i];
     tip.replaceChildren(h('b', { text: p.title }), h('span', { text: p.detail || '' }));
   };

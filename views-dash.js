@@ -52,9 +52,9 @@ export function dashboardView() {
     h('p', { class: 'card-note', text: 'Weeks start on Monday · last 12 weeks' }),
     barChart({
       label: 'Workouts per week', integer: true,
-      points: weeks.map((w) => ({ label: fmtDate(w.start.toISOString()), y: w.count, deload: w.deload > 0, title: unit(w.count), detail: `Week of ${fmtDate(w.start.toISOString())}${w.deload ? ` · includes ${w.deload} deload` : ''}` })),
+      points: weeks.map((w) => ({ label: fmtDate(w.start.toISOString()), y: w.count, deload: w.deload, title: unit(w.count), detail: `Week of ${fmtDate(w.start.toISOString())}${w.deload ? ` · includes ${w.deload} deload` : ''}` })),
     }),
-    weeks.some((w) => w.deload) ? h('div', { class: 'chart-key' }, h('span', { class: 'key-swatch' }), h('span', { text: 'Normal week' }), h('span', { class: 'key-swatch key-deload' }), h('span', { text: 'Week with a deload workout' })) : null,
+    weeks.some((w) => w.deload) ? h('div', { class: 'chart-key' }, h('span', { class: 'key-swatch' }), h('span', { text: 'Workout' }), h('span', { class: 'key-swatch key-deload' }), h('span', { text: 'Deload workout' })) : null,
     dataTable(['Week starting (Mon)', 'Workouts'], weeks.map((w) => [fmtDate(w.start.toISOString()), String(w.count) + (w.deload ? ` (${w.deload} deload)` : '')]))));
 
   if (!dash.exerciseId || !have.has(dash.exerciseId)) { dash.exerciseId = [...have.keys()][0]; dash.slotId = 'all'; }
@@ -147,13 +147,19 @@ function greetingCard() {
 function weekCard() {
   const w = S.weekProgress();
   const pct = Math.min(100, Math.round((w.done / w.goal) * 100));
-  const bar = h('div', { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': w.goal, 'aria-valuenow': w.done, 'aria-label': 'Workouts this week' },
-    h('div', { class: 'meter-fill w-' + (Math.round(pct / 5) * 5) }));
+  const normalPct = Math.min(100, Math.round(((w.done - w.deload) / w.goal) * 100));
+  const deloadPct = Math.min(100 - normalPct, Math.round((w.deload / w.goal) * 100));
+  const step = (n) => Math.round(n / 5) * 5;
+  const bar = h('div', { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': w.goal, 'aria-valuenow': w.done,
+    'aria-label': 'Workouts this week' + (w.deload ? ` (${w.deload} deload)` : '') },
+    normalPct > 0 ? h('div', { class: 'meter-fill w-' + step(normalPct) }) : null,
+    deloadPct > 0 ? h('div', { class: 'meter-fill meter-deload w-' + step(deloadPct) }) : null);
   return card('This week',
     h('div', { class: 'week-row' },
       h('span', { class: 'week-count', text: `${w.done} / ${w.goal} workouts` }),
       h('span', { class: 'week-pct', text: `${pct}%` })),
-    bar);
+    bar,
+    w.deload ? h('div', { class: 'chart-key' }, h('span', { class: 'key-swatch' }), h('span', { text: 'Normal' }), h('span', { class: 'key-swatch key-deload' }), h('span', { text: `Deload (${w.deload})` })) : null);
 }
 
 function liftsCard(lifts) {

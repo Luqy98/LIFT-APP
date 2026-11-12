@@ -750,3 +750,9 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .chart-key { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 12px; color: var(--ink2); margin-top: 4px; }
 .key-swatch { width: 10px; height: 10px; border-radius: 3px; background: var(--series-1); }
 .key-swatch.key-deload { background: var(--c-deload); margin-left: 8px; }
+
+.meter { display: flex; }
+.meter-fill { border-radius: 0; flex: none; }
+.meter-fill + .meter-fill { margin-left: 2px; }
+.meter-fill.meter-deload { background: var(--c-deload); box-shadow: 0 0 12px color-mix(in srgb, var(--c-deload) 55%, transparent); }
+.card .chart-key { margin-top: 10px; }
