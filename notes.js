@@ -3,8 +3,8 @@
 import { h, formDialog, choiceSheet } from './ui.js';
 
 export const NOTE_TYPES = [
-  { key: 'cues', label: 'Lifting cues', sub: 'Reminders for how to perform the lifts', placeholder: 'e.g. Brace first, elbows tucked, pause on the chest' },
-  { key: 'general', label: 'General note', sub: 'Anything else about this exercise', placeholder: 'e.g. Felt strong, sleep was poor' },
+  { key: 'cues', label: 'Lifting Cues', sub: 'Reminders for how to perform the lifts', placeholder: 'e.g. Brace first, elbows tucked, pause on the chest' },
+  { key: 'general', label: 'General Note', sub: 'Anything else about this exercise', placeholder: 'e.g. Felt strong, sleep was poor' },
 ];
 
 async function editNote(owner, type, save) {

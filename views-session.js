@@ -100,8 +100,8 @@ function summaryCard(s) {
     prs.length ? h('div', { class: 'prs' }, prs.map((p) => h('div', { class: 'pr' },
       h('span', { class: 'pr-tag', text: 'New best' }),
       h('span', { text: `${S.exerciseName(p.exerciseId)}: est. 1RM ${fmt(p.e1rm)} kg (+${fmt(p.gain)})` })))) : null,
-    s.workoutNote ? h('button', { class: 'note note-general', 'aria-label': 'Edit workout note', onclick: async () => { if (await editFreeNote(s, 'workoutNote', 'Workout note', () => S.touchSession(s))) nav.refresh(); } },
-      h('span', { class: 'note-label', text: 'Workout note' }),
+    s.workoutNote ? h('button', { class: 'note note-general', 'aria-label': 'Edit workout note', onclick: async () => { if (await editFreeNote(s, 'workoutNote', 'Workout Note', () => S.touchSession(s))) nav.refresh(); } },
+      h('span', { class: 'note-label', text: 'Workout Note' }),
       h('span', { class: 'note-text', text: s.workoutNote })) : null,
     h('label', { class: 'field' },
       h('span', { class: 'field-label', text: 'Date and time' }),
@@ -235,7 +235,7 @@ async function sessionMenu(s, active) {
       active ? { label: 'Discard this workout', value: 'delete', danger: true } : { label: 'Delete this log', value: 'delete', danger: true },
     ],
   });
-  if (v === 'wnote') { if (await editFreeNote(s, 'workoutNote', 'Workout note', () => S.touchSession(s))) nav.refresh(); }
+  if (v === 'wnote') { if (await editFreeNote(s, 'workoutNote', 'Workout Note', () => S.touchSession(s))) nav.refresh(); }
   if (v === 'deload') { S.setSessionDeload(s, !s.deload); toast(s.deload ? 'Deload workout' : 'Normal workout'); nav.refresh(); }
   if (v === 'plan') nav.push(workoutView, { routineId: loc.routine.id, weekId: loc.week.id, workoutId: loc.workout.id });
   if (v === 'delete') {

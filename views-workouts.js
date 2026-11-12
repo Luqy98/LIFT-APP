@@ -284,7 +284,7 @@ function itemCard(workout, item, index) {
     return h('div', { class: 'srow srow-plan' },
       h('button', { class: 'pill pill-' + set.type, 'aria-label': `Set ${label}, ${typeInfo(set.type).label}. Change type`, text: label, onclick: () => planSetType(item, set) }),
       h('input', { class: 'num', type: 'text', inputmode: 'text', autocomplete: 'off', placeholder: set.type === 'hold' ? 'seconds' : 'reps', 'aria-label': set.type === 'hold' ? 'Target seconds' : 'Target reps', value: set.reps ?? '', oninput: (e) => { set.reps = e.target.value.trim(); S.touch(); } }),
-      h('input', { class: 'num', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'kg (optional)', 'aria-label': 'Target weight in kilograms', value: set.weight ?? '', oninput: (e) => { set.weight = e.target.value.trim() === '' ? null : parseNum(e.target.value); S.touch(); } }),
+      h('input', { class: 'num', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'kg', 'aria-label': 'Target weight in kilograms', value: set.weight ?? '', oninput: (e) => { set.weight = e.target.value.trim() === '' ? null : parseNum(e.target.value); S.touch(); } }),
       iconBtn('x', 'Remove set', () => { item.sets = item.sets.filter((x) => x !== set); S.touch(); nav.refresh(); }, 'icon-btn-sm'));
   });
   return h('section', { class: `card entry entry-plan wk wk-${workout.color ?? 0}` },
