@@ -791,3 +791,9 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .cal-day.is-today .cal-num { text-decoration: underline; text-underline-offset: 3px; }
 .cal-day.is-sel { outline: 2px solid var(--ink); outline-offset: 1px; }
 .cal-key { justify-content: center; }
+
+/* ---- 1.8.1 mascot exercise illustrations (one-colour masks: white in dark mode, black in light) ---- */
+.art-img { display: inline-block; width: 40px; height: 40px; background-color: currentColor; -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat; }
+.art-tile .art-img { width: 40px; height: 40px; }
+.art-tile.art-sm .art-img { width: 34px; height: 34px; }
+.art-img-deadlift { -webkit-mask-image: url(img/ex-deadlift.png); mask-image: url(img/ex-deadlift.png); }

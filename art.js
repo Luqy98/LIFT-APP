@@ -65,8 +65,14 @@ const flat = (a) => a.flatMap((x) => (Array.isArray(x[0]) ? flat(x) : [x]));
 export const GROUPS = ['Push', 'Pull', 'Legs', 'Core'];
 
 /** Pictogram for an exercise, sized in px. */
+// Movements that have a mascot illustration (img/ex-<glyph>.png, drawn as a one-colour mask so it follows the theme).
+const IMAGES = new Set(['deadlift']);
+
 export function exerciseArt(name, size = 44) {
   const { glyph } = exerciseKind(name);
+  if (IMAGES.has(glyph)) {
+    return h('span', { class: `art-img art-img-${glyph}`, 'aria-hidden': 'true' });
+  }
   const svg = s('svg', { class: 'art-svg', viewBox: '0 0 48 48', width: size, height: size, 'aria-hidden': 'true' });
   for (const [tag, attrs] of flat(GLYPHS[glyph])) svg.append(s(tag, attrs));
   return svg;
