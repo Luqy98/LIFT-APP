@@ -38,6 +38,7 @@ export function s(tag, attrs, ...kids) {
 const ICONS = {
   back: 'M15 5l-7 7 7 7',
   plus: 'M12 5v14M5 12h14',
+  calendar: 'M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
   check: 'M5 12.5l4.5 4.5L19 7.5',
   x: 'M6 6l12 12M18 6L6 18',

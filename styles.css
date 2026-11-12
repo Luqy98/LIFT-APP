@@ -771,3 +771,23 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .srow-plan { grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr) 32px; }
 .btn-lg { min-height: 44px; font-size: 15px; border-radius: 12px; padding-block: 0; }
 .footer-bar .btn-lg { min-height: 44px; font-size: 15px; }
+
+/* ---- 1.8 calendar ---- */
+.week-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.week-head .card-title { margin: 0; }
+.cal-btn { gap: 6px; padding: 0 12px; min-height: 34px; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-title { font-weight: 650; font-size: 16px; }
+.cal-nav { min-width: 40px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.cal-wd { text-align: center; font-size: 11.5px; font-weight: 600; color: var(--muted); padding-bottom: 2px; }
+.cal-blank { min-height: 52px; }
+.cal-day { min-height: 52px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface2); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 2px 0; }
+.cal-num { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cal-min { font-size: 10.5px; font-weight: 600; min-height: 12px; opacity: .9; font-variant-numeric: tabular-nums; }
+.cal-day.cal-reg { background: color-mix(in srgb, var(--accent) 30%, var(--surface2)); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.cal-day.cal-del { background: color-mix(in srgb, var(--c-deload) 32%, var(--surface2)); border-color: color-mix(in srgb, var(--c-deload) 60%, transparent); }
+.cal-day.cal-both { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 34%, var(--surface2)) 50%, color-mix(in srgb, var(--c-deload) 36%, var(--surface2)) 50%); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.cal-day.is-today .cal-num { text-decoration: underline; text-underline-offset: 3px; }
+.cal-day.is-sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cal-key { justify-content: center; }

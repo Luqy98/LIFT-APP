@@ -6,6 +6,7 @@ import * as nav from './nav.js';
 import { FORMULAS, repRecords, fmt, fmtW, fmtSign, fmtVol, fmtDate, setLabel, typeInfo } from './calc.js';
 import { lineChart, barChart, dataTable } from './charts.js';
 import { sessionView } from './views-session.js';
+import { calendarView } from './views-calendar.js';
 import { runBackup } from './backup.js';
 
 const dash = { exerciseId: null, slotId: 'all', range: '12w', routineId: 'all' };
@@ -156,7 +157,10 @@ function weekCard() {
     'aria-label': 'Workouts this week' + (w.deload ? ` (${w.deload} deload)` : '') },
     normalPct > 0 ? h('div', { class: 'meter-fill w-' + step(normalPct) }) : null,
     deloadPct > 0 ? h('div', { class: 'meter-fill meter-deload w-' + step(deloadPct) }) : null);
-  return card('This week',
+  return card(null,
+    h('div', { class: 'week-head' },
+      h('h2', { class: 'card-title', text: 'This week' }),
+      h('button', { class: 'btn btn-sm cal-btn', 'aria-label': 'Open calendar', onclick: () => nav.push(calendarView, {}) }, icon('calendar', 16), h('span', { text: 'Calendar' }))),
     h('div', { class: 'week-row' },
       h('span', { class: 'week-count', text: `${w.done} / ${w.goal} workouts` }),
       h('span', { class: 'week-pct', text: `${pct}%` })),
