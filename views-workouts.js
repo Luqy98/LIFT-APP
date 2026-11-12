@@ -6,7 +6,7 @@ import * as nav from './nav.js';
 import { exerciseArt } from './art.js';
 import { SET_TYPES, typeInfo, parseNum, fmtW, fmtDate, WORKOUT_COLORS } from './calc.js';
 import { pickMovement } from './picker.js';
-import { activeBanner, startWorkout, historyContent, sessionView, movementHistoryView } from './views-session.js';
+import { startWorkout, historyContent, sessionView, movementHistoryView } from './views-session.js';
 
 const ui = { seg: 'routines' };
 
@@ -30,7 +30,7 @@ export function workoutsRoot() {
   return {
     title: 'Workouts',
     actions: ui.seg === 'routines' ? [iconBtn('plus', 'New routine', newRoutine)] : [],
-    content: h('div', { class: 'page' }, activeBanner(), segmented([['routines', 'Routines'], ['history', 'History']], ui.seg, (v) => { ui.seg = v; nav.refresh(); }), body),
+    content: h('div', { class: 'page' }, segmented([['routines', 'Routines'], ['history', 'History']], ui.seg, (v) => { ui.seg = v; nav.refresh(); }), body),
   };
 }
 
@@ -278,7 +278,7 @@ function itemCard(workout, item, index) {
     const label = set.type === 'normal' ? String(++n) : typeInfo(set.type).short;
     return h('div', { class: 'srow srow-plan' },
       h('button', { class: 'pill pill-' + set.type, 'aria-label': `Set ${label}, ${typeInfo(set.type).label}. Change type`, text: label, onclick: () => planSetType(item, set) }),
-      h('input', { class: 'num', type: 'text', inputmode: 'text', autocomplete: 'off', placeholder: 'reps', 'aria-label': 'Target reps', value: set.reps ?? '', oninput: (e) => { set.reps = e.target.value.trim(); S.touch(); } }),
+      h('input', { class: 'num', type: 'text', inputmode: 'text', autocomplete: 'off', placeholder: set.type === 'hold' ? 'seconds' : 'reps', 'aria-label': set.type === 'hold' ? 'Target seconds' : 'Target reps', value: set.reps ?? '', oninput: (e) => { set.reps = e.target.value.trim(); S.touch(); } }),
       h('input', { class: 'num', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'kg (optional)', 'aria-label': 'Target weight in kilograms', value: set.weight ?? '', oninput: (e) => { set.weight = e.target.value.trim() === '' ? null : parseNum(e.target.value); S.touch(); } }),
       iconBtn('x', 'Remove set', () => { item.sets = item.sets.filter((x) => x !== set); S.touch(); nav.refresh(); }, 'icon-btn-sm'));
   });

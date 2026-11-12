@@ -227,10 +227,17 @@ export const selectField = (label, options, value, onchange) =>
 export const card = (title, ...kids) =>
   h('section', { class: 'card' }, title ? h('h2', { class: 'card-title', text: title }) : null, ...kids);
 
+// "79.2 kg" -> big number + small unit; the unit may drop to a second line but nothing is ever cut off.
+const tileValue = (value) => {
+  const m = /^(.+?)\s+(kg|t|min)$/.exec(String(value));
+  return m
+    ? h('div', { class: 'tile-value' }, h('span', { class: 'tile-num', text: m[1] }), ' ', h('span', { class: 'tile-unit', text: m[2] }))
+    : h('div', { class: 'tile-value' }, h('span', { class: 'tile-num', text: String(value) }));
+};
 export const tile = (label, value, sub, tone = '') =>
   h('div', { class: 'tile' },
     h('div', { class: 'tile-label', text: label }),
-    h('div', { class: 'tile-value', text: value }),
+    tileValue(value),
     sub ? h('div', { class: 'tile-sub' + (tone ? ' tone-' + tone : ''), text: sub }) : null);
 
 export const emptyState = (title, body, action) =>

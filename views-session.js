@@ -12,11 +12,7 @@ import { notesList, addNote, canAddNote, editFreeNote } from './notes.js';
 import { workoutView } from './views-workouts.js';
 
 // ---- Rest timer (kept across re-renders) --------------------------------------
-let rest = null; // { end:ms }
-function startRest() {
-  const sec = S.data.settings.restSec;
-  rest = sec > 0 ? { end: Date.now() + sec * 1000 } : null;
-}
+import { startRest, adjustRest, clearRest, getRest } from './live.js';
 
 // ---- Starting / resuming -------------------------------------------------------
 export async function startWorkout(workoutId) {
@@ -34,21 +30,10 @@ export async function startWorkout(workoutId) {
     if (!choice) return;
     if (choice === 'resume') { nav.push(sessionView, { sessionId: act.id }); return; }
     S.deleteSession(act);
-    rest = null;
+    clearRest();
   }
   const s = S.startSession(workoutId);
   if (s) nav.push(sessionView, { sessionId: s.id });
-}
-
-export function activeBanner() {
-  const act = S.activeSession();
-  if (!act) return null;
-  return h('button', { class: 'banner', onclick: () => nav.push(sessionView, { sessionId: act.id }) },
-    h('span', { class: 'banner-dot' }),
-    h('span', { class: 'banner-main' },
-      h('span', { class: 'banner-title', text: 'Workout in progress' }),
-      h('span', { class: 'banner-sub', text: `${S.workoutName(act)} · ${S.weekName(act)}` })),
-    h('span', { class: 'banner-go', text: 'Resume' }));
 }
 
 // ---- The workout log screen ------------------------------------------------------
@@ -66,13 +51,9 @@ export function sessionView({ sessionId }) {
     setTick(() => {
       const sub = document.getElementById('hdr-sub');
       if (sub) sub.textContent = subtitle();
-      if (rest) {
-        const left = Math.ceil((rest.end - Date.now()) / 1000);
-        if (left <= 0) { rest = null; navigator.vibrate?.([200, 100, 200]); toast('Rest over'); nav.refresh(); }
-        else { const el = document.getElementById('rest-time'); if (el) el.textContent = fmtDuration(left * 1000); }
-      }
     });
-  } else rest = null;
+  }
+  const rest = active ? getRest() : null;
 
   const content = h('div', { class: 'page' });
   content.append(active
@@ -96,13 +77,13 @@ export function sessionView({ sessionId }) {
   const footer = active && rest
     ? h('div', { class: 'rest' },
       h('div', { class: 'rest-label', text: 'Rest' }),
-      h('div', { class: 'rest-time', id: 'rest-time', text: fmtDuration(Math.max(0, rest.end - Date.now())) }),
-      h('button', { class: 'btn btn-sm', text: '−15', onclick: () => { rest.end -= 15000; nav.refresh(); } }),
-      h('button', { class: 'btn btn-sm', text: '+15', onclick: () => { rest.end += 15000; nav.refresh(); } }),
-      h('button', { class: 'btn btn-sm', text: 'Skip', onclick: () => { rest = null; nav.refresh(); } }))
+      h('div', { class: 'rest-time', 'data-rest-time': '', text: fmtDuration(Math.max(0, rest.end - Date.now())) }),
+      h('button', { class: 'btn btn-sm', text: '−15', onclick: () => { adjustRest(-15000); nav.refresh(); } }),
+      h('button', { class: 'btn btn-sm', text: '+15', onclick: () => { adjustRest(15000); nav.refresh(); } }),
+      h('button', { class: 'btn btn-sm', text: 'Skip', onclick: () => { clearRest(); nav.refresh(); } }))
     : null;
 
-  return { title: S.workoutName(s), subtitle: subtitle(), color: S.sessionColor(s), mode: active ? 'log' : 'review', actions, content, footer };
+  return { title: S.workoutName(s), subtitle: subtitle(), color: S.sessionColor(s), mode: active ? 'log' : 'review', actions, content, footer, sessionId: s.id };
 }
 
 function summaryCard(s) {
@@ -165,7 +146,7 @@ function setRow(s, entry, set, idx, prevSets, active, label) {
     h('button', { class: 'pill pill-' + set.type, 'aria-label': `Set ${label}, ${t.label}. Change type`, onclick: () => setMenu(s, entry, set), text: label }),
     h('div', { class: 'prev', text: ps ? setLabel(ps) : '–' }),
     numInput({ value: set.weight, placeholder: phW, mode: 'decimal', label: 'Weight in kilograms', onValue: (v) => { set.weight = v; S.touchSession(s); } }),
-    numInput({ value: set.reps, placeholder: phR, mode: 'numeric', label: 'Reps', onValue: (v) => { set.reps = v; S.touchSession(s); } }),
+    numInput({ value: set.reps, placeholder: phR || (set.type === 'hold' ? 'sec' : ''), mode: 'numeric', label: set.type === 'hold' ? 'Seconds held' : 'Reps', onValue: (v) => { set.reps = v; S.touchSession(s); } }),
     h('button', {
       class: 'tick' + (set.done ? ' is-on' : ''), 'aria-label': set.done ? 'Mark set not done' : 'Mark set done', 'aria-pressed': String(!!set.done),
       onclick: () => {
@@ -249,7 +230,7 @@ async function sessionMenu(s, active) {
     });
     if (!ok) return;
     S.deleteSession(s);
-    rest = null;
+    clearRest();
     nav.pop();
   }
 }
@@ -271,11 +252,11 @@ async function finish(s) {
   const wouldBeDone = S.doneSetCount(s) + (mode === 'count' ? loose.filter((x) => x.reps != null).length : 0);
   if (!wouldBeDone) {
     const ok = await confirmDialog({ title: 'No sets logged', message: 'Nothing has been ticked off. Discard this workout instead?', ok: 'Discard', cancel: 'Keep logging', danger: true });
-    if (ok) { S.deleteSession(s); rest = null; nav.pop(); }
+    if (ok) { S.deleteSession(s); clearRest(); nav.pop(); }
     return;
   }
   S.finishSession(s, mode);
-  rest = null;
+  clearRest();
   await loggedSheet(s);
 }
 
@@ -320,7 +301,7 @@ export function movementHistoryView(params) {
   } else {
     content.append(
       h('div', { class: 'tiles tiles-3' },
-        tile('Best est. 1RM', best ? `${fmt(best.stats.e1rm)} kg` : '–', best ? fmtDate(best.date) : ''),
+        tile('Best 1RM', best ? `${fmt(best.stats.e1rm)} kg` : '–', best ? `${fmtW(best.stats.bestSet.weight)}×${fmt(best.stats.bestSet.reps, 0)} · ${fmtDate(best.date)}` : ''),
         tile('Heaviest set', heaviest ? `${fmtW(heaviest.stats.top.weight)} kg` : '–', heaviest ? `× ${fmt(heaviest.stats.top.reps, 0)}` : ''),
         tile('Sessions', String(hist.length), '')));
     content.append(h('div', { class: 'list' }, hist.map((r) => h('button', { class: `hist-row wk wk-${S.sessionColor(r.session)}`, onclick: () => nav.push(sessionView, { sessionId: r.session.id }) },

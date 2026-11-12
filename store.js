@@ -575,11 +575,11 @@ export function weekProgress() {
 }
 
 /** Per exercise: best estimated 1RM now and how much it rose when the latest personal best was set (vs the best before it). */
-export function liftProgress(limit = 6) {
+export function liftProgress(limit = 6, routineId = null) {
   const out = [];
-  for (const [exerciseId, info] of exercisesWithData()) {
+  for (const [exerciseId, info] of exercisesWithData(routineId)) {
     let best = 0, prevBest = 0, prBest = 0, prDate = null, n = 0;
-    const hist = historyFor(exerciseId).reverse(); // oldest first
+    const hist = historyFor(exerciseId, null, routineId).reverse(); // oldest first
     for (const hh of hist) {
       const e = hh.stats.e1rm;
       if (e == null) continue;
@@ -593,9 +593,9 @@ export function liftProgress(limit = 6) {
 }
 
 /** Finished logs containing this exercise, newest first. slotId = null means every workout. */
-export function historyFor(exerciseId, slotId = null) {
+export function historyFor(exerciseId, slotId = null, routineId = null) {
   const out = [];
-  for (const s of sessionsDesc((x) => x.finishedAt && (!slotId || x.slotId === slotId))) {
+  for (const s of sessionsDesc((x) => x.finishedAt && (!slotId || x.slotId === slotId) && (!routineId || x.routineId === routineId))) {
     const sets = s.entries.filter((e) => e.exerciseId === exerciseId).flatMap((e) => e.sets.filter((x) => x.done));
     if (!sets.length) continue;
     out.push({ session: s, date: s.startedAt, sets, stats: setStats(sets, calcOpts()) });
@@ -619,9 +619,9 @@ export function previousFor(session) {
   return res;
 }
 
-export function exercisesWithData() {
+export function exercisesWithData(routineId = null) {
   const map = new Map();
-  for (const s of sessionsDesc((x) => x.finishedAt)) {
+  for (const s of sessionsDesc((x) => x.finishedAt && (!routineId || x.routineId === routineId))) {
     for (const e of s.entries) {
       if (!e.sets.some((x) => x.done)) continue;
       const cur = map.get(e.exerciseId) || { count: 0, last: s.startedAt };
@@ -632,9 +632,16 @@ export function exercisesWithData() {
   return map;
 }
 
-export function slotsForExercise(exerciseId) {
+/** Routines that have at least one finished workout, newest-used first: [{id, name}]. */
+export function routinesWithData() {
   const seen = new Map();
-  for (const h of historyFor(exerciseId)) if (!seen.has(h.session.slotId)) seen.set(h.session.slotId, slotName(h.session.slotId));
+  for (const s of sessionsDesc((x) => x.finishedAt)) if (!seen.has(s.routineId)) seen.set(s.routineId, routineName(s));
+  return [...seen.entries()].map(([id, name]) => ({ id, name }));
+}
+
+export function slotsForExercise(exerciseId, routineId = null) {
+  const seen = new Map();
+  for (const h of historyFor(exerciseId, null, routineId)) if (!seen.has(h.session.slotId)) seen.set(h.session.slotId, slotName(h.session.slotId));
   return [...seen.entries()].map(([slotId, name]) => ({ slotId, name }));
 }
 

@@ -2,6 +2,7 @@
 // Views read the store fresh on every render, so state changes just call refresh().
 
 import { h, icon, iconBtn, backHandlers, ensureGuard, clearTick } from './ui.js';
+import { liveBar, setOnChange } from './live.js';
 
 export const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dash' },
@@ -88,8 +89,10 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
   main.scrollTop = keep ? kept : restore ? item.scroll || 0 : scroll;
 
   const footer = $('footer');
-  footer.replaceChildren(...(view.footer ? [view.footer] : []));
-  footer.hidden = !view.footer;
+  const bar = liveBar(view.sessionId);
+  const kids = [bar, view.footer].filter(Boolean);
+  footer.replaceChildren(...kids);
+  footer.hidden = !kids.length;
 
   $('tabs').replaceChildren(...TABS.map((t) =>
     h('button', {
@@ -97,3 +100,6 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
       onclick: () => switchTab(t.id),
     }, icon(t.icon, 24), h('span', { text: t.label }))));
 }
+
+// When the rest timer ends (or the workout disappears) redraw so the bar/footers update.
+setOnChange(() => render({ keep: true }));

@@ -5,18 +5,21 @@ import * as S from './store.js';
 import * as nav from './nav.js';
 import { FORMULAS, repRecords, fmt, fmtW, fmtSign, fmtVol, fmtDate, setLabel, typeInfo } from './calc.js';
 import { lineChart, barChart, dataTable } from './charts.js';
-import { activeBanner, sessionView } from './views-session.js';
+import { sessionView } from './views-session.js';
 import { runBackup } from './backup.js';
 
-const dash = { exerciseId: null, slotId: 'all', range: '12w' };
+const dash = { exerciseId: null, slotId: 'all', range: '12w', routineId: 'all' };
 const RANGES = [['4w', 28, '4 wks'], ['12w', 84, '12 wks'], ['6m', 182, '6 mo'], ['1y', 365, '1 yr'], ['all', 0, 'All']];
 
 export function selectMovement(id) { dash.exerciseId = id; dash.slotId = 'all'; }
 
 export function dashboardView() {
-  const have = S.exercisesWithData();
+  const routines = S.routinesWithData();
+  if (dash.routineId !== 'all' && !routines.some((r) => r.id === dash.routineId)) dash.routineId = 'all';
+  const rid = dash.routineId === 'all' ? null : dash.routineId;
+  const have = S.exercisesWithData(rid);
   const ov = S.overview();
-  const content = h('div', { class: 'page' }, activeBanner());
+  const content = h('div', { class: 'page' });
 
   const unbacked = S.unbackedCount();
   const age = S.backupAgeDays();
@@ -28,13 +31,17 @@ export function dashboardView() {
 
   content.append(greetingCard(), weekCard());
   const wp = S.weekProgress();
-  const lifts = S.liftProgress(6);
+  const lifts = S.liftProgress(6, rid);
   const top = lifts.slice().sort((a, b) => b.best - a.best)[0];
   const pct = (n) => (n == null ? null : `${n > 0 ? '▲ +' : n < 0 ? '▼ −' : ''}${Math.abs(n)}%`);
   content.append(h('div', { class: 'tiles tiles-3' },
     tile('Sets', String(wp.sets), pct(wp.setsPct) || 'this week', wp.setsPct == null ? '' : wp.setsPct >= 0 ? 'up' : 'down'),
     tile('Top 1RM', top ? `${fmt(top.best)} kg` : '–', top ? (top.delta != null ? `▲ +${fmt(top.delta)} kg` : S.exerciseName(top.exerciseId)) : 'no lifts yet', top && top.delta != null ? 'up' : ''),
     tile('Sessions', String(ov.month), 'last 30 days')));
+  if (routines.length > 1) {
+    content.append(h('div', { class: 'controls' }, pickerField('Show lifts from', [['all', 'All routines'], ...routines.map((r) => [r.id, r.name])], dash.routineId,
+      (v) => { dash.routineId = v; dash.exerciseId = null; dash.slotId = 'all'; nav.refresh(); })));
+  }
   if (lifts.length) content.append(liftsCard(lifts));
 
   if (!have.size) {
@@ -54,7 +61,7 @@ export function dashboardView() {
     dataTable(['Week starting (Mon)', 'Workouts'], weeks.map((w) => [fmtDate(w.start.toISOString()), String(w.count)]))));
 
   if (!dash.exerciseId || !have.has(dash.exerciseId)) { dash.exerciseId = [...have.keys()][0]; dash.slotId = 'all'; }
-  const slots = S.slotsForExercise(dash.exerciseId);
+  const slots = S.slotsForExercise(dash.exerciseId, rid);
   if (dash.slotId !== 'all' && !slots.some((x) => x.slotId === dash.slotId)) dash.slotId = 'all';
 
   const movementSelect = pickerField('Exercise', [...have.keys()].map((id) => [id, S.exerciseName(id)]), dash.exerciseId,
@@ -67,7 +74,7 @@ export function dashboardView() {
   content.append(h('div', { class: 'controls' }, movementSelect, slots.length > 1 ? scopeSelect : null, ranges));
 
   // ---- data
-  const hist = S.historyFor(dash.exerciseId, dash.slotId === 'all' ? null : dash.slotId); // newest first
+  const hist = S.historyFor(dash.exerciseId, dash.slotId === 'all' ? null : dash.slotId, rid); // newest first
   const days = RANGES.find((r) => r[0] === dash.range)[1];
   const since = days ? Date.now() - days * 864e5 : 0;
   const rows = hist.filter((r) => +new Date(r.date) >= since).reverse(); // oldest first
@@ -78,7 +85,7 @@ export function dashboardView() {
   const delta = withE.length > 1 ? withE[withE.length - 1].stats.e1rm - withE[0].stats.e1rm : null;
 
   content.append(h('div', { class: 'tiles tiles-2' },
-    tile('Estimated 1RM', latestE ? `${fmt(latestE.stats.e1rm)} kg` : '–', delta != null ? `${fmtSign(delta)} kg over this range` : latestE ? fmtDate(latestE.date) : 'Needs a set of up to ' + S.data.settings.maxReps + ' reps'),
+    tile('Est. 1RM', latestE ? `${fmt(latestE.stats.e1rm)} kg` : '–', delta != null ? `${fmtSign(delta)} kg over this range` : latestE ? fmtDate(latestE.date) : 'Needs a set of up to ' + S.data.settings.maxReps + ' reps'),
     tile('Best ever', bestE ? `${fmt(bestE.stats.e1rm)} kg` : '–', bestE ? fmtDate(bestE.date) : ''),
     tile('Heaviest set', heavy ? `${fmtW(heavy.stats.top.weight)} kg` : '–', heavy ? `× ${fmt(heavy.stats.top.reps, 0)} · ${fmtDate(heavy.date)}` : ''),
     tile('Sessions', String(rows.length), days ? 'in this range' : 'all time')));

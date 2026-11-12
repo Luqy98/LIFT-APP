@@ -9,11 +9,14 @@ import { workoutsRoot } from './views-workouts.js';
 import { movementsRoot } from './views-library.js';
 import { settingsRoot } from './views-settings.js';
 import { applyTheme } from './theme.js';
+import { setResume } from './live.js';
+import { sessionView } from './views-session.js';
 
 nav.registerRoot('dashboard', dashboardView);
 nav.registerRoot('workouts', workoutsRoot);
 nav.registerRoot('movements', movementsRoot);
 nav.registerRoot('settings', settingsRoot);
+setResume((sessionId) => nav.push(sessionView, { sessionId }));
 
 const $ = (id) => document.getElementById(id);
 

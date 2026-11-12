@@ -8,6 +8,7 @@ export const SET_TYPES = [
   { id: 'drop',    label: 'Drop set', short: 'D',   hint: 'Lighter weight straight after a set' },
   { id: 'failure', label: 'Failure',  short: 'F',   hint: 'Taken to failure' },
   { id: 'backoff', label: 'Back-off', short: 'B',   hint: 'Lighter set after the top work' },
+  { id: 'hold',    label: 'Static hold', short: 'H', hint: 'Timed hold. Reps = seconds. Not used for 1RM' },
 ];
 export const typeInfo = (id) => SET_TYPES.find((t) => t.id === id) || SET_TYPES[0];
 
@@ -53,6 +54,7 @@ export function setStats(sets, opts) {
     const r = parseNum(s.reps);
     const w = parseNum(s.weight) ?? 0;
     if (!s.done || s.type === 'warmup' || !(r > 0)) continue;
+    if (s.type === 'hold') { n++; continue; } // timed holds count as a set only: no volume, top set or 1RM
     n++; volume += w * r; reps += r;
     if (!top || w > top.weight || (w === top.weight && r > top.reps)) top = { weight: w, reps: r };
     if (s.type !== 'drop') {
@@ -69,7 +71,7 @@ export function repRecords(history) {
   for (const h of history) {
     for (const s of h.sets) {
       const r = parseNum(s.reps), w = parseNum(s.weight);
-      if (!s.done || s.type === 'warmup' || !(r > 0) || !(w > 0)) continue;
+      if (!s.done || s.type === 'warmup' || s.type === 'hold' || !(r > 0) || !(w > 0)) continue;
       const cur = map.get(r);
       if (!cur || w > cur.weight) map.set(r, { reps: r, weight: w, date: h.date });
     }
@@ -90,6 +92,7 @@ export function fmtVol(kg) {
 export function setLabel(s) {
   const w = parseNum(s.weight), r = parseNum(s.reps);
   if (r == null) return '–';
+  if (s.type === 'hold') return w ? `${fmtW(w)}×${fmt(r, 0)}s` : `${fmt(r, 0)}s`;
   return w ? `${fmtW(w)}×${fmt(r, 0)}` : `BW×${fmt(r, 0)}`;
 }
 

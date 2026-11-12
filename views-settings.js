@@ -8,6 +8,7 @@ import { FORMULAS, fmtDateLong } from './calc.js';
 import { applyTheme } from './theme.js';
 import { validateSecret, strengthHint } from './views-lock.js';
 import { VERSION } from './version.js';
+import { unlockAudio, scheduleBell } from './sound.js';
 
 const set = (k, v) => { S.data.settings[k] = v; S.touch(); nav.refresh(); };
 
@@ -159,7 +160,12 @@ export function settingsRoot() {
       selectField('Estimated 1RM formula', Object.entries(FORMULAS).map(([k, f]) => [k, k === 'blend' ? 'Blend of three' : f.label]), st.formula, (v) => set('formula', v)),
       selectField('Count sets up to', [5, 6, 8, 10, 12, 15].map((n) => [n, `${n} reps`]), st.maxReps, (v) => set('maxReps', +v)),
       selectField('Rest timer', [[0, 'Off'], [60, '1:00'], [90, '1:30'], [120, '2:00'], [150, '2:30'], [180, '3:00'], [240, '4:00'], [300, '5:00']], st.restSec, (v) => set('restSec', +v)),
-      h('p', { class: 'hint', text: 'Estimates get less reliable as reps go up, so sets above the limit are left out of the 1RM chart. Warm-up and drop sets are never used. The blend averages three well-known formulas to smooth out any single formula’s bias.' })),
+      h('div', { class: 'row-between' },
+        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'Round-start bell' }), h('span', { class: 'row-sub', text: 'Rings when the rest timer ends' })),
+        h('div', { class: 'btn-row' },
+          h('button', { class: 'btn btn-sm', text: 'Test', onclick: () => { unlockAudio(); scheduleBell(0); } }),
+          h('button', { class: 'btn btn-sm' + (st.restBell !== false ? ' btn-primary' : ''), 'aria-pressed': String(st.restBell !== false), text: st.restBell !== false ? 'On' : 'Off', onclick: () => set('restBell', st.restBell === false) }))),
+      h('p', { class: 'hint', text: 'Keep the app open (screen on) to hear the bell. Phones can silence web pages when the screen is off. Estimates get less reliable as reps go up, so sets above the limit are left out of the 1RM chart. Warm-up and drop sets are never used. The blend averages three well-known formulas to smooth out any single formula’s bias.' })),
 
     card('Appearance',
       segmented([['dark', 'Dark'], ['light', 'Light'], ['system', 'Match phone']], st.theme, (v) => { applyTheme(v); set('theme', v); })),
