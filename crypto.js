@@ -119,6 +119,18 @@ export async function addBioSlot(wrapped, secret, prfBytes) {
   return { v: 1, iv: b64.enc(iv), ct: b64.enc(ct) };
 }
 
+/** Forgot-PIN recovery: the fingerprint opens the data key, which is re-wrapped under a new PIN. Returns the new wrapped blob, or null. */
+export async function rewrapFromBio(slot, prfBytes, newSecret) {
+  const kek = await bioKek(prfBytes);
+  let raw;
+  try {
+    raw = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64.dec(slot.iv), additionalData: BIO_AAD }, kek, b64.dec(slot.ct)));
+  } catch { return null; }
+  const wrapped = await wrapRaw(raw, newSecret);
+  raw.fill(0);
+  return wrapped;
+}
+
 /** Live data key from fingerprint-derived bytes, or null if they don't match. */
 export async function unlockWithBytes(slot, prfBytes) {
   const kek = await bioKek(prfBytes);

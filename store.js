@@ -167,6 +167,16 @@ export async function changePasscode(oldSecret, newSecret) {
   return true;
 }
 
+/** Sets a new PIN/passcode using the fingerprint instead of the old one (for a forgotten PIN). */
+export async function resetPasscodeWithBio(newSecret, bytes) {
+  if (!vault.bio) return false;
+  const wrapped = await C.rewrapFromBio(vault.bio, bytes, newSecret);
+  if (!wrapped) return false;
+  vault = { ...vault, wrapped, numeric: /^\d+$/.test(newSecret), fails: 0, lockedUntil: 0 };
+  await db.batch('vault', [['lock', vault]]);
+  return true;
+}
+
 // ---- Fingerprint slot ---------------------------------------------------------
 /** Stores a second copy of the data key protected by fingerprint-derived bytes. False if the PIN is wrong. */
 export async function enableBio(secret, { credId, salt, bytes }) {

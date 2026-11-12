@@ -159,5 +159,6 @@ function unlockForm(onDone) {
   },
   h('div', { class: 'lock-mark' }, icon('lock', 30)),
   h('h1', { class: 'lock-brand', text: 'LIFT' }),
-  bioBtn, input, msg, btn);
+  bioBtn, input, msg, btn,
+  info.bio ? h('p', { class: 'lock-fine', text: 'Forgot your PIN? Unlock with your fingerprint, then go to Settings → Change PIN → “I forgot it”.' }) : null);
 }

@@ -1,5 +1,5 @@
 // Settings: security, training preferences, appearance, backup/restore, install.
-import { h, card, selectField, segmented, formDialog, confirmDialog, toast, installState, pickFile } from './ui.js';
+import { h, card, selectField, segmented, formDialog, choiceSheet, confirmDialog, toast, installState, pickFile } from './ui.js';
 import * as WA from './webauthn.js';
 import { runBackup } from './backup.js';
 import * as S from './store.js';
@@ -13,6 +13,13 @@ const set = (k, v) => { S.data.settings[k] = v; S.touch(); nav.refresh(); };
 
 async function changePasscode() {
   const numeric = S.vaultInfo().numeric;
+  if (S.vaultInfo().bio) {
+    const how = await choiceSheet({ title: 'Change PIN or passcode', options: [
+      { label: 'I know my current PIN', value: 'pin' },
+      { label: 'I forgot it: use my fingerprint', value: 'bio' }], cancel: 'Cancel' });
+    if (how == null) return;
+    if (how === 'bio') return resetWithFingerprint(numeric);
+  }
   const v = await formDialog({
     title: 'Change PIN or passcode',
     message: 'Your data is re-protected instantly with the new one.',
@@ -31,6 +38,28 @@ async function changePasscode() {
     },
   });
   if (v) toast('Passcode changed');
+}
+
+async function resetWithFingerprint(numeric) {
+  let bytes;
+  try { const p = S.bioParams(); bytes = await WA.derive(p.credId, p.salt); }
+  catch (e) { toast(e.message || 'Fingerprint check failed.'); return; }
+  const v = await formDialog({
+    title: 'Choose a new PIN or passcode',
+    message: 'Your fingerprint is verified. Pick a new PIN or passcode and write it down somewhere safe.',
+    fields: [
+      { key: 'next', label: 'New (4+ digits, or 8+ characters)', type: 'password', autocomplete: 'new-password', inputmode: numeric ? 'numeric' : 'text' },
+      { key: 'again', label: 'Repeat new', type: 'password', autocomplete: 'new-password', inputmode: numeric ? 'numeric' : 'text' },
+    ],
+    ok: 'Set new PIN',
+    validate: async (f) => {
+      const bad = validateSecret(f.next);
+      if (bad) return bad;
+      if (f.next !== f.again) return 'The new entries don’t match.';
+      return (await S.resetPasscodeWithBio(f.next, bytes)) ? null : 'Could not set the new PIN. Try again.';
+    },
+  });
+  if (v) toast('New PIN set');
 }
 
 async function checkUpdate() {
