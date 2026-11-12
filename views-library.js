@@ -63,7 +63,7 @@ export function movementsRoot() {
         h('span', { class: 'art-tile', 'aria-hidden': 'true' }, exerciseArt(e.name, 34)),
         h('button', { class: 'row-main row-btn', onclick: () => movementMenu(e, st) },
           h('span', { class: 'row-title', text: e.name }),
-          h('span', { class: 'row-sub', text: `${exerciseKind(e.name).group === 'Other' ? '' : exerciseKind(e.name).group + ' · '}${st ? `Trained ${st.count} ${st.count === 1 ? 'time' : 'times'} · last ${fmtDate(st.last)}` : 'Not logged yet'}` })),
+          h('span', { class: 'row-sub', text: `${exerciseKind(e.name).group === 'Other' ? '' : exerciseKind(e.name).group + ' · '}${st ? `${st.count}× · last ${fmtDate(st.last)}` : 'Not logged yet'}` })),
         iconBtn('more', `Options for ${e.name}`, () => movementMenu(e, st)));
     }) : [h('p', { class: 'hint', text: q ? 'No match. Add it with the + button.' : 'No exercises yet.' })]));
 

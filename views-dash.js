@@ -32,7 +32,7 @@ export function dashboardView() {
   const top = lifts.slice().sort((a, b) => b.best - a.best)[0];
   const pct = (n) => (n == null ? null : `${n > 0 ? '▲ +' : n < 0 ? '▼ −' : ''}${Math.abs(n)}%`);
   content.append(h('div', { class: 'tiles tiles-3' },
-    tile('Volume', fmtVol(wp.volume), pct(wp.volumePct) || 'this week', wp.volumePct == null ? '' : wp.volumePct >= 0 ? 'up' : 'down'),
+    tile('Sets', String(wp.sets), pct(wp.setsPct) || 'this week', wp.setsPct == null ? '' : wp.setsPct >= 0 ? 'up' : 'down'),
     tile('Top 1RM', top ? `${fmt(top.best)} kg` : '–', top ? (top.delta != null ? `▲ +${fmt(top.delta)} kg` : S.exerciseName(top.exerciseId)) : 'no lifts yet', top && top.delta != null ? 'up' : ''),
     tile('Sessions', String(ov.month), 'last 30 days')));
   if (lifts.length) content.append(liftsCard(lifts));

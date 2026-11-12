@@ -72,15 +72,39 @@ export function exerciseArt(name, size = 44) {
   return svg;
 }
 
-/** Heavy plate with a sleeve, used on the dashboard greeting. */
+/** Barbell sleeve with a loaded rubber plate, drawn with shading so it reads as an object rather than an icon. */
 export function plateArt() {
-  const svg = s('svg', { class: 'plate-svg', viewBox: '0 0 200 160', 'aria-hidden': 'true' });
-  const g = (tag, attrs) => svg.append(s(tag, attrs));
-  g('rect', { x: 0, y: 70, width: 70, height: 20, rx: 5, class: 'pl-bar' });
-  g('ellipse', { cx: 128, cy: 80, rx: 40, ry: 70, class: 'pl-edge' });
-  g('ellipse', { cx: 112, cy: 80, rx: 40, ry: 70, class: 'pl-face' });
-  g('ellipse', { cx: 112, cy: 80, rx: 31, ry: 56, class: 'pl-ring' });
-  g('ellipse', { cx: 112, cy: 80, rx: 13, ry: 22, class: 'pl-hub' });
-  g('ellipse', { cx: 112, cy: 80, rx: 5, ry: 9, class: 'pl-hole' });
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = s('svg', { class: 'plate-svg', viewBox: '0 0 240 170', 'aria-hidden': 'true' });
+  const stop = (o, c, op) => s('stop', { offset: o, 'stop-color': c, ...(op != null ? { 'stop-opacity': op } : {}) });
+  const grad = (tag, id, attrs, stops) => { const g = s(tag, { id, ...attrs }); stops.forEach((x) => g.append(stop(...x))); return g; };
+  const defs = s('defs', {});
+  defs.append(
+    grad('linearGradient', 'pl-steel', { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, '#5b5b66'], [0.28, '#e4e4ec'], [0.5, '#9a9aa6'], [1, '#3a3a44']]),
+    grad('radialGradient', 'pl-face', { cx: '38%', cy: '34%', r: '75%' }, [[0, '#4a4a56'], [0.55, '#25252d'], [1, '#101014']]),
+    grad('linearGradient', 'pl-edge', { x1: 0, y1: 0, x2: 1, y2: 0 }, [[0, '#0b0b0e'], [0.5, '#2c2c34'], [1, '#08080a']]),
+    grad('radialGradient', 'pl-hub', { cx: '38%', cy: '34%', r: '80%' }, [[0, '#d9d9e2'], [1, '#55555f']]),
+    grad('radialGradient', 'pl-glow', { cx: '50%', cy: '50%', r: '50%' }, [[0, '#8b5cf6', 0.45], [1, '#8b5cf6', 0]]));
+  svg.append(defs);
+  const add = (tag, attrs) => svg.append(s(tag, attrs));
+  add('ellipse', { cx: 150, cy: 88, rx: 86, ry: 78, fill: 'url(#pl-glow)' });
+  // sleeve and collar
+  add('rect', { x: 0, y: 77, width: 118, height: 19, rx: 4, fill: 'url(#pl-steel)' });
+  for (let x = 14; x < 62; x += 4) add('line', { x1: x, y1: 79, x2: x, y2: 94, stroke: '#2a2a32', 'stroke-opacity': 0.45, 'stroke-width': 1 });
+  add('rect', { x: 100, y: 68, width: 16, height: 37, rx: 4, fill: 'url(#pl-steel)' });
+  // back plate peeking out
+  add('ellipse', { cx: 146, cy: 87, rx: 32, ry: 60, fill: 'url(#pl-edge)' });
+  add('ellipse', { cx: 140, cy: 87, rx: 32, ry: 60, fill: '#17171c', stroke: '#4a4a56', 'stroke-width': 1.5 });
+  // main plate: thickness, then face
+  add('ellipse', { cx: 188, cy: 87, rx: 44, ry: 78, fill: 'url(#pl-edge)' });
+  add('rect', { x: 164, y: 9, width: 24, height: 156, fill: 'url(#pl-edge)' });
+  add('ellipse', { cx: 164, cy: 87, rx: 44, ry: 78, fill: 'url(#pl-face)', stroke: '#7a7a88', 'stroke-width': 2 });
+  add('ellipse', { cx: 164, cy: 87, rx: 35, ry: 62, fill: 'none', stroke: '#5a5a67', 'stroke-width': 1.6 });
+  add('ellipse', { cx: 164, cy: 87, rx: 24, ry: 42, fill: 'none', stroke: '#3c3c46', 'stroke-width': 1.4 });
+  add('path', { d: 'M138 40 A44 78 0 0 1 176 11', fill: 'none', stroke: '#ffffff', 'stroke-opacity': 0.4, 'stroke-width': 2.4, 'stroke-linecap': 'round' });
+  add('path', { d: 'M129 62 A44 78 0 0 1 134 46', fill: 'none', stroke: '#ffffff', 'stroke-opacity': 0.25, 'stroke-width': 2, 'stroke-linecap': 'round' });
+  add('ellipse', { cx: 164, cy: 87, rx: 13, ry: 22, fill: 'url(#pl-hub)', stroke: '#2a2a32', 'stroke-width': 1.5 });
+  add('ellipse', { cx: 164, cy: 87, rx: 5.5, ry: 10, fill: '#07070a' });
+  void NS;
   return svg;
 }

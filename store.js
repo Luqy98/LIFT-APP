@@ -551,17 +551,17 @@ export function weekStreak() {
 export function weekProgress() {
   const t0 = weekStart(new Date()).getTime();
   const t1 = t0 - 7 * 864e5;
-  let done = 0, vol = 0, prevVol = 0;
+  let done = 0, vol = 0, prevVol = 0, sets = 0, prevSets = 0;
   for (const s of allSessions()) {
     if (!s.finishedAt) continue;
     const t = weekStart(s.startedAt).getTime();
     if (t !== t0 && t !== t1) continue;
-    let v = 0;
-    for (const e of s.entries) v += setStats(e.sets, calcOpts()).volume;
-    if (t === t0) { done++; vol += v; } else prevVol += v;
+    let v = 0, n = 0;
+    for (const e of s.entries) { const st = setStats(e.sets, calcOpts()); v += st.volume; n += st.sets; }
+    if (t === t0) { done++; vol += v; sets += n; } else { prevVol += v; prevSets += n; }
   }
   const goal = Math.max(1, Math.round(data.settings.weeklyGoal || 4));
-  return { done, goal, volume: vol, prevVolume: prevVol, volumePct: prevVol > 0 ? Math.round(((vol - prevVol) / prevVol) * 100) : null };
+  return { done, goal, volume: vol, prevVolume: prevVol, volumePct: prevVol > 0 ? Math.round(((vol - prevVol) / prevVol) * 100) : null, sets, prevSets, setsPct: prevSets > 0 ? Math.round(((sets - prevSets) / prevSets) * 100) : null };
 }
 
 /** Per exercise: best estimated 1RM now and how much it rose when the latest personal best was set (vs the best before it). */
