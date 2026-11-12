@@ -111,7 +111,7 @@ function summaryCard(s) {
   const mins = s.finishedAt ? Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000) : 0;
   const prs = S.prsForSession(s);
   return card(null,
-    h('div', { class: 'tiles tiles-3' }, tile('Sets', String(sets)), tile('Volume', fmtVol(vol)), tile('Duration', mins > 0 && mins < 600 ? `${mins} min` : '–')),
+    h('div', { class: 'tiles tiles-3' }, tile('Exercises', String(s.entries.filter((e) => e.sets.some((x) => x.done)).length)), tile('Sets', String(sets)), tile('Duration', mins > 0 && mins < 600 ? `${mins} min` : '–')),
     prs.length ? h('div', { class: 'prs' }, prs.map((p) => h('div', { class: 'pr' },
       h('span', { class: 'pr-tag', text: 'New best' }),
       h('span', { text: `${S.exerciseName(p.exerciseId)}: est. 1RM ${fmt(p.e1rm)} kg (+${fmt(p.gain)})` })))) : null,
