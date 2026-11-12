@@ -26,6 +26,7 @@ function showLock() {
 }
 
 function onUnlocked() {
+  if (!$('app').hidden) return; // already unlocked by the other method (PIN and fingerprint can finish together)
   $('lock').hidden = true;
   $('lock').replaceChildren();
   $('app').hidden = false;

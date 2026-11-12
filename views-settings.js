@@ -118,6 +118,14 @@ export function settingsRoot() {
         h('button', { class: 'btn', text: 'Lock now', onclick: () => window.dispatchEvent(new Event('gymlog:lock')) })),
       h('p', { class: 'hint', text: 'Data is encrypted on this phone (AES-256). A 4-digit PIN only has 10,000 combinations, so it protects against people using your phone, not against someone copying its stored data. For that, use a longer passcode.' })),
 
+    card('Profile',
+      h('div', { class: 'row-between' },
+        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'Your name' }), h('span', { class: 'row-sub', text: st.name ? `Greeting shows “${st.name}”` : 'Not set' })),
+        h('button', { class: 'btn btn-sm', text: 'Change', onclick: async () => {
+          const v = await formDialog({ title: 'Your name', message: 'Used for the greeting on the dashboard. It stays on this phone.', fields: [{ key: 'name', label: 'Name', value: st.name || '', autocomplete: 'off' }], ok: 'Save' });
+          if (v) set('name', v.name.trim().slice(0, 30));
+        } })),
+      selectField('Workouts per week (goal)', [1, 2, 3, 4, 5, 6, 7].map((n) => [n, `${n} ${n === 1 ? 'workout' : 'workouts'}`]), st.weeklyGoal || 4, (v) => set('weeklyGoal', +v))),
     card('Training',
       selectField('Estimated 1RM formula', Object.entries(FORMULAS).map(([k, f]) => [k, k === 'blend' ? 'Blend of three' : f.label]), st.formula, (v) => set('formula', v)),
       selectField('Count sets up to', [5, 6, 8, 10, 12, 15].map((n) => [n, `${n} reps`]), st.maxReps, (v) => set('maxReps', +v)),
@@ -146,7 +154,7 @@ export function settingsRoot() {
         : h('p', { class: 'hint', text: 'In Chrome, open the ⋮ menu and choose “Install app” (or “Add to Home screen”). Once installed it opens full-screen and works offline.' })),
 
     card('Danger zone', h('button', { class: 'btn btn-danger', text: 'Erase all data', onclick: wipe })),
-    h('p', { class: 'foot', text: `Gym Log ${VERSION}` }));
+    h('p', { class: 'foot', text: `LIFT ${VERSION}` }));
 
   return { title: 'Settings', content };
 }

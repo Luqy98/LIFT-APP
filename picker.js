@@ -1,6 +1,7 @@
 // Exercise picker: search the library, or create a new exercise on the spot.
 import { h, sheet } from './ui.js';
 import * as S from './store.js';
+import { exerciseArt } from './art.js';
 
 /** -> exerciseId | null */
 export function pickMovement({ title = 'Add exercise' } = {}) {
@@ -24,7 +25,7 @@ export function pickMovement({ title = 'Add exercise' } = {}) {
         out.push(h('button', { class: 'choice choice-create', onclick: () => choose(S.addExercise(q).id) },
           h('span', { class: 'choice-main' }, h('span', { class: 'choice-label', text: `Create “${q}”` }), h('span', { class: 'choice-sub', text: 'Adds it to your exercise library' }))));
       }
-      rows.forEach((e) => out.push(h('button', { class: 'choice', onclick: () => choose(e.id) }, h('span', { class: 'choice-main' }, h('span', { class: 'choice-label', text: e.name })))));
+      rows.forEach((e) => out.push(h('button', { class: 'choice choice-art', onclick: () => choose(e.id) }, h('span', { class: 'art-tile art-sm', 'aria-hidden': 'true' }, exerciseArt(e.name, 28)), h('span', { class: 'choice-main' }, h('span', { class: 'choice-label', text: e.name })))));
       if (!out.length) out.push(h('p', { class: 'sheet-msg', text: 'No exercises yet. Type a name to create one.' }));
       list.replaceChildren(...out);
     };

@@ -46,6 +46,7 @@ const ICONS = {
   down: 'M6 10l6 6 6-6',
   finger: 'M12 11v3c0 3-1 5-2.5 7M8 14c0-2.2 1.8-4 4-4s4 1.8 4 4c0 2.5-.5 4.500-1.500 6.500M5 12a7 7 0 0114 0c0 2 0 3.500-.5 5M8.500 5.500A7 7 0 0112 5',
   home: 'M4 11l8-7 8 7M6 9.500V20h12V9.500M10 20v-5h4v5',
+  flame: 'M12 3c1 4 5 5.500 5 10a5 5 0 01-10 0c0-2 1-3.500 2-4.500.2 1.500 1 2.500 2 2.500 0-3-.5-5 1-8z',
   pencil: 'M4 20l1-4L16 5l3 3L8 19l-4 1zM14 7l3 3',
   lock: 'M7 11V8a5 5 0 0110 0v3M6 11h12v9H6z',
   history: 'M4 12a8 8 0 108-8M4 4v5h5M12 8v4l3 2',
@@ -226,11 +227,11 @@ export const selectField = (label, options, value, onchange) =>
 export const card = (title, ...kids) =>
   h('section', { class: 'card' }, title ? h('h2', { class: 'card-title', text: title }) : null, ...kids);
 
-export const tile = (label, value, sub) =>
+export const tile = (label, value, sub, tone = '') =>
   h('div', { class: 'tile' },
     h('div', { class: 'tile-label', text: label }),
     h('div', { class: 'tile-value', text: value }),
-    sub ? h('div', { class: 'tile-sub', text: sub }) : null);
+    sub ? h('div', { class: 'tile-sub' + (tone ? ' tone-' + tone : ''), text: sub }) : null);
 
 export const emptyState = (title, body, action) =>
   h('div', { class: 'empty' }, h('h2', { text: title }), body ? h('p', { text: body }) : null, action || null);

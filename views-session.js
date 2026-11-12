@@ -7,6 +7,7 @@ import {
   setStats, toLocalInput, FORMULAS,
 } from './calc.js';
 import { pickMovement } from './picker.js';
+import { exerciseArt } from './art.js';
 import { notesList, addNote, canAddNote, editFreeNote } from './notes.js';
 import { workoutView } from './views-workouts.js';
 
@@ -135,6 +136,7 @@ function entryCard(s, entry, index, prev, active) {
   });
   return h('section', { class: `card entry entry-log wk wk-${S.sessionColor(s)}` },
     h('div', { class: 'entry-head' },
+      h('span', { class: 'art-tile art-sm', 'aria-hidden': 'true' }, exerciseArt(name, 28)),
       h('button', { class: 'entry-name', onclick: () => entryMenu(s, entry, index), text: name }),
       h('button', { class: 'btn btn-sm btn-ghost', 'aria-label': `History of ${name} in this workout`, onclick: () => nav.push(movementHistoryView, { exerciseId: entry.exerciseId, slotId: s.slotId }) },
         icon('history', 18), h('span', { text: 'History' }))),

@@ -81,7 +81,7 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
       depth > 1 ? iconBtn('home', `Back to start of ${TABS.find((x) => x.id === tab).label}`, () => goHome(), 'hdr-home') : null,
       view.actions || []));
   $('hdr').replaceChildren(...hdrKids);
-  $('hdr').className = view.color != null ? 'wk wk-' + view.color : '';
+  $('hdr').className = (view.color != null ? 'wk wk-' + view.color : '') + (view.brand ? ' brand' : '');
   $('app').dataset.mode = view.mode || '';
 
   main.replaceChildren(view.content);

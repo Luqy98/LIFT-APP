@@ -3,9 +3,10 @@ import { h, iconBtn, formDialog, choiceSheet, confirmDialog, toast, emptyState }
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { fmtDate } from './calc.js';
+import { exerciseArt, exerciseKind, GROUPS } from './art.js';
 import { selectMovement } from './views-dash.js';
 
-const lib = { q: '' };
+const lib = { q: '', g: 'All' };
 
 async function addMovement() {
   const v = await formDialog({
@@ -55,13 +56,14 @@ export function movementsRoot() {
 
   const draw = () => {
     const q = lib.q.trim().toLowerCase();
-    const items = S.data.exercises.filter((e) => !e.archived && e.name.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
+    const items = S.data.exercises.filter((e) => !e.archived && e.name.toLowerCase().includes(q) && (lib.g === 'All' || exerciseKind(e.name).group === lib.g)).sort((a, b) => a.name.localeCompare(b.name));
     list.replaceChildren(...(items.length ? items.map((e) => {
       const st = have.get(e.id);
-      return h('div', { class: 'row-card' },
+      return h('div', { class: 'row-card ex-row' },
+        h('span', { class: 'art-tile', 'aria-hidden': 'true' }, exerciseArt(e.name, 34)),
         h('button', { class: 'row-main row-btn', onclick: () => movementMenu(e, st) },
           h('span', { class: 'row-title', text: e.name }),
-          h('span', { class: 'row-sub', text: st ? `Trained ${st.count} ${st.count === 1 ? 'time' : 'times'} · last ${fmtDate(st.last)}` : 'Not logged yet' })),
+          h('span', { class: 'row-sub', text: `${exerciseKind(e.name).group === 'Other' ? '' : exerciseKind(e.name).group + ' · '}${st ? `Trained ${st.count} ${st.count === 1 ? 'time' : 'times'} · last ${fmtDate(st.last)}` : 'Not logged yet'}` })),
         iconBtn('more', `Options for ${e.name}`, () => movementMenu(e, st)));
     }) : [h('p', { class: 'hint', text: q ? 'No match. Add it with the + button.' : 'No exercises yet.' })]));
 
@@ -81,6 +83,9 @@ export function movementsRoot() {
   return {
     title: 'Exercises', subtitle: `${S.data.exercises.filter((e) => !e.archived).length} in your library`,
     actions: [iconBtn('plus', 'New exercise', addMovement)],
-    content: h('div', { class: 'page' }, search, list, archivedBox),
+    content: h('div', { class: 'page' }, search,
+      h('div', { class: 'chips-row', role: 'group', 'aria-label': 'Filter by group' }, ['All', ...GROUPS].map((g) =>
+        h('button', { type: 'button', class: 'fchip' + (lib.g === g ? ' is-on' : ''), 'aria-pressed': String(lib.g === g), text: g, onclick: () => { lib.g = g; nav.refresh(); } }))),
+      list, archivedBox),
   };
 }

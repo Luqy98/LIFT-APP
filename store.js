@@ -21,7 +21,7 @@ const STARTER = [
   'Chest Fly', 'Leg Press', 'Leg Curl', 'Leg Extension', 'Hip Thrust', 'Calf Raise',
 ];
 
-const DEFAULT_SETTINGS = { theme: 'dark', formula: 'blend', maxReps: 10, restSec: 120, autoLockMin: 5, lastBackup: null };
+const DEFAULT_SETTINGS = { name: 'Luqy', weeklyGoal: 4, theme: 'dark', formula: 'blend', maxReps: 10, restSec: 120, autoLockMin: 5, lastBackup: null };
 
 // Lock-out after repeated wrong passcodes: [failures, seconds]
 const THROTTLE = [[5, 30], [6, 60], [7, 300], [8, 900], [9, 3600]];
@@ -81,8 +81,17 @@ export async function unlock(secret) {
   vault.fails = 0;
   vault.lockedUntil = 0;
   await db.batch('vault', [['lock', vault]]);
-  try { await load(); } catch (e) { key = null; throw e; }
+  try { await loadOnce(); } catch (e) { key = null; throw e; }
   return { ok: true };
+}
+
+// A PIN unlock and a fingerprint unlock can finish at nearly the same moment. Load the data once, so the second
+// one can't replace the data (and anything already changed) with a fresh copy from storage.
+let loading = null;
+async function loadOnce() {
+  if (data) return;
+  if (!loading) loading = load().finally(() => { loading = null; });
+  await loading;
 }
 
 async function load() {
@@ -179,7 +188,7 @@ export async function unlockBio(bytes) {
   const k = await C.unlockWithBytes(vault.bio, bytes);
   if (!k) return { ok: false };
   key = k;
-  try { await load(); } catch (e) { key = null; throw e; }
+  try { await loadOnce(); } catch (e) { key = null; throw e; }
   return { ok: true };
 }
 
@@ -521,6 +530,56 @@ export function weeklyCounts(n = 12) {
     if (b) b.count++;
   }
   return buckets;
+}
+
+/** Consecutive weeks (Monday start) with at least one finished workout. This week counts once it has one; otherwise last week is where the run is measured from. */
+export function weekStreak() {
+  const counts = new Map();
+  for (const s of allSessions()) {
+    if (!s.finishedAt) continue;
+    const k = weekStart(s.startedAt).getTime();
+    counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  const d = weekStart(new Date());
+  if (!counts.has(d.getTime())) d.setDate(d.getDate() - 7);
+  let n = 0;
+  while (counts.has(d.getTime())) { n++; d.setDate(d.getDate() - 7); }
+  return n;
+}
+
+/** This week's progress (Monday start): workouts done vs the weekly goal, and volume against last week. */
+export function weekProgress() {
+  const t0 = weekStart(new Date()).getTime();
+  const t1 = t0 - 7 * 864e5;
+  let done = 0, vol = 0, prevVol = 0;
+  for (const s of allSessions()) {
+    if (!s.finishedAt) continue;
+    const t = weekStart(s.startedAt).getTime();
+    if (t !== t0 && t !== t1) continue;
+    let v = 0;
+    for (const e of s.entries) v += setStats(e.sets, calcOpts()).volume;
+    if (t === t0) { done++; vol += v; } else prevVol += v;
+  }
+  const goal = Math.max(1, Math.round(data.settings.weeklyGoal || 4));
+  return { done, goal, volume: vol, prevVolume: prevVol, volumePct: prevVol > 0 ? Math.round(((vol - prevVol) / prevVol) * 100) : null };
+}
+
+/** Per exercise: best estimated 1RM now and how much it rose when the latest personal best was set (vs the best before it). */
+export function liftProgress(limit = 6) {
+  const out = [];
+  for (const [exerciseId, info] of exercisesWithData()) {
+    let best = 0, prevBest = 0, prBest = 0, prDate = null, n = 0;
+    const hist = historyFor(exerciseId).reverse(); // oldest first
+    for (const hh of hist) {
+      const e = hh.stats.e1rm;
+      if (e == null) continue;
+      n++;
+      if (e > best + 1e-9) { prevBest = best; best = e; prDate = hh.date; }
+    }
+    if (n === 0) continue;
+    out.push({ exerciseId, best, delta: prevBest > 0 ? best - prevBest : null, prDate, count: info.count });
+  }
+  return out.sort((a, b) => b.count - a.count || b.best - a.best).slice(0, limit);
 }
 
 /** Finished logs containing this exercise, newest first. slotId = null means every workout. */

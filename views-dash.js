@@ -1,5 +1,6 @@
 // Dashboard: overview + per-exercise analysis (estimated 1RM, heaviest set, rep records).
-import { h, card, tile, emptyState, pickerField } from './ui.js';
+import { h, card, tile, emptyState, pickerField, icon } from './ui.js';
+import { exerciseArt, plateArt } from './art.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { FORMULAS, repRecords, fmt, fmtW, fmtSign, fmtVol, fmtDate, setLabel, typeInfo } from './calc.js';
@@ -25,15 +26,21 @@ export function dashboardView() {
       h('button', { class: 'btn btn-sm btn-primary', text: 'Back up', onclick: async () => { await runBackup(); nav.refresh(); } })));
   }
 
+  content.append(greetingCard(), weekCard());
+  const wp = S.weekProgress();
+  const lifts = S.liftProgress(6);
+  const top = lifts.slice().sort((a, b) => b.best - a.best)[0];
+  const pct = (n) => (n == null ? null : `${n > 0 ? '▲ +' : n < 0 ? '▼ −' : ''}${Math.abs(n)}%`);
   content.append(h('div', { class: 'tiles tiles-3' },
-    tile('Workouts', String(ov.week), 'last 7 days'),
-    tile('Workouts', String(ov.month), 'last 30 days'),
-    tile('Volume', fmtVol(ov.volume), 'last 30 days')));
+    tile('Volume', fmtVol(wp.volume), pct(wp.volumePct) || 'this week', wp.volumePct == null ? '' : wp.volumePct >= 0 ? 'up' : 'down'),
+    tile('Top 1RM', top ? `${fmt(top.best)} kg` : '–', top ? (top.delta != null ? `▲ +${fmt(top.delta)} kg` : S.exerciseName(top.exerciseId)) : 'no lifts yet', top && top.delta != null ? 'up' : ''),
+    tile('Sessions', String(ov.month), 'last 30 days')));
+  if (lifts.length) content.append(liftsCard(lifts));
 
   if (!have.size) {
     content.append(emptyState('Your charts will appear here', 'Finish a workout and each exercise you trained gets an estimated 1RM trend, heaviest set and rep records.',
       h('button', { class: 'btn btn-primary', text: 'Go to workouts', onclick: () => nav.switchTab('workouts') })));
-    return { title: 'Dashboard', content };
+    return { title: 'LIFT', brand: true, content };
   }
 
   const weeks = S.weeklyCounts(12);
@@ -113,5 +120,49 @@ export function dashboardView() {
         h('span', { class: 'hist-e1', text: r.stats.e1rm != null ? `${fmt(r.stats.e1rm)} kg` : '' })),
       h('div', { class: 'chips' }, r.sets.map((x) => h('span', { class: 'chip chip-' + x.type, text: (x.type !== 'normal' ? typeInfo(x.type).short + ' ' : '') + setLabel(x) }))))))));
 
-  return { title: 'Dashboard', content };
+  return { title: 'LIFT', brand: true, content };
+}
+
+function greeting() {
+  const hr = new Date().getHours();
+  const part = hr < 12 ? 'morning' : hr < 18 ? 'afternoon' : 'evening';
+  const name = (S.data.settings.name || '').trim();
+  return { part: `Good ${part},`, name };
+}
+
+function greetingCard() {
+  const g = greeting();
+  const streak = S.weekStreak();
+  return h('section', { class: 'hero' },
+    h('div', { class: 'hero-text' },
+      h('p', { class: 'hero-hi', text: g.part }),
+      h('h2', { class: 'hero-name', text: g.name || 'Lifter' }),
+      h('span', { class: 'streak', title: 'Weeks in a row with at least one workout' }, h('span', { class: 'streak-flame', 'aria-hidden': 'true' }, icon('flame', 16)),
+        h('span', { text: streak > 0 ? `${streak} week streak` : 'Start your streak' }))),
+    h('div', { class: 'hero-art' }, plateArt()));
+}
+
+function weekCard() {
+  const w = S.weekProgress();
+  const pct = Math.min(100, Math.round((w.done / w.goal) * 100));
+  const bar = h('div', { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': w.goal, 'aria-valuenow': w.done, 'aria-label': 'Workouts this week' },
+    h('div', { class: 'meter-fill w-' + (Math.round(pct / 5) * 5) }));
+  return card('This week',
+    h('div', { class: 'week-row' },
+      h('span', { class: 'week-count', text: `${w.done} / ${w.goal} workouts` }),
+      h('span', { class: 'week-pct', text: `${pct}%` })),
+    bar);
+}
+
+function liftsCard(lifts) {
+  return card('Lift progress',
+    h('p', { class: 'card-note', text: 'Estimated 1RM, and how much it rose when you last set a new best' }),
+    h('div', { class: 'lifts' }, lifts.map((l) => {
+      const name = S.exerciseName(l.exerciseId);
+      return h('button', { class: 'lift-row', onclick: () => { selectMovement(l.exerciseId); nav.refresh(); } },
+        h('span', { class: 'art-tile art-sm', 'aria-hidden': 'true' }, exerciseArt(name, 28)),
+        h('span', { class: 'lift-main' }, h('span', { class: 'lift-name', text: name }), h('span', { class: 'lift-sub', text: l.prDate ? `Best set ${fmtDate(l.prDate)}` : '' })),
+        h('span', { class: 'lift-val' }, h('b', { text: `${fmt(l.best)} kg` }),
+          l.delta != null ? h('span', { class: 'delta up', text: `▲ +${fmt(l.delta)} kg` }) : h('span', { class: 'delta', text: 'first max' })));
+    })));
 }

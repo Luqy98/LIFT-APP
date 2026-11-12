@@ -59,7 +59,7 @@ function setupForm(onDone) {
     },
   },
   h('div', { class: 'lock-mark' }, icon('lock', 30)),
-  h('h1', { text: 'Gym Log' }),
+  h('h1', { class: 'lock-brand', text: 'LIFT' }),
   h('p', { class: 'lock-lead', text: 'Choose a PIN. Everything you log is encrypted on this phone with a key made from it, and never sent anywhere.' }),
   segHost, p1, p2, hint, err, btn,
   h('button', { type: 'button', class: 'btn btn-block', text: 'Restore from a backup', onclick: () => restoreFlow(onDone) }),
@@ -158,6 +158,6 @@ function unlockForm(onDone) {
     },
   },
   h('div', { class: 'lock-mark' }, icon('lock', 30)),
-  h('h1', { text: 'Gym Log' }),
+  h('h1', { class: 'lock-brand', text: 'LIFT' }),
   bioBtn, input, msg, btn);
 }

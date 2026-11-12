@@ -3,6 +3,7 @@ import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmen
 import { notesList, addNote, canAddNote } from './notes.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
+import { exerciseArt } from './art.js';
 import { SET_TYPES, typeInfo, parseNum, fmtW, fmtDate, WORKOUT_COLORS } from './calc.js';
 import { pickMovement } from './picker.js';
 import { activeBanner, startWorkout, historyContent, sessionView, movementHistoryView } from './views-session.js';
@@ -283,6 +284,7 @@ function itemCard(workout, item, index) {
   });
   return h('section', { class: `card entry entry-plan wk wk-${workout.color ?? 0}` },
     h('div', { class: 'entry-head' },
+      h('span', { class: 'art-tile art-sm', 'aria-hidden': 'true' }, exerciseArt(ex?.name || '', 28)),
       h('button', { class: 'entry-name', text: ex?.name || 'Deleted exercise', onclick: () => itemMenu(workout, item, index) }),
       iconBtn('more', 'Exercise options', () => itemMenu(workout, item, index))),
     notesList(item, () => S.touch(), () => nav.refresh()),
