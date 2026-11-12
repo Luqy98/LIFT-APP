@@ -147,8 +147,10 @@ function greetingCard() {
 function weekCard() {
   const w = S.weekProgress();
   const pct = Math.min(100, Math.round((w.done / w.goal) * 100));
-  const normalPct = Math.min(100, Math.round(((w.done - w.deload) / w.goal) * 100));
-  const deloadPct = Math.min(100 - normalPct, Math.round((w.deload / w.goal) * 100));
+  // Past the goal the bar is still full, split in proportion so a deload slice is always visible.
+  const total = Math.max(w.done, w.goal);
+  const normalPct = Math.round(((w.done - w.deload) / total) * 100);
+  const deloadPct = Math.min(100 - normalPct, Math.round((w.deload / total) * 100));
   const step = (n) => Math.round(n / 5) * 5;
   const bar = h('div', { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': w.goal, 'aria-valuenow': w.done,
     'aria-label': 'Workouts this week' + (w.deload ? ` (${w.deload} deload)` : '') },

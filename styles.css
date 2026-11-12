@@ -756,3 +756,9 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .meter-fill + .meter-fill { margin-left: 2px; }
 .meter-fill.meter-deload { background: var(--c-deload); box-shadow: 0 0 12px color-mix(in srgb, var(--c-deload) 55%, transparent); }
 .card .chart-key { margin-top: 10px; }
+
+/* ---- 1.7.2 settings: one consistent, smaller text size ---- */
+.settings .row-title, .settings .setting-label { font-size: 14.5px; font-weight: 500; }
+.settings .select { font-size: 14px; font-weight: 500; }
+.settings .btn { font-size: 13.5px; }
+.settings .hint, .settings .row-sub { font-size: 12.5px; }

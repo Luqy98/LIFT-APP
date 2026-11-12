@@ -8,7 +8,6 @@ import { FORMULAS, fmtDateLong } from './calc.js';
 import { applyTheme } from './theme.js';
 import { validateSecret, strengthHint } from './views-lock.js';
 import { VERSION } from './version.js';
-import { unlockAudio, scheduleBell } from './sound.js';
 
 const set = (k, v) => { S.data.settings[k] = v; S.touch(); nav.refresh(); };
 
@@ -131,10 +130,10 @@ export function settingsRoot() {
   navigator.storage?.persisted?.().then((p) => { persistLine.textContent = p ? 'Protected from automatic cleanup by the browser.' : 'Not guaranteed. The browser may clear data if the phone is very low on space, so export backups.'; })
     .catch(() => { persistLine.textContent = ''; });
 
-  const content = h('div', { class: 'page' },
+  const content = h('div', { class: 'page settings' },
     card('About',
       h('div', { class: 'row-between' },
-        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: `Version ${VERSION}` }), h('span', { class: 'row-sub', text: 'Shown here so you can tell when an update has installed' })),
+        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: `Version ${VERSION}` })),
         h('button', { class: 'btn btn-sm', text: 'Check for update', onclick: checkUpdate }))),
     card('Security',
       selectField('Lock after leaving the app', [[0, 'Immediately'], [1, '1 minute'], [5, '5 minutes'], [15, '15 minutes'], [30, '30 minutes']], st.autoLockMin, (v) => set('autoLockMin', +v)),
@@ -161,11 +160,10 @@ export function settingsRoot() {
       selectField('Count sets up to', [5, 6, 8, 10, 12, 15].map((n) => [n, `${n} reps`]), st.maxReps, (v) => set('maxReps', +v)),
       selectField('Rest timer', [[0, 'Off'], [60, '1:00'], [90, '1:30'], [120, '2:00'], [150, '2:30'], [180, '3:00'], [240, '4:00'], [300, '5:00']], st.restSec, (v) => set('restSec', +v)),
       h('div', { class: 'row-between' },
-        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'Round-start bell' }), h('span', { class: 'row-sub', text: 'Rings when the rest timer ends' })),
+        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'Round-start bell' })),
         h('div', { class: 'btn-row' },
-          h('button', { class: 'btn btn-sm', text: 'Test', onclick: () => { unlockAudio(); scheduleBell(0); } }),
           h('button', { class: 'btn btn-sm' + (st.restBell !== false ? ' btn-primary' : ''), 'aria-pressed': String(st.restBell !== false), text: st.restBell !== false ? 'On' : 'Off', onclick: () => set('restBell', st.restBell === false) }))),
-      h('p', { class: 'hint', text: 'Keep the app open (screen on) to hear the bell. Phones can silence web pages when the screen is off. Estimates get less reliable as reps go up, so sets above the limit are left out of the 1RM chart. Warm-up and drop sets are never used. The blend averages three well-known formulas to smooth out any single formula’s bias.' })),
+      h('p', { class: 'hint', text: 'Estimates get less reliable as reps go up, so sets above the limit are left out of the 1RM chart. Warm-up and drop sets are never used. The blend averages three well-known formulas to smooth out any single formula’s bias.' })),
 
     card('Appearance',
       segmented([['dark', 'Dark'], ['light', 'Light'], ['system', 'Match phone']], st.theme, (v) => { applyTheme(v); set('theme', v); })),
