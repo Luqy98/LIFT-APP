@@ -21,6 +21,11 @@ const STARTER = [
   'Chest Fly', 'Leg Press', 'Leg Curl', 'Leg Extension', 'Hip Thrust', 'Calf Raise',
 ];
 
+// Exercises added to existing libraries by later versions (each is added once, only if you don't already have one by that name).
+const LIBRARY_ADDITIONS = [
+  'Dumbbell Press', 'Chest Press Machine', 'Pec Deck', 'Chest Fly High to Low', 'Chest Fly Low to High', 'JM Press', 'JM Press Machine',
+];
+
 const DEFAULT_SETTINGS = { name: 'Luqy', weeklyGoal: 4, theme: 'dark', formula: 'blend', maxReps: 10, restSec: 120, autoLockMin: 5, lastBackup: null };
 
 // Lock-out after repeated wrong passcodes: [failures, seconds]
@@ -60,6 +65,7 @@ export async function setup(secret) {
   await db.batch('vault', [['lock', vault]]);
   key = created.key;
   data = newData();
+  migrate();
   sessionMap = new Map();
   dirty.add('meta');
   await flush();
@@ -115,6 +121,14 @@ async function load() {
 /** Brings data saved by older versions up to date (workout colours, per-log notes). */
 function migrate() {
   let planChanged = false;
+  const have = new Set(data.exercises.map((e) => norm(e.name).toLowerCase()));
+  data.libAdded = data.libAdded || [];
+  for (const name of LIBRARY_ADDITIONS) {
+    if (data.libAdded.includes(name)) continue;
+    data.libAdded.push(name);
+    if (!have.has(name.toLowerCase())) data.exercises.push({ id: uid(), name, archived: false });
+    planChanged = true;
+  }
   for (const r of data.routines) {
     const bySlot = new Map();
     for (const wk of r.weeks) for (const w of wk.workouts) if (w.color != null && !bySlot.has(w.slotId)) bySlot.set(w.slotId, w.color);
