@@ -1,6 +1,6 @@
 // Exercise pictograms and group inference. Drawn with currentColor, so they are white on the dark theme
 // and black on the light theme. Everything is vector and local: no images are downloaded.
-import { s } from './ui.js';
+import { h, s } from './ui.js';
 
 const L = (x1, y1, x2, y2) => ['line', { x1, y1, x2, y2 }];
 const P = (d) => ['path', { d }];
@@ -107,4 +107,20 @@ export function plateArt() {
   add('ellipse', { cx: 164, cy: 87, rx: 5.5, ry: 10, fill: '#07070a' });
   void NS;
   return svg;
+}
+
+/** Mascot for the dashboard: the white one on the light theme, the charcoal one on the dark theme (CSS picks which). */
+export function mascotArt() {
+  const wrap = h('span', { class: 'mascot' });
+  for (const [mode, label] of [['light', 'Muscular white mascot with crossed arms'], ['dark', 'Muscular charcoal mascot with crossed arms']]) {
+    const img = document.createElement('img');
+    img.className = 'mascot-img mascot-' + mode;
+    img.src = `img/mascot-${mode}.png`;
+    img.alt = '';
+    img.width = 320; img.height = 440;
+    img.decoding = 'async';
+    img.setAttribute('aria-hidden', 'true');
+    wrap.append(img);
+  }
+  return wrap;
 }

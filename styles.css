@@ -693,3 +693,19 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .tile-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hero-art { width: 52%; max-width: 210px; }
 .hero { padding-right: 22px; }
+
+/* ---- Dashboard mascot: white on the light theme, charcoal on the dark theme ---- */
+.hero { padding: 16px 14px 0 18px; min-height: 170px; align-items: stretch; }
+.hero-text { padding-bottom: 18px; }
+.hero-art { align-self: flex-end; width: auto; max-width: none; }
+.mascot { display: block; line-height: 0; }
+.mascot-img { height: 176px; width: auto; display: none; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.35)); }
+.mascot-dark { display: block; }
+:root[data-theme='light'] .mascot-dark { display: none; }
+:root[data-theme='light'] .mascot-light { display: block; }
+@media (prefers-color-scheme: light) {
+  :root[data-theme='system'] .mascot-dark { display: none; }
+  :root[data-theme='system'] .mascot-light { display: block; }
+}
+.mascot-img { max-width: none; aspect-ratio: 320 / 440; flex: none; }
+.mascot-img { width: 128px; height: 176px; } .mascot { width: 128px; }

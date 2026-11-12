@@ -1,6 +1,6 @@
 // Dashboard: overview + per-exercise analysis (estimated 1RM, heaviest set, rep records).
 import { h, card, tile, emptyState, pickerField, icon } from './ui.js';
-import { exerciseArt, plateArt } from './art.js';
+import { exerciseArt, mascotArt } from './art.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { FORMULAS, repRecords, fmt, fmtW, fmtSign, fmtVol, fmtDate, setLabel, typeInfo } from './calc.js';
@@ -139,7 +139,7 @@ function greetingCard() {
       h('h2', { class: 'hero-name', text: g.name || 'Lifter' }),
       h('span', { class: 'streak', title: 'Weeks in a row with at least one workout' }, h('span', { class: 'streak-flame', 'aria-hidden': 'true' }, icon('flame', 16)),
         h('span', { text: streak > 0 ? `${streak} week streak` : 'Start your streak' }))),
-    h('div', { class: 'hero-art' }, plateArt()));
+    h('div', { class: 'hero-art' }, mascotArt()));
 }
 
 function weekCard() {
