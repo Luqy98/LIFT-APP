@@ -1,5 +1,8 @@
 // Pure maths + formatting. No DOM, no storage.
 
+/** A deload session suggests this fraction of your best estimated 1RM. */
+export const DELOAD_PCT = 0.6;
+
 export const SET_TYPES = [
   { id: 'normal',  label: 'Normal',   short: '',    hint: 'A standard working set' },
   { id: 'warmup',  label: 'Warm-up',  short: 'W',   hint: 'Not counted in volume or 1RM' },

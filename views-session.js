@@ -4,7 +4,7 @@ import * as S from './store.js';
 import * as nav from './nav.js';
 import {
   SET_TYPES, typeInfo, parseNum, fmt, fmtW, fmtDate, fmtDateLong, fmtDuration, fmtVol, fmtMonth, setLabel,
-  setStats, toLocalInput, FORMULAS,
+  setStats, toLocalInput, FORMULAS, DELOAD_PCT,
 } from './calc.js';
 import { pickMovement } from './picker.js';
 import { exerciseArt } from './art.js';
@@ -43,9 +43,10 @@ export function sessionView({ sessionId }) {
   const active = !s.finishedAt;
   const prevMap = S.previousFor(s);
 
+  const dl = s.deload ? 'Deload · ' : '';
   const subtitle = () => (active
-    ? `${fmtDuration(Date.now() - new Date(s.startedAt))} · ${S.routineName(s)} · ${S.weekName(s)}`
-    : `${fmtDateLong(s.startedAt)} · ${S.routineName(s)} · ${S.weekName(s)}`);
+    ? `${dl}${fmtDuration(Date.now() - new Date(s.startedAt))} · ${S.routineName(s)} · ${S.weekName(s)}`
+    : `${dl}${fmtDateLong(s.startedAt)} · ${S.routineName(s)} · ${S.weekName(s)}`);
 
   if (active) {
     setTick(() => {
@@ -59,6 +60,9 @@ export function sessionView({ sessionId }) {
   content.append(active
     ? modeBanner('log', 'Logging', 'Tick each set as you do it')
     : modeBanner('review', 'Logged workout', 'Changes here update your history'));
+  if (s.deload) content.append(h('div', { class: 'deload-banner' },
+    h('span', { class: 'tag-deload', text: 'Deload' }),
+    h('span', { text: `Weights are suggested at ${Math.round(DELOAD_PCT * 100)}% of your best 1RM. This session does not count towards 1RM, records or exercise charts.` })));
   if (!active) content.append(summaryCard(s));
 
   if (!s.entries.length) content.append(emptyState('No exercises yet', 'Add the first exercise to start logging sets.'));
@@ -122,11 +126,19 @@ function entryCard(s, entry, index, prev, active) {
       h('button', { class: 'btn btn-sm btn-ghost', 'aria-label': `History of ${name} in this workout`, onclick: () => nav.push(movementHistoryView, { exerciseId: entry.exerciseId, slotId: s.slotId }) },
         icon('history', 18), h('span', { text: 'History' }))),
     notesList(entry, () => S.touchSession(s), () => nav.refresh()),
+    s.deload ? deloadHint(entry.exerciseId) : null,
     prev ? h('div', { class: 'entry-prev', text: `Previous: ${fmtDate(prev.session.startedAt)} · ${S.weekName(prev.session)}` }) : null,
     h('div', { class: 'sets' },
       h('div', { class: 'srow srow-head' }, h('span', { text: 'Set' }), h('span', { text: 'Previous' }), h('span', { text: 'kg' }), h('span', { text: 'Reps' }), h('span', {})),
       rows),
     h('button', { class: 'btn btn-block btn-ghost btn-add', text: '+ Add set', onclick: () => { S.addSessionSet(s, entry); nav.refresh(); } }));
+}
+
+function deloadHint(exerciseId) {
+  const t = S.deloadTarget(exerciseId);
+  return h('div', { class: 'deload-hint', text: t
+    ? `Deload: ${Math.round(DELOAD_PCT * 100)}% of your ${fmt(t.best)} kg 1RM = ${fmtW(t.weight)} kg`
+    : 'Deload: no 1RM logged for this yet, so pick a light weight' });
 }
 
 function numInput({ value, placeholder, mode, label, onValue }) {
@@ -216,11 +228,15 @@ async function sessionMenu(s, active) {
     title: 'Workout options',
     options: [
       { label: s.workoutNote ? 'Edit workout note' : 'Add workout note', value: 'wnote' },
+      s.deload
+        ? { label: 'Switch back to a normal workout', value: 'deload', sub: 'Counts towards 1RM and charts again' }
+        : { label: 'Make this a deload workout', value: 'deload', sub: `Suggests ${Math.round(DELOAD_PCT * 100)}% of your 1RM; left out of 1RM and charts` },
       ...(loc ? [{ label: 'Open workout plan', value: 'plan' }] : []),
       active ? { label: 'Discard this workout', value: 'delete', danger: true } : { label: 'Delete this log', value: 'delete', danger: true },
     ],
   });
   if (v === 'wnote') { if (await editFreeNote(s, 'workoutNote', 'Workout note', () => S.touchSession(s))) nav.refresh(); }
+  if (v === 'deload') { S.setSessionDeload(s, !s.deload); toast(s.deload ? 'Deload workout' : 'Normal workout'); nav.refresh(); }
   if (v === 'plan') nav.push(workoutView, { routineId: loc.routine.id, weekId: loc.week.id, workoutId: loc.workout.id });
   if (v === 'delete') {
     const ok = await confirmDialog({
@@ -286,9 +302,10 @@ export function movementHistoryView(params) {
   const all = !!params.all;
   const name = S.exerciseName(exerciseId);
   const wName = S.slotName(slotId);
-  const hist = S.historyFor(exerciseId, all ? null : slotId);
-  const best = hist.reduce((b, r) => (r.stats.e1rm != null && (b == null || r.stats.e1rm > b.stats.e1rm) ? r : b), null);
-  const heaviest = hist.reduce((b, r) => (r.stats.top && (b == null || r.stats.top.weight > b.stats.top.weight) ? r : b), null);
+  const hist = S.historyFor(exerciseId, all ? null : slotId, null, true);
+  const counted = hist.filter((r) => !r.session.deload);
+  const best = counted.reduce((b, r) => (r.stats.e1rm != null && (b == null || r.stats.e1rm > b.stats.e1rm) ? r : b), null);
+  const heaviest = counted.reduce((b, r) => (r.stats.top && (b == null || r.stats.top.weight > b.stats.top.weight) ? r : b), null);
 
   const content = h('div', { class: 'page' },
     segmented([['slot', `${wName} only`], ['all', 'All workouts']], all ? 'all' : 'slot', (v) => { params.all = v === 'all'; nav.refresh(); }),
@@ -303,12 +320,13 @@ export function movementHistoryView(params) {
       h('div', { class: 'tiles tiles-3' },
         tile('Best 1RM', best ? `${fmt(best.stats.e1rm)} kg` : '–', best ? `${fmtW(best.stats.bestSet.weight)}×${fmt(best.stats.bestSet.reps, 0)} · ${fmtDate(best.date)}` : ''),
         tile('Heaviest set', heaviest ? `${fmtW(heaviest.stats.top.weight)} kg` : '–', heaviest ? `× ${fmt(heaviest.stats.top.reps, 0)}` : ''),
-        tile('Sessions', String(hist.length), '')));
+        tile('Sessions', String(counted.length), counted.length < hist.length ? `+${hist.length - counted.length} deload` : '')));
     content.append(h('div', { class: 'list' }, hist.map((r) => h('button', { class: `hist-row wk wk-${S.sessionColor(r.session)}`, onclick: () => nav.push(sessionView, { sessionId: r.session.id }) },
       h('div', { class: 'hist-top' },
         h('span', { class: 'hist-date', text: fmtDate(r.date) }),
         h('span', { class: 'hist-where', text: all ? `${S.workoutName(r.session)} · ${S.weekName(r.session)}` : S.weekName(r.session) }),
-        h('span', { class: 'hist-e1', text: r.stats.e1rm != null ? `${fmt(r.stats.e1rm)} kg` : '' })),
+        r.session.deload ? h('span', { class: 'tag-deload', text: 'Deload' }) : null,
+        h('span', { class: 'hist-e1', text: r.stats.e1rm != null && !r.session.deload ? `${fmt(r.stats.e1rm)} kg` : '' })),
       h('div', { class: 'chips' }, r.sets.map((x) => h('span', { class: 'chip chip-' + x.type, text: (x.type !== 'normal' ? typeInfo(x.type).short + ' ' : '') + setLabel(x) }))),
       icon('right', 18)))));
   }
@@ -337,7 +355,7 @@ export function historyContent() {
     for (const e of s.entries) { const st = setStats(e.sets, S.calcOpts()); vol += st.volume; sets += st.sets; }
     out.push(h('button', { class: `row-card row-btn wk wk-${S.sessionColor(s)}`, onclick: () => nav.push(sessionView, { sessionId: s.id }) },
       h('span', { class: 'row-main' },
-        h('span', { class: 'row-title', text: S.workoutName(s) }),
+        h('span', { class: 'row-title' }, h('span', { text: S.workoutName(s) }), s.deload ? h('span', { class: 'tag-deload', text: 'Deload' }) : null),
         h('span', { class: 'row-sub', text: `${S.routineName(s)} · ${S.weekName(s)}` })),
       h('span', { class: 'row-side' },
         h('span', { class: 'row-date', text: s.finishedAt ? fmtDate(s.startedAt) : 'In progress' }),

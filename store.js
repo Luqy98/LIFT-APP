@@ -8,7 +8,7 @@
 // bench press on a rep day never mixes with a bench press on a heavy-single day.
 
 import * as C from './crypto.js';
-import { setStats, e1rm, weekStart, WORKOUT_COLORS } from './calc.js';
+import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT } from './calc.js';
 
 export const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
@@ -456,17 +456,51 @@ export function startSession(workoutId) {
   const s = {
     id: uid(), routineId: routine.id, weekId: week.id, workoutId: workout.id, slotId: workout.slotId,
     routineName: routine.name, weekName: week.name, workoutName: workout.name,
-    startedAt: now(), finishedAt: null, color: workout.color ?? 0,
+    startedAt: now(), finishedAt: null, color: workout.color ?? 0, deload: !!workout.deload,
     entries: workout.items.map((it) => ({
       id: uid(), exerciseId: it.exerciseId, exerciseName: exerciseName(it.exerciseId), notes: it.notes ? { ...it.notes } : {},
       sets: it.sets.map((p) => ({ id: uid(), type: p.type, weight: null, reps: null, done: false, tw: p.weight ?? null, tr: p.reps ?? '' })),
     })),
   };
+  if (s.deload) applyDeloadWeights(s);
   sessionMap.set(s.id, s);
   data.activeSessionId = s.id;
   touch();
   touchSession(s);
   return s;
+}
+
+// ---- Deload ------------------------------------------------------------------------------------
+/** The suggested deload weight: DELOAD_PCT of your best estimated 1RM (normal sessions only), to the nearest 2.5 kg. */
+export function deloadTarget(exerciseId) {
+  let best = null;
+  for (const h of historyFor(exerciseId)) if (h.stats.e1rm != null && (best == null || h.stats.e1rm > best)) best = h.stats.e1rm;
+  if (best == null) return null;
+  return { best, weight: Math.max(2.5, Math.round((best * DELOAD_PCT) / 2.5) * 2.5) };
+}
+const fillable = (set) => !set.done && set.weight == null && set.type !== 'hold' && set.type !== 'warmup';
+/** Fill empty, un-ticked sets with the deload weight (remembering which ones we filled so switching back can undo it). */
+export function applyDeloadWeights(s, entries = s.entries) {
+  for (const e of entries) {
+    const t = deloadTarget(e.exerciseId);
+    if (!t) continue;
+    for (const set of e.sets) if (fillable(set)) { set.weight = t.weight; set.autoW = t.weight; }
+  }
+}
+export function setSessionDeload(s, on) {
+  s.deload = !!on;
+  if (s.deload) applyDeloadWeights(s);
+  else for (const e of s.entries) for (const set of e.sets) {
+    if (set.autoW != null && !set.done && set.weight === set.autoW) set.weight = null;
+    delete set.autoW;
+  }
+  touchSession(s);
+}
+export function setWorkoutDeload(workoutId, on) {
+  const loc = locateWorkout(workoutId);
+  if (!loc) return;
+  loc.workout.deload = !!on;
+  touch();
 }
 
 export function addEntry(s, exerciseId) {
@@ -475,6 +509,7 @@ export function addEntry(s, exerciseId) {
     sets: [{ id: uid(), type: 'normal', weight: null, reps: null, done: false, tw: null, tr: '' }],
   };
   s.entries.push(e);
+  if (s.deload) applyDeloadWeights(s, [e]);
   touchSession(s);
   return e;
 }
@@ -482,6 +517,7 @@ export function addSessionSet(s, entry) {
   const last = entry.sets[entry.sets.length - 1];
   const set = { id: uid(), type: last?.type || 'normal', weight: null, reps: null, done: false, tw: last?.tw ?? null, tr: last?.tr ?? '' };
   entry.sets.push(set);
+  if (s.deload) applyDeloadWeights(s, [{ exerciseId: entry.exerciseId, sets: [set] }]);
   touchSession(s);
   return set;
 }
@@ -532,12 +568,12 @@ export function weeklyCounts(n = 12) {
   const key = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
   const cur = weekStart(new Date());
   const buckets = [];
-  for (let i = n - 1; i >= 0; i--) { const d = new Date(cur); d.setDate(d.getDate() - 7 * i); buckets.push({ start: d, count: 0 }); }
+  for (let i = n - 1; i >= 0; i--) { const d = new Date(cur); d.setDate(d.getDate() - 7 * i); buckets.push({ start: d, count: 0, deload: 0 }); }
   const byKey = new Map(buckets.map((b) => [key(b.start), b]));
   for (const s of allSessions()) {
     if (!s.finishedAt) continue;
     const b = byKey.get(key(weekStart(s.startedAt)));
-    if (b) b.count++;
+    if (b) { b.count++; if (s.deload) b.deload++; }
   }
   return buckets;
 }
@@ -593,9 +629,10 @@ export function liftProgress(limit = 6, routineId = null) {
 }
 
 /** Finished logs containing this exercise, newest first. slotId = null means every workout. */
-export function historyFor(exerciseId, slotId = null, routineId = null) {
+/** Deload sessions are left out unless includeDeload is set (they never count towards 1RM, charts or records). */
+export function historyFor(exerciseId, slotId = null, routineId = null, includeDeload = false) {
   const out = [];
-  for (const s of sessionsDesc((x) => x.finishedAt && (!slotId || x.slotId === slotId) && (!routineId || x.routineId === routineId))) {
+  for (const s of sessionsDesc((x) => x.finishedAt && (includeDeload || !x.deload) && (!slotId || x.slotId === slotId) && (!routineId || x.routineId === routineId))) {
     const sets = s.entries.filter((e) => e.exerciseId === exerciseId).flatMap((e) => e.sets.filter((x) => x.done));
     if (!sets.length) continue;
     out.push({ session: s, date: s.startedAt, sets, stats: setStats(sets, calcOpts()) });
@@ -605,7 +642,7 @@ export function historyFor(exerciseId, slotId = null, routineId = null) {
 
 /** For a log being filled in or viewed: entryId -> the same exercise's sets from the previous log of the SAME workout slot. */
 export function previousFor(session) {
-  const prev = sessionsDesc((x) => x.finishedAt && x.slotId === session.slotId && x.id !== session.id && x.startedAt < session.startedAt)[0];
+  const prev = sessionsDesc((x) => x.finishedAt && !x.deload && x.slotId === session.slotId && x.id !== session.id && x.startedAt < session.startedAt)[0];
   const res = new Map();
   if (!prev) return res;
   const used = new Map();
@@ -621,7 +658,7 @@ export function previousFor(session) {
 
 export function exercisesWithData(routineId = null) {
   const map = new Map();
-  for (const s of sessionsDesc((x) => x.finishedAt && (!routineId || x.routineId === routineId))) {
+  for (const s of sessionsDesc((x) => x.finishedAt && !x.deload && (!routineId || x.routineId === routineId))) {
     for (const e of s.entries) {
       if (!e.sets.some((x) => x.done)) continue;
       const cur = map.get(e.exerciseId) || { count: 0, last: s.startedAt };
@@ -635,7 +672,7 @@ export function exercisesWithData(routineId = null) {
 /** Routines that have at least one finished workout, newest-used first: [{id, name}]. */
 export function routinesWithData() {
   const seen = new Map();
-  for (const s of sessionsDesc((x) => x.finishedAt)) if (!seen.has(s.routineId)) seen.set(s.routineId, routineName(s));
+  for (const s of sessionsDesc((x) => x.finishedAt && !x.deload)) if (!seen.has(s.routineId)) seen.set(s.routineId, routineName(s));
   return [...seen.entries()].map(([id, name]) => ({ id, name }));
 }
 
@@ -648,6 +685,7 @@ export function slotsForExercise(exerciseId, routineId = null) {
 /** New estimated-1RM records set in a finished log, compared with everything logged before it. */
 export function prsForSession(s) {
   const prs = [];
+  if (s.deload) return prs;
   for (const e of s.entries) {
     const cur = setStats(e.sets, calcOpts()).e1rm;
     if (cur == null) continue;

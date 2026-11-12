@@ -52,9 +52,10 @@ export function dashboardView() {
     h('p', { class: 'card-note', text: 'Weeks start on Monday · last 12 weeks' }),
     barChart({
       label: 'Workouts per week', integer: true,
-      points: weeks.map((w) => ({ label: fmtDate(w.start.toISOString()), y: w.count, title: unit(w.count), detail: `Week of ${fmtDate(w.start.toISOString())}` })),
+      points: weeks.map((w) => ({ label: fmtDate(w.start.toISOString()), y: w.count, deload: w.deload > 0, title: unit(w.count), detail: `Week of ${fmtDate(w.start.toISOString())}${w.deload ? ` · includes ${w.deload} deload` : ''}` })),
     }),
-    dataTable(['Week starting (Mon)', 'Workouts'], weeks.map((w) => [fmtDate(w.start.toISOString()), String(w.count)]))));
+    weeks.some((w) => w.deload) ? h('div', { class: 'chart-key' }, h('span', { class: 'key-swatch' }), h('span', { text: 'Normal week' }), h('span', { class: 'key-swatch key-deload' }), h('span', { text: 'Week with a deload workout' })) : null,
+    dataTable(['Week starting (Mon)', 'Workouts'], weeks.map((w) => [fmtDate(w.start.toISOString()), String(w.count) + (w.deload ? ` (${w.deload} deload)` : '')]))));
 
   if (!dash.exerciseId || !have.has(dash.exerciseId)) { dash.exerciseId = [...have.keys()][0]; dash.slotId = 'all'; }
   dash.slotId = 'all';

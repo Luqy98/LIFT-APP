@@ -170,7 +170,7 @@ export function weekView({ routineId, weekId }) {
       const sets = w.items.reduce((n, it) => n + it.sets.length, 0);
       return h('div', { class: `row-card wk wk-${w.color ?? 0}` },
         h('button', { class: 'row-main row-btn', onclick: () => nav.push(workoutView, { routineId, weekId, workoutId: w.id }) },
-          h('span', { class: 'row-title' }, h('span', { class: 'wk-dot' }), h('span', { text: w.name })),
+          h('span', { class: 'row-title' }, h('span', { class: 'wk-dot' }), h('span', { text: w.name }), w.deload ? h('span', { class: 'tag-deload', text: 'Deload' }) : null),
           h('span', { class: 'row-sub', text: w.items.length ? `${plural(w.items.length, 'exercise')} · ${plural(sets, 'set')}` : 'No exercises yet' })),
         st.active ? h('span', { class: 'status status-live', text: 'In progress' })
           : st.done ? h('span', { class: 'status status-done' }, icon('check', 14), h('span', { text: fmtDate(st.done.startedAt) })) : null,
@@ -206,6 +206,9 @@ async function workoutMenu(r, wk, w) {
     options: [
       { label: 'Rename', value: 'rename' },
       { label: 'Colour', value: 'color', sub: WORKOUT_COLORS[w.color ?? 0] },
+      w.deload
+        ? { label: 'Remove deload', value: 'deload', sub: 'Make this a normal workout again' }
+        : { label: 'Mark as deload workout', value: 'deload', sub: 'Suggests 60% of your 1RM. Left out of 1RM and charts' },
       { label: 'Duplicate', value: 'dup', sub: 'A separate workout with its own history' },
       ...(links.length ? [{ label: 'Share history with another workout…', value: 'link', sub: 'Previous values and history carry over between them' }] : []),
       { label: 'Move up', value: 'up', disabled: i === 0 },
@@ -222,6 +225,7 @@ async function workoutMenu(r, wk, w) {
       validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : null),
     });
     if (x) { S.renameWorkout(r.id, w.id, x.name, !!x.all); nav.refresh(); }
+  } else if (v === 'deload') { S.setWorkoutDeload(w.id, !w.deload); toast(w.deload ? 'Marked as deload' : 'Deload removed'); nav.refresh();
   } else if (v === 'color') {
     const c = await colorSheet(w.color ?? 0, WORKOUT_COLORS);
     if (c != null) { S.setWorkoutColor(r.id, w.id, c); nav.refresh(); }
@@ -249,6 +253,7 @@ export function workoutView({ routineId, weekId, workoutId }) {
   const { routine, week, workout } = loc;
   const st = S.statusOfWorkout(workout.id);
   const content = h('div', { class: 'page' }, modeBanner('plan', 'Planning', 'Set up exercises and target sets. Nothing here is logged until you start the workout.'));
+  if (workout.deload) content.append(h('div', { class: 'deload-banner' }, h('span', { class: 'tag-deload', text: 'Deload' }), h('span', { text: 'Starting this workout suggests 60% of your best 1RM for each exercise. It won’t count towards 1RM or exercise charts.' })));
 
   if (!workout.items.length) content.append(emptyState('No exercises yet', 'Add the exercises for this workout, then set the sets, reps and any target weight.'));
   workout.items.forEach((item, i) => content.append(itemCard(workout, item, i)));

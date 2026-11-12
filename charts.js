@@ -135,7 +135,7 @@ export function barChart({ points, height = 170, label = 'Chart', integer = fals
     const y = Y(p.y);
     const r = Math.min(4, bw / 2, base - y);
     const path = s('path', {
-      class: 'bar',
+      class: 'bar' + (p.deload ? ' bar-deload' : ''),
       d: `M${x},${base} L${x},${y + r} Q${x},${y} ${x + r},${y} L${x + bw - r},${y} Q${x + bw},${y} ${x + bw},${y + r} L${x + bw},${base} Z`,
     });
     svg.append(path);
