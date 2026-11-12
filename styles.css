@@ -709,3 +709,9 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 }
 .mascot-img { max-width: none; aspect-ratio: 320 / 440; flex: none; }
 .mascot-img { width: 128px; height: 176px; } .mascot { width: 128px; }
+
+/* shorter mascot, and no drop-shadow filter (it exposed the faint rectangle in the image) */
+.hero { min-height: 128px; padding-top: 12px; }
+.mascot-img { height: 132px; width: 96px; filter: none; }
+.mascot { width: 96px; }
+.hero-text { padding-bottom: 14px; }

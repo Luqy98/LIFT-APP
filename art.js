@@ -117,7 +117,7 @@ export function mascotArt() {
     img.className = 'mascot-img mascot-' + mode;
     img.src = `img/mascot-${mode}.png`;
     img.alt = '';
-    img.width = 320; img.height = 440;
+    img.width = 240; img.height = 330;
     img.decoding = 'async';
     img.setAttribute('aria-hidden', 'true');
     wrap.append(img);
