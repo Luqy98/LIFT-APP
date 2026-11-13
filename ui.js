@@ -323,11 +323,18 @@ function reveal(el, smooth) {
   } catch { /* ignore */ }
 }
 window.addEventListener('scroll', () => { if (window.scrollY || window.scrollX) window.scrollTo(0, 0); });
+let fullH = 0; // tallest screen height seen while no keyboard was showing
+const kbClosed = () => { document.documentElement.classList.remove('kb-open'); if (typesText(document.activeElement)) document.activeElement.blur(); };
 window.visualViewport?.addEventListener('resize', () => {
   syncVV();
+  const vh = window.visualViewport.height, root = document.documentElement;
+  if (!root.classList.contains('kb-open')) { fullH = Math.max(fullH, vh); return; }
+  // The phone's Back button hides the keyboard without leaving the field, so watch the screen height instead.
+  if (fullH && vh >= fullH - 80) { kbClosed(); return; }
   const el = document.activeElement;
-  if (document.documentElement.classList.contains('kb-open') && typesText(el)) reveal(el, false);
+  if (typesText(el)) reveal(el, false);
 });
+fullH = Math.max(window.visualViewport?.height || 0, window.innerHeight || 0);
 document.addEventListener('focusin', (e) => {
   if (!typesText(e.target)) return;
   clearTimeout(kbTimer);

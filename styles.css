@@ -961,8 +961,8 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 /* ---- 2.4: backup buttons, keyboard handling ---- */
 .btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .btn-pair .btn { min-width: 0; padding-inline: 8px; }
-.kb-open .backdrop { align-items: flex-start; }
-.kb-open .sheet { max-height: calc(var(--vvh, 54dvh) - var(--sat) - 16px); margin-top: calc(var(--sat) + 8px); border-radius: 24px; border-bottom: 1px solid var(--line-strong); padding-bottom: 16px; animation: none; }
+/* Sheets stay at the bottom (above the keyboard, which shrinks the screen); they only get a height cap. */
+.kb-open .sheet { max-height: calc(var(--vvh, 88dvh) - var(--sat) - 16px); animation: none; }
 /* While typing, the tab bar and the bottom action bar step out of the way so only the page scrolls to the field. */
 .kb-open #tabs, .kb-open #footer { display: none; }
 .kb-open #main { padding-bottom: 45dvh; scroll-padding-block: 16px; }
