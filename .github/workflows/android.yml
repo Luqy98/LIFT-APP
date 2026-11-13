@@ -74,6 +74,7 @@ jobs:
             public void onCreate(Bundle savedInstanceState) {
               EdgeToEdge.enable(this);
               super.onCreate(savedInstanceState);
+              if (getSupportActionBar() != null) getSupportActionBar().hide();
             }
           }
           JAVA
@@ -90,6 +91,7 @@ jobs:
             override fun onCreate(savedInstanceState: Bundle?) {
               EdgeToEdge.enable(this)
               super.onCreate(savedInstanceState)
+              supportActionBar?.hide()
             }
           }
           KOTLIN
@@ -115,6 +117,7 @@ jobs:
           S=app/src/main/res/values/styles.xml
           cat "$S"
           sed -i 's#@drawable/splash#@color/lift_window_bg#g' "$S"
+          sed -i 's#Theme.AppCompat.DayNight.DarkActionBar#Theme.AppCompat.DayNight.NoActionBar#g; s#Theme.AppCompat.Light.DarkActionBar#Theme.AppCompat.DayNight.NoActionBar#g' "$S"
           grep -n "splash\|lift_window_bg" "$S" || true
 
       - name: Set version numbers

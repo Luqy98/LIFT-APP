@@ -144,6 +144,11 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Android app: native fingerprint unlock (secret held in the Android Keystore behind the fingerprint, PIN always works), see-through status and navigation bars (edge-to-edge, bar icons follow the theme), bell is paired with vibration, new logo.
 - Android shell moved to Capacitor 8.
 
+## 2.5.1
+- Android: removes the native "LIFT" title bar that covered the app's own header (workout names, subtitles, light/dark style) and cut into the welcome box.
+- Typing: the tab bar and bottom action bar step aside while the keyboard is open, so only the page scrolls to the field you are filling in.
+- Sharper, bolder app icon.
+
 ## 2.5.0
 - App lock is optional. First launch offers "Skip, no lock"; Settings → Security has App lock Turn on / Turn off. With the lock off the app opens straight away (the data key is wrapped with a built-in secret, so this is convenience rather than protection).
 - Backups are always named LIFT-backup.json so the newest copy is easy to spot and old ones are easy to replace.

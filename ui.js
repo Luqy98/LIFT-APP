@@ -303,9 +303,16 @@ export function modeBanner(kind, title, sub) {
 // focus, sheets move to the top of the screen, the page gets room to scroll, and the field is scrolled into view.
 const typesText = (el) => el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'submit', 'range', 'file', 'date', 'color'].includes(el.type)));
 let kbTimer = 0;
+const syncVV = () => document.documentElement.style.setProperty('--vvh', Math.round(window.visualViewport?.height || window.innerHeight) + 'px');
+window.visualViewport?.addEventListener('resize', () => {
+  syncVV();
+  const el = document.activeElement;
+  if (document.documentElement.classList.contains('kb-open') && typesText(el)) { try { el.scrollIntoView({ block: 'center' }); } catch { /* ignore */ } }
+});
 document.addEventListener('focusin', (e) => {
   if (!typesText(e.target)) return;
   clearTimeout(kbTimer);
+  syncVV();
   document.documentElement.classList.add('kb-open');
   setTimeout(() => { try { e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { /* ignore */ } }, 300);
 });
