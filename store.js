@@ -496,9 +496,18 @@ export function bestE1rm(exerciseId) {
   for (const h of historyFor(exerciseId)) if (h.stats.e1rm != null && (best == null || h.stats.e1rm > best)) best = h.stats.e1rm;
   return best;
 }
-export function setTarget(exerciseId, kg) {
+/** Whole days from today to a YYYY-MM-DD date (0 = today, negative = passed), or null. */
+export function daysLeft(date) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date || '');
+  if (!m) return null;
+  const t = new Date(+m[1], +m[2] - 1, +m[3]), n = new Date();
+  return Math.round((t - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 86400000);
+}
+export const targetDateFor = (exerciseId) => data.targets.find((t) => t.exerciseId === exerciseId)?.date ?? null;
+export function setTarget(exerciseId, kg, date = undefined) {
   const t = data.targets.find((x) => x.exerciseId === exerciseId);
-  if (t) t.kg = kg; else data.targets.push({ id: uid(), exerciseId, kg });
+  if (t) { t.kg = kg; if (date !== undefined) { if (date) t.date = date; else delete t.date; } }
+  else data.targets.push({ id: uid(), exerciseId, kg, ...(date ? { date } : {}) });
   touch();
 }
 export function removeTarget(exerciseId) {

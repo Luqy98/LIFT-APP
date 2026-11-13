@@ -891,3 +891,7 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .sw-label { font-size: 13px; color: var(--muted); }
 .sw-time { margin-left: auto; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .sw-card .btn { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.target-foot { display: flex; justify-content: space-between; gap: 8px; }
+.target-days { font-weight: 600; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.target-days.is-late { color: var(--c-deload, #f59e0b); }
+.sw-card { position: sticky; top: 0; z-index: 3; background: var(--surface); box-shadow: 0 6px 14px -8px rgba(0,0,0,.5); }

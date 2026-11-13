@@ -119,3 +119,7 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Targets tab: set a 1RM target for any exercise; each shows a percentage and progress bar towards your best estimated 1RM, and a dotted target line appears on that exercise's Estimated 1RM chart. Change or remove from the card.
 - Bulletin tab: add notes, pin them to keep them at the top, edit or remove them.
 - Workout stopwatch: a Start / Pause / Reset timer on the workout screen, independent of the rest timer that starts when you complete a set. It also shows in the Workout in progress bar while running.
+
+## 2.1.0
+- The workout stopwatch now stays pinned to the top of the screen while you scroll the workout.
+- Targets can have an optional date. The card shows days left (or days overdue) and the Estimated 1RM chart's dotted target line shows "· 23d left". Without a date nothing extra is shown.

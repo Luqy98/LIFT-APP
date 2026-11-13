@@ -92,7 +92,7 @@ export function dashboardView() {
   content.append(card('Estimated 1RM',
     h('p', { class: 'card-note', text: `Best set each session · ${formula} · sets up to ${S.data.settings.maxReps} reps` }),
     lineChart({
-      label: `Estimated 1RM for ${name}`, unit: ' kg', target: S.targetFor(dash.exerciseId),
+      label: `Estimated 1RM for ${name}`, unit: ' kg', target: S.targetFor(dash.exerciseId), targetNote: daysNote(S.targetDateFor(dash.exerciseId)),
       points: withE.map((r) => ({ t: +new Date(r.date), y: r.stats.e1rm, title: `${fmt(r.stats.e1rm)} kg`, detail: `${fmtDate(r.date)} · from ${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}${dash.slotId === 'all' ? ' · ' + S.workoutName(r.session) : ''}` })),
     }),
     dataTable(['Date', 'Est. 1RM (kg)', 'From'], withE.map((r) => [fmtDate(r.date), fmt(r.stats.e1rm), `${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}`]))));
@@ -179,4 +179,11 @@ function liftsCard(lifts) {
         h('span', { class: 'lift-val' }, h('b', { text: `${fmt(l.best)} kg` }),
           l.delta != null ? h('span', { class: 'delta up', text: `▲ +${fmt(l.delta)} kg` }) : h('span', { class: 'delta', text: 'first max' })));
     })));
+}
+
+/** " · 23d left" for the chart's target line; only when a target date is set. */
+function daysNote(date) {
+  const n = S.daysLeft(date);
+  if (n == null) return '';
+  return n < 0 ? ' · date passed' : n === 0 ? ' · due today' : ` · ${n}d left`;
 }
