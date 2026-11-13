@@ -100,6 +100,54 @@ export function titleCase(s) {
   return s.split(' ').map((w, i) => (!w || (i > 0 && SMALL.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
 }
 
+/** Pull the grip or title of a sheet down to close it: it follows the finger, a quick flick or a long pull closes it, otherwise it springs back. */
+function enableDragToClose(panel, backdrop, close) {
+  let id = null, startY = 0, dy = 0, samples = [];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const inHandle = (e) => !!e.target.closest('.sheet-grip, .sheet-title') || e.clientY - panel.getBoundingClientRect().top < 44;
+  const set = (y) => {
+    panel.style.transform = y ? `translateY(${y}px)` : '';
+    const f = Math.min(1, y / Math.max(1, panel.offsetHeight));
+    backdrop.style.opacity = String(1 - f * 0.85);
+  };
+  panel.addEventListener('pointerdown', (e) => {
+    if (id !== null || (e.pointerType === 'mouse' && e.button !== 0) || !inHandle(e)) return;
+    id = e.pointerId; startY = e.clientY; dy = 0; samples = [[performance.now(), e.clientY]];
+    try { panel.setPointerCapture(id); } catch { /* ignore */ }
+    panel.style.transition = 'none'; backdrop.style.transition = 'none';
+    if (panel.contains(document.activeElement)) document.activeElement.blur?.();
+  });
+  panel.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== id) return;
+    dy = Math.max(0, e.clientY - startY);
+    const now = performance.now();
+    samples.push([now, e.clientY]);
+    while (samples.length > 2 && now - samples[0][0] > 120) samples.shift();
+    set(dy);
+  });
+  const end = (e) => {
+    if (e.pointerId !== id) return;
+    id = null;
+    const now = performance.now();
+    samples.push([now, e.clientY]);
+    while (samples.length > 2 && now - samples[0][0] > 120) samples.shift();
+    const [t0, y0] = samples[0], [t1, y1] = samples[samples.length - 1];
+    const speed = t1 > t0 ? (y1 - y0) / (t1 - t0) : 0; // px per ms, downwards positive
+    const h = panel.offsetHeight;
+    const ms = reduced ? 0 : 200;
+    panel.style.transition = `transform ${ms}ms ease-out`; backdrop.style.transition = `opacity ${ms}ms ease-out`;
+    if (e.type === 'pointerup' && (dy > h * 0.4 || (speed > 0.5 && dy > 24))) {
+      panel.style.transform = `translateY(${h}px)`; backdrop.style.opacity = '0';
+      setTimeout(close, ms);
+    } else {
+      set(0);
+      setTimeout(() => { panel.style.transition = ''; backdrop.style.transition = ''; }, ms);
+    }
+  };
+  panel.addEventListener('pointerup', end);
+  panel.addEventListener('pointercancel', end);
+}
+
 export function sheet(content, { title: rawTitle, onClose, wide = false } = {}) {
   const title = rawTitle ? titleCase(rawTitle) : rawTitle;
   const backdrop = h('div', { class: 'backdrop', onpointerdown: (e) => { if (e.target === backdrop) close(); } });
@@ -109,6 +157,7 @@ export function sheet(content, { title: rawTitle, onClose, wide = false } = {}) 
     content);
   backdrop.append(panel);
   layerRoot().append(backdrop);
+  enableDragToClose(panel, backdrop, () => close());
   const entry = { close };
   overlays.push(entry);
   ensureGuard();

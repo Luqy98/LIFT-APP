@@ -972,3 +972,8 @@ html, body { overflow: hidden; }
 body { position: fixed; inset: 0; width: 100%; }
 #app { height: 100%; }
 #lock { position: fixed; inset: 0; min-height: 0; overflow-y: auto; }
+
+/* ---- 2.6: pull a sheet down to close it ---- */
+.sheet-grip { position: relative; touch-action: none; cursor: grab; }
+.sheet-grip::before { content: ''; position: absolute; inset: -14px -40px -14px; } /* bigger touch target than the visible bar */
+.sheet-title { touch-action: none; }

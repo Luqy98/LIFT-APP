@@ -144,6 +144,9 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Android app: native fingerprint unlock (secret held in the Android Keystore behind the fingerprint, PIN always works), see-through status and navigation bars (edge-to-edge, bar icons follow the theme), bell is paired with vibration, new logo.
 - Android shell moved to Capacitor 8.
 
+## 2.6.0
+- Pull a pop-up sheet down by its grey bar or title to close it: it follows your finger, a quick flick or a long pull closes it, a short slow pull springs back.
+
 ## 2.5.4
 - The phone's Back button now steps back through screens and sheets, then to the Dashboard, and only leaves the app from the Dashboard.
 

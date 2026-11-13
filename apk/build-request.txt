@@ -1,1 +1,1 @@
-Build 7: LIFT 2.5.4
+Build 8: LIFT 2.6.0
