@@ -1,11 +1,12 @@
 name: Build Android APK
 
-# Run it by pushing a tag that starts with "apk-", for example:  git tag apk-2.3.0 && git push origin apk-2.3.0
+# Run it by changing apk/build-request.txt (any edit pushed to main starts a build),
 # or from the Actions tab with "Run workflow".
 on:
   workflow_dispatch:
   push:
-    tags: ['apk-*']
+    branches: [main]
+    paths: ['apk/build-request.txt']
 
 permissions:
   contents: write
