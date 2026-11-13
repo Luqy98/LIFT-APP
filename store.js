@@ -361,6 +361,17 @@ export function moveInArray(arr, item, dir) {
   return true;
 }
 
+/** Put a week's workouts in the given order (ids). */
+export function reorderWorkouts(routineId, weekId, ids) {
+  const wk = weekById(routineId, weekId);
+  if (!wk) return;
+  const by = new Map(wk.workouts.map((w) => [w.id, w]));
+  const next = ids.map((id) => by.get(id)).filter(Boolean);
+  if (next.length !== wk.workouts.length) return;
+  wk.workouts.splice(0, wk.workouts.length, ...next);
+  touch();
+}
+
 export function addRoutine(name, { weeks = 0, perWeek = 0 } = {}) {
   const r = { id: uid(), name: norm(name) || 'New programme', createdAt: now(), weeks: [] };
   const slots = Array.from({ length: perWeek }, () => uid());

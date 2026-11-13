@@ -976,4 +976,10 @@ body { position: fixed; inset: 0; width: 100%; }
 /* ---- 2.6: pull a sheet down to close it ---- */
 .sheet-grip { position: relative; touch-action: none; cursor: grab; }
 .sheet-grip::before { content: ''; position: absolute; inset: -14px -40px -14px; } /* bigger touch target than the visible bar */
-.sheet-title { touch-action: none; }
+
+/* ---- 2.7: reorder screen ---- */
+.sort-row { position: relative; }
+.sort-row.is-dragging { z-index: 5; box-shadow: 0 14px 30px -10px rgba(0, 0, 0, 0.55); border-color: var(--accent); }
+.drag-handle { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin-right: 2px; color: var(--muted); touch-action: none; cursor: grab; border-radius: 12px; }
+.sortable { gap: 8px; }
+.sort-item .row-main { min-width: 0; padding: 12px 8px 12px 14px; }

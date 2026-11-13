@@ -1,5 +1,5 @@
 // Workouts tab: routines -> weeks -> workouts -> exercises -> sets (the plan), plus the History segment.
-import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet, modeBanner } from './ui.js';
+import { h, icon, iconBtn, sortableList, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet, modeBanner } from './ui.js';
 import { notesList, addNote, canAddNote } from './notes.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
@@ -185,6 +185,23 @@ export function weekView({ routineId, weekId }) {
   };
 }
 
+// ---- Week: reorder workouts (drag by the handle) --------------------------------------------
+export function reorderView({ routineId, weekId }) {
+  const r = S.routineById(routineId);
+  const wk = S.weekById(routineId, weekId);
+  if (!r || !wk) return notFound('Week');
+  const rows = wk.workouts.map((w) => ({
+    id: w.id,
+    el: h('div', { class: `row-card wk wk-${w.color ?? 0} sort-item` },
+      h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, h('span', { class: 'wk-dot' }), h('span', { text: w.name }), w.deload ? h('span', { class: 'tag-deload', text: 'Deload' }) : null)),
+      h('span', { class: 'drag-handle', role: 'button', 'aria-label': `Drag ${w.name} to reorder` }, icon('grip', 22))),
+  }));
+  const content = h('div', { class: 'page' },
+    h('p', { class: 'hint', text: 'Drag the handle on the right to move a workout where you want it.' }),
+    sortableList(rows, (ids) => S.reorderWorkouts(routineId, weekId, ids)));
+  return { title: 'Reorder Workouts', subtitle: `${wk.name} · ${r.name}`, content };
+}
+
 async function addWorkout(r, wk) {
   const v = await formDialog({
     title: 'Add workout',
@@ -211,8 +228,7 @@ async function workoutMenu(r, wk, w) {
         : { label: 'Mark as deload workout', value: 'deload', sub: 'Suggests 60% of your 1RM. Left out of 1RM and charts' },
       { label: 'Duplicate', value: 'dup', sub: 'A separate workout with its own history' },
       ...(links.length ? [{ label: 'Share history with another workout…', value: 'link', sub: 'Previous values and history carry over between them' }] : []),
-      { label: 'Move up', value: 'up', disabled: i === 0 },
-      { label: 'Move down', value: 'down', disabled: i === wk.workouts.length - 1 },
+      ...(wk.workouts.length > 1 ? [{ label: 'Reorder workouts', value: 'reorder', sub: 'Drag them into a new order' }] : []),
       { label: 'Delete workout', value: 'del', danger: true },
     ],
   });
@@ -237,7 +253,7 @@ async function workoutMenu(r, wk, w) {
       options: links.map((l) => ({ label: l.name, sub: l.week, value: l.slotId })),
     });
     if (pick) { S.linkWorkoutSlot(w.id, pick); toast('History linked'); nav.refresh(); }
-  } else if (v === 'up' || v === 'down') { S.moveInArray(wk.workouts, w, v === 'up' ? -1 : 1); nav.refresh(); }
+  } else if (v === 'reorder') { nav.push(reorderView, { routineId: r.id, weekId: wk.id }); }
   else if (v === 'del') {
     if (await confirmDialog({ title: `Delete ${w.name}?`, message: 'The plan is removed. Logs you already saved stay in your history.', ok: 'Delete workout', danger: true })) {
       S.deleteWorkout(r.id, wk.id, w.id);

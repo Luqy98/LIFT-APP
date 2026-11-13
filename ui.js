@@ -53,6 +53,7 @@ const ICONS = {
   finger: 'M12 11v3c0 3-1 5-2.5 7M8 14c0-2.2 1.8-4 4-4s4 1.8 4 4c0 2.5-.5 4.500-1.500 6.500M5 12a7 7 0 0114 0c0 2 0 3.500-.5 5M8.500 5.500A7 7 0 0112 5',
   home: 'M4 11l8-7 8 7M6 9.500V20h12V9.500M10 20v-5h4v5',
   flame: 'M12 3c1 4 5 5.500 5 10a5 5 0 01-10 0c0-2 1-3.500 2-4.500.2 1.500 1 2.500 2 2.500 0-3-.5-5 1-8z',
+  grip: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
   pencil: 'M4 20l1-4L16 5l3 3L8 19l-4 1zM14 7l3 3',
   lock: 'M7 11V8a5 5 0 0110 0v3M6 11h12v9H6z',
   history: 'M4 12a8 8 0 108-8M4 4v5h5M12 8v4l3 2',
@@ -100,43 +101,36 @@ export function titleCase(s) {
   return s.split(' ').map((w, i) => (!w || (i > 0 && SMALL.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
 }
 
-/** Pull the grip or title of a sheet down to close it: it follows the finger, a quick flick or a long pull closes it, otherwise it springs back. */
+/** Pull a sheet down from anywhere near its top to close it: it follows the finger, a quick flick or a long pull closes it, otherwise it springs back. */
 function enableDragToClose(panel, backdrop, close) {
-  let id = null, startY = 0, dy = 0, samples = [];
+  let startY = 0, dy = 0, samples = [], active = false;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const inHandle = (e) => !!e.target.closest('.sheet-grip, .sheet-title') || e.clientY - panel.getBoundingClientRect().top < 44;
   const set = (y) => {
     panel.style.transform = y ? `translateY(${y}px)` : '';
-    const f = Math.min(1, y / Math.max(1, panel.offsetHeight));
-    backdrop.style.opacity = String(1 - f * 0.85);
+    backdrop.style.opacity = String(1 - Math.min(1, y / Math.max(1, panel.offsetHeight)) * 0.85);
   };
-  panel.addEventListener('pointerdown', (e) => {
-    if (id !== null || (e.pointerType === 'mouse' && e.button !== 0) || !inHandle(e)) return;
-    id = e.pointerId; startY = e.clientY; dy = 0; samples = [[performance.now(), e.clientY]];
-    try { panel.setPointerCapture(id); } catch { /* ignore */ }
+  const begin = (y) => {
+    active = true; startY = y; dy = 0; samples = [[performance.now(), y]];
     panel.style.transition = 'none'; backdrop.style.transition = 'none';
     if (panel.contains(document.activeElement)) document.activeElement.blur?.();
-  });
-  panel.addEventListener('pointermove', (e) => {
-    if (e.pointerId !== id) return;
-    dy = Math.max(0, e.clientY - startY);
+  };
+  const track = (y) => {
+    dy = Math.max(0, y - startY);
     const now = performance.now();
-    samples.push([now, e.clientY]);
+    samples.push([now, y]);
     while (samples.length > 2 && now - samples[0][0] > 120) samples.shift();
     set(dy);
-  });
-  const end = (e) => {
-    if (e.pointerId !== id) return;
-    id = null;
+  };
+  const finish = (y, cancelled) => {
+    active = false;
     const now = performance.now();
-    samples.push([now, e.clientY]);
+    samples.push([now, y]);
     while (samples.length > 2 && now - samples[0][0] > 120) samples.shift();
     const [t0, y0] = samples[0], [t1, y1] = samples[samples.length - 1];
     const speed = t1 > t0 ? (y1 - y0) / (t1 - t0) : 0; // px per ms, downwards positive
-    const h = panel.offsetHeight;
-    const ms = reduced ? 0 : 200;
+    const h = panel.offsetHeight, ms = reduced ? 0 : 200;
     panel.style.transition = `transform ${ms}ms ease-out`; backdrop.style.transition = `opacity ${ms}ms ease-out`;
-    if (e.type === 'pointerup' && (dy > h * 0.4 || (speed > 0.5 && dy > 24))) {
+    if (!cancelled && (dy > h * 0.4 || (speed > 0.5 && dy > 24))) {
       panel.style.transform = `translateY(${h}px)`; backdrop.style.opacity = '0';
       setTimeout(close, ms);
     } else {
@@ -144,8 +138,95 @@ function enableDragToClose(panel, backdrop, close) {
       setTimeout(() => { panel.style.transition = ''; backdrop.style.transition = ''; }, ms);
     }
   };
-  panel.addEventListener('pointerup', end);
-  panel.addEventListener('pointercancel', end);
+  const zone = () => Math.max(160, panel.offsetHeight * 0.4); // the top part of the sheet
+  const inZone = (y) => y - panel.getBoundingClientRect().top <= zone();
+
+  // Fingers: any touch that starts in the top part of the sheet and moves downwards (while the sheet is not scrolled) pulls it down.
+  let t = null;
+  panel.addEventListener('touchstart', (e) => {
+    t = null;
+    if (active || e.touches.length !== 1 || e.target.closest('input[type=range], .no-sheet-drag')) return;
+    const p = e.touches[0];
+    if (inZone(p.clientY)) t = { x: p.clientX, y: p.clientY, on: false };
+  }, { passive: true });
+  panel.addEventListener('touchmove', (e) => {
+    if (!t) return;
+    const p = e.touches[0], mx = p.clientX - t.x, my = p.clientY - t.y;
+    if (!t.on) {
+      if (my < -8 || Math.abs(mx) > Math.abs(my) + 4 && Math.abs(mx) > 10) { t = null; return; } // scrolling up or sideways
+      if (my > 8 && panel.scrollTop <= 0) { t.on = true; begin(p.clientY - (my - 8)); } else return;
+    }
+    if (e.cancelable) e.preventDefault();
+    track(p.clientY);
+  }, { passive: false });
+  const tEnd = (e, cancelled) => { if (t?.on) finish((e.changedTouches?.[0] || {}).clientY ?? startY + dy, cancelled); t = null; };
+  panel.addEventListener('touchend', (e) => tEnd(e, false));
+  panel.addEventListener('touchcancel', (e) => tEnd(e, true));
+
+  // Mouse / pen: the grip bar and title.
+  let id = null;
+  panel.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch' || id !== null || e.button !== 0 || !e.target.closest('.sheet-grip, .sheet-title')) return;
+    id = e.pointerId; begin(e.clientY);
+    try { panel.setPointerCapture(id); } catch { /* ignore */ }
+  });
+  panel.addEventListener('pointermove', (e) => { if (e.pointerId === id && active) track(e.clientY); });
+  const pEnd = (e) => { if (e.pointerId !== id) return; id = null; finish(e.clientY, e.type === 'pointercancel'); };
+  panel.addEventListener('pointerup', pEnd);
+  panel.addEventListener('pointercancel', pEnd);
+}
+
+/**
+ * A list whose rows can be dragged into a new order by their handle. rows: [{ id, el }] where each el contains a
+ * `.drag-handle`. onChange(ids) is called after a drop that changed the order.
+ */
+export function sortableList(rows, onChange) {
+  const list = h('div', { class: 'list sortable' }, rows.map((r) => { r.el.dataset.id = r.id; r.el.classList.add('sort-row'); return r.el; }));
+  const order = () => [...list.children].map((c) => c.dataset.id);
+  let drag = null;
+  list.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest('.drag-handle');
+    if (!handle || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const row = handle.closest('.sort-row');
+    drag = { row, id: e.pointerId, startY: e.clientY, before: order().join() };
+    try { handle.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+    row.classList.add('is-dragging');
+    row.style.transition = 'none';
+    e.preventDefault();
+  });
+  list.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const { row } = drag;
+    const place = () => { row.style.transform = `translateY(${e.clientY - drag.startY}px)`; };
+    place();
+    for (let guard = 0; guard < 20; guard++) {
+      const r = row.getBoundingClientRect(), centre = r.top + r.height / 2;
+      const next = row.nextElementSibling, prev = row.previousElementSibling;
+      let sib = null, after = false;
+      if (next) { const n = next.getBoundingClientRect(); if (centre > n.top + n.height / 2) { sib = next; after = true; } }
+      if (!sib && prev) { const n = prev.getBoundingClientRect(); if (centre < n.top + n.height / 2) sib = prev; }
+      if (!sib) break;
+      const sibTop = sib.getBoundingClientRect().top;
+      if (after) list.insertBefore(sib, row); else list.insertBefore(row, sib);
+      drag.startY += row.getBoundingClientRect().top - r.top; // the row's resting place moved; keep it under the finger
+      place();
+      const shift = sibTop - sib.getBoundingClientRect().top; // glide the row that stepped aside
+      if (shift) {
+        sib.style.transition = 'none'; sib.style.transform = `translateY(${shift}px)`;
+        requestAnimationFrame(() => requestAnimationFrame(() => { sib.style.transition = 'transform 160ms ease-out'; sib.style.transform = ''; }));
+      }
+    }
+  });
+  const drop = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const { row, before } = drag; drag = null;
+    row.style.transition = 'transform 160ms ease-out'; row.style.transform = '';
+    setTimeout(() => { row.classList.remove('is-dragging'); row.style.transition = ''; }, 170);
+    if (order().join() !== before) onChange?.(order());
+  };
+  list.addEventListener('pointerup', drop);
+  list.addEventListener('pointercancel', drop);
+  return list;
 }
 
 export function sheet(content, { title: rawTitle, onClose, wide = false } = {}) {
