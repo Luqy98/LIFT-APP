@@ -793,7 +793,9 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .cal-key { justify-content: center; }
 
 /* ---- 1.9 mascot exercise illustrations: a one-colour body mask (white in dark mode, black in light) plus red eyes ---- */
-:root { --art-eyes: #ff3b3b; }
+:root { --art-eyes: #000; }   /* dark mode: black eyes */
+:root[data-theme="light"] { --art-eyes: #ff3b3b; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --art-eyes: #ff3b3b; } }
 .art-img { position: relative; display: inline-block; width: 40px; height: 40px; }
 .art-img::before, .art-img::after { content: ""; position: absolute; inset: 0; -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat; }
 .art-img::before { background-color: currentColor; }
