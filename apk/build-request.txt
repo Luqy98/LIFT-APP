@@ -1,1 +1,1 @@
-Build 4: LIFT 2.5.1
+Build 5: LIFT 2.5.2

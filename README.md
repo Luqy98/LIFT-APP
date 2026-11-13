@@ -144,6 +144,9 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Android app: native fingerprint unlock (secret held in the Android Keystore behind the fingerprint, PIN always works), see-through status and navigation bars (edge-to-edge, bar icons follow the theme), bell is paired with vibration, new logo.
 - Android shell moved to Capacitor 8.
 
+## 2.5.2
+- Android: own theme file so no native title bar can appear; the page itself no longer scrolls when the keyboard opens (only the page body or sheet scrolls to the field); icon matches the black-on-lavender design.
+
 ## 2.5.1
 - Android: removes the native "LIFT" title bar that covered the app's own header (workout names, subtitles, light/dark style) and cut into the welcome box.
 - Typing: the tab bar and bottom action bar step aside while the keyboard is open, so only the page scrolls to the field you are filling in.

@@ -304,17 +304,37 @@ export function modeBanner(kind, title, sub) {
 const typesText = (el) => el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'submit', 'range', 'file', 'date', 'color'].includes(el.type)));
 let kbTimer = 0;
 const syncVV = () => document.documentElement.style.setProperty('--vvh', Math.round(window.visualViewport?.height || window.innerHeight) + 'px');
+const scrollParent = (el) => {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const o = getComputedStyle(p).overflowY;
+    if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) return p;
+  }
+  return null;
+};
+/** Scroll only the page or sheet that holds the field (never the whole window) so the field sits in the middle of what is left above the keyboard. */
+function reveal(el, smooth) {
+  try {
+    const sc = scrollParent(el);
+    if (!sc) return;
+    const vh = window.visualViewport?.height || window.innerHeight;
+    const r = el.getBoundingClientRect(), c = sc.getBoundingClientRect();
+    const visible = Math.max(80, Math.min(c.bottom, vh) - c.top);
+    sc.scrollBy({ top: r.top + r.height / 2 - (c.top + visible / 2), behavior: smooth ? 'smooth' : 'auto' });
+  } catch { /* ignore */ }
+}
+window.addEventListener('scroll', () => { if (window.scrollY || window.scrollX) window.scrollTo(0, 0); });
 window.visualViewport?.addEventListener('resize', () => {
   syncVV();
   const el = document.activeElement;
-  if (document.documentElement.classList.contains('kb-open') && typesText(el)) { try { el.scrollIntoView({ block: 'center' }); } catch { /* ignore */ } }
+  if (document.documentElement.classList.contains('kb-open') && typesText(el)) reveal(el, false);
 });
 document.addEventListener('focusin', (e) => {
   if (!typesText(e.target)) return;
   clearTimeout(kbTimer);
   syncVV();
   document.documentElement.classList.add('kb-open');
-  setTimeout(() => { try { e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { /* ignore */ } }, 300);
+  setTimeout(() => reveal(e.target, true), 300);
+  setTimeout(() => { if (document.activeElement === e.target) reveal(e.target, false); }, 700);
 });
 document.addEventListener('focusout', () => {
   clearTimeout(kbTimer);

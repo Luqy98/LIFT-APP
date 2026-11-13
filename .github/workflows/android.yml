@@ -115,10 +115,31 @@ jobs:
           </resources>
           XML
           S=app/src/main/res/values/styles.xml
+          echo "--- template styles.xml ---"; cat "$S"
+          # Own theme file: every theme is a NoActionBar theme, so Android never draws its own title bar over the app.
+          cat > "$S" <<XML
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+                  <item name="windowActionBar">false</item>
+                  <item name="windowNoTitle">true</item>
+                  <item name="android:windowBackground">@color/lift_window_bg</item>
+                  <item name="android:background">@color/lift_window_bg</item>
+                  <item name="android:statusBarColor">@android:color/transparent</item>
+                  <item name="android:navigationBarColor">@android:color/transparent</item>
+              </style>
+              <style name="AppTheme.NoActionBar" parent="AppTheme">
+                  <item name="windowActionBar">false</item>
+                  <item name="windowNoTitle">true</item>
+                  <item name="android:background">@null</item>
+              </style>
+              <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
+                  <item name="android:windowBackground">@color/lift_window_bg</item>
+              </style>
+          </resources>
+          XML
           cat "$S"
-          sed -i 's#@drawable/splash#@color/lift_window_bg#g' "$S"
-          sed -i 's#Theme.AppCompat.DayNight.DarkActionBar#Theme.AppCompat.DayNight.NoActionBar#g; s#Theme.AppCompat.Light.DarkActionBar#Theme.AppCompat.DayNight.NoActionBar#g' "$S"
-          grep -n "splash\|lift_window_bg" "$S" || true
+          grep -n "android:theme" app/src/main/AndroidManifest.xml || true
 
       - name: Set version numbers
         working-directory: apk/android

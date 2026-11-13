@@ -966,3 +966,9 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 /* While typing, the tab bar and the bottom action bar step out of the way so only the page scrolls to the field. */
 .kb-open #tabs, .kb-open #footer { display: none; }
 .kb-open #main { padding-bottom: 45dvh; scroll-padding-block: 16px; }
+
+/* ---- 2.5.1: the page itself never scrolls (only #main and sheets do), so the on-screen keyboard cannot push the header away ---- */
+html, body { overflow: hidden; }
+body { position: fixed; inset: 0; width: 100%; }
+#app { height: 100%; }
+#lock { position: fixed; inset: 0; min-height: 0; overflow-y: auto; }
