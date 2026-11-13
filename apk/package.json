@@ -5,6 +5,7 @@
   "description": "Android wrapper for LIFT. The web files are bundled into the app; nothing is loaded from the internet.",
   "dependencies": {
     "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "@capacitor/filesystem": "^8.0.0",
     "@capacitor/share": "^8.0.0",

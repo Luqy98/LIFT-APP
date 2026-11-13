@@ -2,7 +2,7 @@
 import { openDb } from './db.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
-import { toast, installState, closeAllOverlays, clearTick } from './ui.js';
+import { toast, installState, closeAllOverlays, clearTick, backHandlers } from './ui.js';
 import { renderLock } from './views-lock.js';
 import { dashboardView } from './views-dash.js';
 import { workoutsRoot } from './views-workouts.js';
@@ -74,6 +74,17 @@ S.onSaveError(() => toast('Could not save. Storage may be full.', { ms: 8000 }))
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installState.prompt = e; });
 
 // Inside the Android app the files are bundled in the app itself, so no service worker is needed.
+// Android app: take the phone's Back button ourselves. (Browser history entries the page adds without a tap are skipped
+// by Android's web view, which made Back close the app after the first step.) Each press closes a sheet, goes back one
+// screen, or goes to the Dashboard; only from the Dashboard (or the lock screen) does it leave the app.
+{
+  const App = window.Capacitor?.isNativePlatform?.() && window.Capacitor.Plugins?.App;
+  App?.addListener?.('backButton', () => {
+    if (!document.getElementById('app').hidden) for (const fn of backHandlers) if (fn()) return;
+    App.exitApp?.();
+  });
+}
+
 if ('serviceWorker' in navigator && !window.Capacitor?.isNativePlatform?.()) {
   let hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
