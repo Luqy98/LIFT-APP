@@ -42,6 +42,7 @@ export function switchTab(id) {
   saveScroll();
   if (id === tab) stacks[tab].length = 1;
   tab = id;
+  if (id !== 'dashboard') ensureGuard();
   render({ restore: true });
 }
 export const refresh = () => render({ keep: true });
@@ -58,6 +59,8 @@ export function resetAll() {
 }
 
 backHandlers.push(() => pop());
+// On the first screen of any other tab, Back goes to the Dashboard; only from the Dashboard does it leave the app.
+backHandlers.push(() => { if (tab === 'dashboard') return false; switchTab('dashboard'); return true; });
 
 export function render({ keep = false, restore = false, scroll = 0 } = {}) {
   const main = $('main');
