@@ -55,9 +55,9 @@ export async function runBackup() {
   });
   if (!v) return false;
   const text = await S.exportBackup(v.p1);
-  const name = `gymlog-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const name = 'LIFT-backup.json'; // always the same name, so the newest copy is easy to spot and old ones are easy to replace
   // A fresh tap is needed for the share sheet, because encrypting takes a moment.
-  const go = await confirmDialog({ title: 'Backup ready', message: 'Choose where to keep it, for example Google Drive or an email to yourself.', ok: 'Share or save' });
+  const go = await confirmDialog({ title: 'Backup ready', message: 'Choose where to keep it, for example Google Drive. The file is always called LIFT-backup.json, so replace the old one when Drive asks.', ok: 'Share or save' });
   if (!go) return false;
   const how = await deliver(name, text);
   if (how === 'cancelled') return false;

@@ -88,6 +88,40 @@ async function enableFingerprint() {
   } catch (e) { toast(e.message, { ms: 7000 }); }
   nav.refresh();
 }
+async function turnLockOff() {
+  const v = await formDialog({
+    title: 'Turn off app lock?',
+    message: 'The app will open without a PIN or fingerprint. Anyone who can unlock your phone can open it. Your data stays on this phone.',
+    fields: [{ key: 'cur', label: 'Current PIN or passcode', type: 'password', autocomplete: 'current-password', inputmode: S.vaultInfo().numeric ? 'numeric' : 'text' }],
+    ok: 'Turn off lock',
+    validate: async (f) => ((await S.verifyPasscode(f.cur)) ? null : 'That PIN or passcode is wrong.'),
+  });
+  if (!v) return;
+  await WA.forget(S.bioParams()?.credId);
+  if (await S.turnLockOff(v.cur)) toast('App lock is off'); else toast('Could not turn the lock off.');
+  nav.refresh();
+}
+
+async function turnLockOn() {
+  const v = await formDialog({
+    title: 'Turn on app lock',
+    message: 'Choose a PIN (4+ digits) or a passcode (8+ characters). If you forget it, the data can’t be recovered, so back up regularly.',
+    fields: [
+      { key: 'next', label: 'New PIN or passcode', type: 'password', autocomplete: 'new-password' },
+      { key: 'again', label: 'Repeat', type: 'password', autocomplete: 'new-password' },
+    ],
+    ok: 'Turn on lock',
+    validate: async (f) => {
+      const bad = validateSecret(f.next);
+      if (bad) return bad;
+      if (f.next !== f.again) return 'The two entries don’t match.';
+      return (await S.turnLockOn(f.next)) ? null : 'Could not turn the lock on.';
+    },
+  });
+  if (v) toast('App lock is on');
+  nav.refresh();
+}
+
 async function disableFingerprint() {
   await WA.forget(S.bioParams()?.credId);
   await S.disableBio();
@@ -140,16 +174,25 @@ export function settingsRoot() {
         h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: `Version ${VERSION}` })),
         NATIVE ? null : h('button', { class: 'btn btn-sm', text: 'Check for update', onclick: checkUpdate }))),
     card('Security',
-      selectField('Lock after leaving the app', [[0, 'Immediately'], [1, '1 minute'], [5, '5 minutes'], [15, '15 minutes'], [30, '30 minutes']], st.autoLockMin, (v) => set('autoLockMin', +v)),
-      h('div', { class: 'row-between' },
-        h('div', {}, h('div', { class: 'row-title', text: 'Fingerprint unlock' }), h('div', { class: 'hint', text: S.vaultInfo().bio ? 'On. Your PIN still works too.' : 'Off' })),
-        S.vaultInfo().bio
-          ? h('button', { class: 'btn btn-sm', text: 'Turn off', onclick: disableFingerprint })
-          : h('button', { class: 'btn btn-sm btn-primary', text: 'Turn on', onclick: enableFingerprint })),
-      h('div', { class: 'btn-row' },
-        h('button', { class: 'btn', text: 'Change PIN or passcode', onclick: changePasscode }),
-        h('button', { class: 'btn', text: 'Lock now', onclick: () => window.dispatchEvent(new Event('gymlog:lock')) })),
-      h('p', { class: 'hint', text: 'Data is encrypted on this phone (AES-256). A 4-digit PIN only has 10,000 combinations, so it protects against people using your phone, not against someone copying its stored data. For that, use a longer passcode.' })),
+      S.vaultInfo().open
+        ? h('div', { class: 'row-between' },
+            h('div', {}, h('div', { class: 'row-title', text: 'App lock' }), h('div', { class: 'hint', text: 'Off. The app opens straight away.' })),
+            h('button', { class: 'btn btn-sm btn-primary', text: 'Turn on', onclick: turnLockOn }))
+        : [
+          selectField('Lock after leaving the app', [[0, 'Immediately'], [1, '1 minute'], [5, '5 minutes'], [15, '15 minutes'], [30, '30 minutes']], st.autoLockMin, (v) => set('autoLockMin', +v)),
+          h('div', { class: 'row-between' },
+            h('div', {}, h('div', { class: 'row-title', text: 'Fingerprint unlock' }), h('div', { class: 'hint', text: S.vaultInfo().bio ? 'On. Your PIN still works too.' : 'Off' })),
+            S.vaultInfo().bio
+              ? h('button', { class: 'btn btn-sm', text: 'Turn off', onclick: disableFingerprint })
+              : h('button', { class: 'btn btn-sm btn-primary', text: 'Turn on', onclick: enableFingerprint })),
+          h('div', { class: 'btn-row' },
+            h('button', { class: 'btn', text: 'Change PIN or passcode', onclick: changePasscode }),
+            h('button', { class: 'btn', text: 'Lock now', onclick: () => window.dispatchEvent(new Event('gymlog:lock')) })),
+          h('div', { class: 'row-between' },
+            h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'App lock' }), h('span', { class: 'row-sub', text: 'On. Turn off to open the app without a PIN.' })),
+            h('button', { class: 'btn btn-sm', text: 'Turn off', onclick: turnLockOff })),
+          h('p', { class: 'hint', text: 'Data is encrypted on this phone (AES-256). A 4-digit PIN only has 10,000 combinations, so it protects against people using your phone, not against someone copying its stored data. For that, use a longer passcode.' }),
+        ]),
 
     card('Profile',
       h('div', { class: 'row-between' },

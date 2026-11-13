@@ -60,10 +60,13 @@ function setupForm(onDone) {
   },
   h('div', { class: 'lock-mark' }, icon('lock', 30)),
   h('h1', { class: 'lock-brand', text: 'LIFT' }),
-  h('p', { class: 'lock-lead', text: 'Choose a PIN. Everything you log is encrypted on this phone with a key made from it, and never sent anywhere.' }),
+  h('p', { class: 'lock-lead', text: 'Choose a PIN to lock the app, or skip it. Everything you log stays on this phone and is never sent anywhere.' }),
   segHost, p1, p2, hint, err, btn,
   h('button', { type: 'button', class: 'btn btn-block', text: 'Restore from a backup', onclick: () => restoreFlow(onDone) }),
-  h('p', { class: 'lock-fine', text: 'There is no reset. If you forget it, the data can’t be recovered, so back up regularly.' }));
+  h('button', { type: 'button', class: 'btn btn-block', text: 'Skip, no lock', onclick: async () => {
+    try { await S.setupWithoutLock(); onDone(); } catch (ex) { console.error(ex); err.textContent = 'Could not set up storage on this device.'; }
+  } }),
+  h('p', { class: 'lock-fine', text: 'If you choose a PIN there is no reset. If you forget it, the data can’t be recovered, so back up regularly. You can turn the lock on or off later in Settings.' }));
 }
 
 async function restoreFlow(onDone) {

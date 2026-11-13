@@ -102,6 +102,21 @@ jobs:
         continue-on-error: true
         run: npx capacitor-assets generate --android
 
+      - name: Plain window background (no stretched splash image behind the status bar)
+        working-directory: apk/android
+        run: |
+          mkdir -p app/src/main/res/values
+          cat > app/src/main/res/values/lift_colors.xml <<XML
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="lift_window_bg">#0b0a10</color>
+          </resources>
+          XML
+          S=app/src/main/res/values/styles.xml
+          cat "$S"
+          sed -i 's#@drawable/splash#@color/lift_window_bg#g' "$S"
+          grep -n "splash\|lift_window_bg" "$S" || true
+
       - name: Set version numbers
         working-directory: apk/android
         run: |

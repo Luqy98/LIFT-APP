@@ -143,3 +143,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Typing: while a text box is focused, pop-ups move to the top of the screen and the page scrolls the field into view, so the keyboard never hides what you type.
 - Android app: native fingerprint unlock (secret held in the Android Keystore behind the fingerprint, PIN always works), see-through status and navigation bars (edge-to-edge, bar icons follow the theme), bell is paired with vibration, new logo.
 - Android shell moved to Capacitor 8.
+
+## 2.5.0
+- App lock is optional. First launch offers "Skip, no lock"; Settings → Security has App lock Turn on / Turn off. With the lock off the app opens straight away (the data key is wrapped with a built-in secret, so this is convenience rather than protection).
+- Backups are always named LIFT-backup.json so the newest copy is easy to spot and old ones are easy to replace.
+- New logo with no background: just the white tile, dumbbell and LIFT. Splash image removed (it was being stretched behind the status bar).

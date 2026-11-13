@@ -47,7 +47,32 @@ export async function init(database) {
 }
 export const isSetup = () => !!vault;
 export const isUnlocked = () => !!key && !!data;
-export const vaultInfo = () => (vault ? { numeric: !!vault.numeric, lockedUntil: vault.lockedUntil || 0, bio: !!vault.bio } : null);
+export const vaultInfo = () => (vault ? { numeric: !!vault.numeric, lockedUntil: vault.lockedUntil || 0, bio: !!vault.bio, open: !!vault.open } : null);
+
+// "No lock" mode: the app opens straight away. The data key is wrapped with a fixed built-in secret instead of a PIN,
+// so this is convenience, not protection. Turning the lock back on re-wraps the key with a new PIN.
+const NO_LOCK = 'lift-no-lock-v1';
+export async function setupWithoutLock() {
+  await setup(NO_LOCK);
+  vault = { ...vault, open: true, numeric: false };
+  await db.batch('vault', [['lock', vault]]);
+}
+export const openWithoutLock = () => unlock(NO_LOCK);
+export async function turnLockOff(current) {
+  const wrapped = await C.changeSecret(vault.wrapped, current, NO_LOCK);
+  if (!wrapped) return false;
+  const { bio, ...rest } = vault;
+  vault = { ...rest, wrapped, numeric: false, open: true, fails: 0, lockedUntil: 0 };
+  await db.batch('vault', [['lock', vault]]);
+  return true;
+}
+export async function turnLockOn(newSecret) {
+  const wrapped = await C.changeSecret(vault.wrapped, NO_LOCK, newSecret);
+  if (!wrapped) return false;
+  vault = { ...vault, wrapped, numeric: /^\d+$/.test(newSecret), open: false, fails: 0, lockedUntil: 0 };
+  await db.batch('vault', [['lock', vault]]);
+  return true;
+}
 
 function newData() {
   return {

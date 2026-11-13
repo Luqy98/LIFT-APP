@@ -43,7 +43,7 @@ function onUnlocked() {
 }
 
 async function lockNow() {
-  if (!S.isUnlocked()) return;
+  if (!S.isUnlocked() || S.vaultInfo()?.open) return; // with the lock turned off the app never locks
   closeAllOverlays();
   clearTick();
   await S.lock();
@@ -92,6 +92,9 @@ if ('serviceWorker' in navigator && !window.Capacitor?.isNativePlatform?.()) {
     $('lock').hidden = false;
     $('lock').textContent = 'This browser is blocking local storage (private browsing?). Open Gym Log in a normal Chrome window.';
     return;
+  }
+  if (S.isSetup() && S.vaultInfo().open) {
+    try { if ((await S.openWithoutLock()).ok) { onUnlocked(); return; } } catch (e) { console.error(e); }
   }
   showLock();
 })();
