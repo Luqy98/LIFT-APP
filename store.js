@@ -361,6 +361,15 @@ export function moveInArray(arr, item, dir) {
   return true;
 }
 
+/** Put the items of any list (weeks, workouts, exercises…) in the given order of ids, then save. */
+export function reorderList(arr, ids, save = touch) {
+  const by = new Map(arr.map((x) => [x.id, x]));
+  const next = ids.map((id) => by.get(id)).filter(Boolean);
+  if (next.length !== arr.length) return;
+  arr.splice(0, arr.length, ...next);
+  save();
+}
+
 /** Put a week's workouts in the given order (ids). */
 export function reorderWorkouts(routineId, weekId, ids) {
   const wk = weekById(routineId, weekId);

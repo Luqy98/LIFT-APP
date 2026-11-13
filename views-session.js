@@ -1,5 +1,6 @@
 // Logging a workout, editing past logs, per-exercise history (locked to one workout), and the history list.
 import { h, icon, iconBtn, confirmDialog, choiceSheet, toast, setTick, segmented, card, tile, emptyState, pickerField, sheet, modeBanner } from './ui.js';
+import { openReorder } from './views-reorder.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import {
@@ -212,8 +213,7 @@ async function entryMenu(s, entry, index) {
       ...(canAddNote(entry) ? [{ label: 'Add note', value: 'note', sub: 'Lifting cues or a general note' }] : []),
       { label: 'History in this workout', value: 'history' },
       { label: 'Replace exercise', value: 'replace' },
-      { label: 'Move up', value: 'up', disabled: index === 0 },
-      { label: 'Move down', value: 'down', disabled: index === s.entries.length - 1 },
+      ...(s.entries.length > 1 ? [{ label: 'Reorder exercises', value: 'reorder', sub: 'Drag them into a new order' }] : []),
       { label: 'Remove from this workout', value: 'remove', danger: true },
     ],
   });
@@ -225,10 +225,12 @@ async function entryMenu(s, entry, index) {
     if (!id) return;
     entry.exerciseId = id; entry.exerciseName = S.exerciseName(id);
     S.touchSession(s); nav.refresh();
-  } else if (v === 'up' || v === 'down') {
-    const i = s.entries.indexOf(entry), j = i + (v === 'up' ? -1 : 1);
-    [s.entries[i], s.entries[j]] = [s.entries[j], s.entries[i]];
-    S.touchSession(s); nav.refresh();
+  } else if (v === 'reorder') {
+    openReorder({
+      title: 'Reorder Exercises', subtitle: S.workoutName(s),
+      rows: () => s.entries.map((x) => ({ id: x.id, name: S.exerciseName(x.exerciseId, x.exerciseName), art: S.exerciseName(x.exerciseId, x.exerciseName), sub: `${x.sets.length} ${x.sets.length === 1 ? 'set' : 'sets'}` })),
+      apply: (ids) => S.reorderList(s.entries, ids, () => S.touchSession(s)),
+    });
   } else if (v === 'remove') {
     if (entry.sets.some((x) => x.done) && !(await confirmDialog({ title: 'Remove this exercise?', message: 'Its logged sets in this workout will be deleted.', ok: 'Remove', danger: true }))) return;
     s.entries = s.entries.filter((x) => x !== entry);

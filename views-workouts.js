@@ -1,11 +1,12 @@
 // Workouts tab: routines -> weeks -> workouts -> exercises -> sets (the plan), plus the History segment.
-import { h, icon, iconBtn, sortableList, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet, modeBanner } from './ui.js';
+import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet, modeBanner } from './ui.js';
 import { notesList, addNote, canAddNote } from './notes.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { exerciseArt } from './art.js';
 import { SET_TYPES, typeInfo, parseNum, fmtW, fmtDate, WORKOUT_COLORS } from './calc.js';
 import { pickMovement } from './picker.js';
+import { openReorder } from './views-reorder.js';
 import { startWorkout, historyContent, sessionView, movementHistoryView } from './views-session.js';
 
 const ui = { seg: 'programmes' };
@@ -139,8 +140,7 @@ async function weekMenu(r, wk) {
     options: [
       { label: 'Rename', value: 'rename' },
       { label: 'Duplicate week', value: 'dup' },
-      { label: 'Move up', value: 'up', disabled: i === 0 },
-      { label: 'Move down', value: 'down', disabled: i === r.weeks.length - 1 },
+      ...(r.weeks.length > 1 ? [{ label: 'Reorder weeks', value: 'reorder', sub: 'Drag them into a new order' }] : []),
       { label: 'Delete week', value: 'del', danger: true },
     ],
   });
@@ -148,7 +148,13 @@ async function weekMenu(r, wk) {
     const x = await formDialog({ title: 'Rename week', fields: [{ key: 'name', label: 'Week name', value: wk.name, capitalize: 'words' }], validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : null) });
     if (x) { S.renameWeek(r.id, wk.id, x.name); nav.refresh(); }
   } else if (v === 'dup') { S.duplicateWeek(r.id, wk.id); nav.refresh(); }
-  else if (v === 'up' || v === 'down') { S.moveInArray(r.weeks, wk, v === 'up' ? -1 : 1); nav.refresh(); }
+  else if (v === 'reorder') {
+    openReorder({
+      title: 'Reorder Weeks', subtitle: r.name,
+      rows: () => r.weeks.map((x) => ({ id: x.id, name: x.name, sub: plural(x.workouts.length, 'workout') })),
+      apply: (ids) => S.reorderList(r.weeks, ids),
+    });
+  }
   else if (v === 'del') {
     if (await confirmDialog({ title: `Delete ${wk.name}?`, message: 'Its workouts and planned sets are removed. Anything you logged stays in your history.', ok: 'Delete week', danger: true })) {
       S.deleteWeek(r.id, wk.id);
@@ -183,23 +189,6 @@ export function weekView({ routineId, weekId }) {
     actions: [iconBtn('more', 'Week options', () => weekMenu(r, wk).then(() => { if (!S.weekById(routineId, weekId)) nav.pop(); }))],
     content,
   };
-}
-
-// ---- Week: reorder workouts (drag by the handle) --------------------------------------------
-export function reorderView({ routineId, weekId }) {
-  const r = S.routineById(routineId);
-  const wk = S.weekById(routineId, weekId);
-  if (!r || !wk) return notFound('Week');
-  const rows = wk.workouts.map((w) => ({
-    id: w.id,
-    el: h('div', { class: `row-card wk wk-${w.color ?? 0} sort-item` },
-      h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, h('span', { class: 'wk-dot' }), h('span', { text: w.name }), w.deload ? h('span', { class: 'tag-deload', text: 'Deload' }) : null)),
-      h('span', { class: 'drag-handle', role: 'button', 'aria-label': `Drag ${w.name} to reorder` }, icon('grip', 22))),
-  }));
-  const content = h('div', { class: 'page' },
-    h('p', { class: 'hint', text: 'Drag the handle on the right to move a workout where you want it.' }),
-    sortableList(rows, (ids) => S.reorderWorkouts(routineId, weekId, ids)));
-  return { title: 'Reorder Workouts', subtitle: `${wk.name} · ${r.name}`, content };
 }
 
 async function addWorkout(r, wk) {
@@ -253,7 +242,13 @@ async function workoutMenu(r, wk, w) {
       options: links.map((l) => ({ label: l.name, sub: l.week, value: l.slotId })),
     });
     if (pick) { S.linkWorkoutSlot(w.id, pick); toast('History linked'); nav.refresh(); }
-  } else if (v === 'reorder') { nav.push(reorderView, { routineId: r.id, weekId: wk.id }); }
+  } else if (v === 'reorder') {
+    openReorder({
+      title: 'Reorder Workouts', subtitle: `${wk.name} · ${r.name}`,
+      rows: () => wk.workouts.map((x) => ({ id: x.id, name: x.name, color: x.color ?? 0, deload: x.deload })),
+      apply: (ids) => S.reorderList(wk.workouts, ids),
+    });
+  }
   else if (v === 'del') {
     if (await confirmDialog({ title: `Delete ${w.name}?`, message: 'The plan is removed. Logs you already saved stay in your history.', ok: 'Delete workout', danger: true })) {
       S.deleteWorkout(r.id, wk.id, w.id);
@@ -332,8 +327,7 @@ async function itemMenu(workout, item, index) {
       ...(canAddNote(item) ? [{ label: 'Add note', value: 'note', sub: 'Lifting cues or a general note' }] : []),
       { label: 'History in this workout', value: 'history' },
       { label: 'Replace exercise', value: 'replace' },
-      { label: 'Move up', value: 'up', disabled: index === 0 },
-      { label: 'Move down', value: 'down', disabled: index === workout.items.length - 1 },
+      ...(workout.items.length > 1 ? [{ label: 'Reorder exercises', value: 'reorder', sub: 'Drag them into a new order' }] : []),
       { label: 'Remove from workout', value: 'remove', danger: true },
     ],
   });
@@ -342,7 +336,13 @@ async function itemMenu(workout, item, index) {
   else if (v === 'replace') {
     const id = await pickMovement({ title: 'Replace with' });
     if (id) { item.exerciseId = id; S.touch(); nav.refresh(); }
-  } else if (v === 'up' || v === 'down') { S.moveInArray(workout.items, item, v === 'up' ? -1 : 1); nav.refresh(); }
+  } else if (v === 'reorder') {
+    openReorder({
+      title: 'Reorder Exercises', subtitle: workout.name,
+      rows: () => workout.items.map((x) => ({ id: x.id, name: S.exerciseName(x.exerciseId), art: S.exerciseName(x.exerciseId), sub: plural(x.sets.length, 'set') })),
+      apply: (ids) => S.reorderList(workout.items, ids),
+    });
+  }
   else if (v === 'remove') {
     workout.items = workout.items.filter((x) => x !== item);
     S.touch(); nav.refresh();

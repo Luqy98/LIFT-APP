@@ -144,6 +144,9 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Android app: native fingerprint unlock (secret held in the Android Keystore behind the fingerprint, PIN always works), see-through status and navigation bars (edge-to-edge, bar icons follow the theme), bell is paired with vibration, new logo.
 - Android shell moved to Capacitor 8.
 
+## 2.8.0
+- "Reorder weeks" and "Reorder exercises" (in a programme's workout plan and in a workout being logged) use the same drag screen as workouts. Move up / Move down are gone.
+
 ## 2.7.0
 - Pop-up sheets can be pulled down from anywhere in their top part (not only the grey bar).
 - Workout menu: "Reorder workouts" opens a screen with just the workout names; drag the handle to reorder. Replaces Move up / Move down for workouts.
