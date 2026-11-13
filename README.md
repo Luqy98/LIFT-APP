@@ -133,3 +133,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Once a target is reached its dotted line on the Estimated 1RM chart turns green and says "reached".
 - Reached targets are saved permanently as achievements. Editing or removing the target no longer removes the trophy from the calendar, so you can always find it. Existing reached targets were carried over.
 - Bottom tab bar has equal margins on the left and right.
+
+## 2.3.1
+- Groundwork for the Android app: inside it the Settings page hides the browser-only items (update check, install, storage protection, fingerprint for now), and backups open Android's share sheet.

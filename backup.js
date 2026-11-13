@@ -14,6 +14,19 @@ function download(name, text) {
 
 /** Shares if the phone supports file sharing, otherwise downloads. Resolves 'shared' | 'saved' | 'cancelled'. */
 export async function deliver(name, text) {
+  const cap = window.Capacitor;
+  if (cap?.isNativePlatform?.()) {
+    // Android app: write the file to the app's cache and open the system share sheet (Drive, Gmail, Files…).
+    try {
+      const { Filesystem, Share } = cap.Plugins;
+      const r = await Filesystem.writeFile({ path: name, data: text, directory: 'CACHE', encoding: 'utf8' });
+      await Share.share({ title: 'LIFT backup', files: [r.uri] });
+      return 'shared';
+    } catch (e) {
+      if (/cancel/i.test(String(e?.message || e))) return 'cancelled';
+      throw e;
+    }
+  }
   try {
     const file = new File([text], name, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {

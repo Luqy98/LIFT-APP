@@ -73,7 +73,8 @@ S.onSaveError(() => toast('Could not save. Storage may be full.', { ms: 8000 }))
 
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installState.prompt = e; });
 
-if ('serviceWorker' in navigator) {
+// Inside the Android app the files are bundled in the app itself, so no service worker is needed.
+if ('serviceWorker' in navigator && !window.Capacitor?.isNativePlatform?.()) {
   let hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (hadController) toast('Update installed', { action: { label: 'Reload', onclick: () => location.reload() } });

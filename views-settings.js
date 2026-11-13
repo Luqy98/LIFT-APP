@@ -124,6 +124,8 @@ async function wipe() {
   location.reload();
 }
 
+const NATIVE = !!window.Capacitor?.isNativePlatform?.();
+
 export function settingsRoot() {
   const st = S.data.settings;
   const persistLine = h('span', { class: 'hint', text: 'Checking…' });
@@ -134,10 +136,10 @@ export function settingsRoot() {
     card('About',
       h('div', { class: 'row-between' },
         h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: `Version ${VERSION}` })),
-        h('button', { class: 'btn btn-sm', text: 'Check for update', onclick: checkUpdate }))),
+        NATIVE ? null : h('button', { class: 'btn btn-sm', text: 'Check for update', onclick: checkUpdate }))),
     card('Security',
       selectField('Lock after leaving the app', [[0, 'Immediately'], [1, '1 minute'], [5, '5 minutes'], [15, '15 minutes'], [30, '30 minutes']], st.autoLockMin, (v) => set('autoLockMin', +v)),
-      h('div', { class: 'row-between' },
+      NATIVE ? null : h('div', { class: 'row-between' },
         h('div', {}, h('div', { class: 'row-title', text: 'Fingerprint unlock' }), h('div', { class: 'hint', text: S.vaultInfo().bio ? 'On. Your PIN still works too.' : 'Off' })),
         S.vaultInfo().bio
           ? h('button', { class: 'btn btn-sm', text: 'Turn off', onclick: disableFingerprint })
@@ -173,15 +175,15 @@ export function settingsRoot() {
       h('div', { class: 'btn-row' },
         h('button', { class: 'btn btn-primary', text: 'Back up now', onclick: async () => { await runBackup(); nav.refresh(); } }),
         h('button', { class: 'btn', text: 'Restore from backup', onclick: importBackup })),
-      h('p', { class: 'hint', text: 'Clearing Chrome’s “Cookies and site data” deletes this app’s data (clearing only browsing history or cached files does not). Back up before you clear, and keep the file in Google Drive or email.' }),
-      persistLine,
-      h('button', { class: 'btn btn-sm', text: 'Ask the browser to protect this data', onclick: async () => {
+      NATIVE ? h('p', { class: 'hint', text: 'Uninstalling the app, or choosing Clear storage for it in Android settings, erases its data. Back up first and keep the file in Google Drive or email.' }) : h('p', { class: 'hint', text: 'Clearing Chrome’s “Cookies and site data” deletes this app’s data (clearing only browsing history or cached files does not). Back up before you clear, and keep the file in Google Drive or email.' }),
+      NATIVE ? null : persistLine,
+      NATIVE ? null : h('button', { class: 'btn btn-sm', text: 'Ask the browser to protect this data', onclick: async () => {
         const ok = await navigator.storage?.persist?.();
         toast(ok ? 'Storage protected' : 'The browser declined for now');
         nav.refresh();
       } })),
 
-    card('Install',
+    NATIVE ? null : card('Install',
       installState.prompt
         ? h('button', { class: 'btn btn-primary', text: 'Install app on this phone', onclick: async () => { installState.prompt.prompt(); installState.prompt = null; nav.refresh(); } })
         : h('p', { class: 'hint', text: 'In Chrome, open the ⋮ menu and choose “Install app” (or “Add to Home screen”). Once installed it opens full-screen and works offline.' })),
