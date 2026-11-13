@@ -90,7 +90,7 @@ async function restoreFlow(onDone) {
   try {
     await S.setup(v.pin);
     const r = await S.applyBackup(payload);
-    toast(`Restored ${r.routines} routines and ${r.sessions} workouts`);
+    toast(`Restored ${r.routines} programmes and ${r.sessions} workouts`);
     onDone();
   } catch (e) { console.error(e); toast(e.message || 'Could not restore that backup.'); }
 }

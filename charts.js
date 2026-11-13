@@ -25,7 +25,7 @@ const tickLabel = (v) => (Math.abs(v) >= 10000 ? `${+(v / 1000).toFixed(1)}k` : 
  * points: [{ t: ms, y: number, title: 'value', detail: 'date · note' }] ascending by t.
  * Returns a card body: tooltip line + svg. Tap/drag anywhere to read a point.
  */
-export function lineChart({ points, height = 190, unit = '', zeroBase = false, label = 'Chart' }) {
+export function lineChart({ points, height = 190, unit = '', zeroBase = false, label = 'Chart', target = null }) {
   const H = height;
   const wrap = h('div', { class: 'chart' });
   const tip = h('div', { class: 'chart-tip' });
@@ -35,6 +35,7 @@ export function lineChart({ points, height = 190, unit = '', zeroBase = false, l
 
   const ys = points.map((p) => p.y);
   let lo = Math.min(...ys), hi = Math.max(...ys);
+  if (target != null) { hi = Math.max(hi, target); lo = Math.min(lo, target); }
   if (zeroBase) lo = Math.min(0, lo);
   const { ticks, lo: y0, hi: y1 } = niceScale(lo, hi);
   const t0 = points[0].t, t1 = points[points.length - 1].t;
@@ -56,6 +57,11 @@ export function lineChart({ points, height = 190, unit = '', zeroBase = false, l
     svg.append(s('text', { class: 'axis-text', x: points.length === 1 ? X(p.t) : anchor === 'start' ? PAD.l : anchor === 'end' ? W - PAD.r : X(p.t), y: H - 7, 'text-anchor': points.length === 1 ? 'middle' : anchor }, fmtDate(new Date(p.t).toISOString())));
   });
 
+  if (target != null) {
+    const ty = Y(target);
+    svg.append(s('line', { class: 'target-line', x1: PAD.l, x2: W - PAD.r, y1: ty, y2: ty }));
+    svg.append(s('text', { class: 'target-label', x: PAD.l + 4, y: ty - 5 }, `Target ${+target.toFixed(1)}${unit}`));
+  }
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${X(p.t).toFixed(1)},${Y(p.y).toFixed(1)}`).join(' ');
   if (points.length > 1) {
     svg.append(s('path', { class: 'area', d: `${d} L${X(t1).toFixed(1)},${PAD.t + ih} L${X(t0).toFixed(1)},${PAD.t + ih} Z` }));

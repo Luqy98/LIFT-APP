@@ -55,6 +55,8 @@ function newData() {
     settings: { ...DEFAULT_SETTINGS },
     exercises: STARTER.map((name) => ({ id: uid(), name, archived: false })),
     routines: [],
+    targets: [],
+    bulletin: [],
     activeSessionId: null,
   };
 }
@@ -121,6 +123,8 @@ async function load() {
 /** Brings data saved by older versions up to date (workout colours, per-log notes). */
 function migrate() {
   let planChanged = false;
+  if (!Array.isArray(data.targets)) { data.targets = []; planChanged = true; }
+  if (!Array.isArray(data.bulletin)) { data.bulletin = []; planChanged = true; }
   const have = new Set(data.exercises.map((e) => norm(e.name).toLowerCase()));
   data.libAdded = data.libAdded || [];
   for (const name of LIBRARY_ADDITIONS) {
@@ -327,7 +331,7 @@ export function moveInArray(arr, item, dir) {
 }
 
 export function addRoutine(name, { weeks = 0, perWeek = 0 } = {}) {
-  const r = { id: uid(), name: norm(name) || 'New routine', createdAt: now(), weeks: [] };
+  const r = { id: uid(), name: norm(name) || 'New programme', createdAt: now(), weeks: [] };
   const slots = Array.from({ length: perWeek }, () => uid());
   for (let w = 1; w <= weeks; w++) {
     const wk = mkWeek('Week ' + w);
@@ -482,6 +486,45 @@ export function startSession(workoutId) {
   touch();
   touchSession(s);
   return s;
+}
+
+// ---- Targets and bulletin ------------------------------------------------------------------------
+export const targetFor = (exerciseId) => data.targets.find((t) => t.exerciseId === exerciseId)?.kg ?? null;
+/** Best estimated 1RM across normal (non-deload) sessions, or null. */
+export function bestE1rm(exerciseId) {
+  let best = null;
+  for (const h of historyFor(exerciseId)) if (h.stats.e1rm != null && (best == null || h.stats.e1rm > best)) best = h.stats.e1rm;
+  return best;
+}
+export function setTarget(exerciseId, kg) {
+  const t = data.targets.find((x) => x.exerciseId === exerciseId);
+  if (t) t.kg = kg; else data.targets.push({ id: uid(), exerciseId, kg });
+  touch();
+}
+export function removeTarget(exerciseId) {
+  data.targets = data.targets.filter((t) => t.exerciseId !== exerciseId);
+  touch();
+}
+export function addNote(text) {
+  const n = { id: uid(), text: String(text).trim(), pinned: false, pinnedAt: null, createdAt: now(), updatedAt: now() };
+  data.bulletin.push(n); touch(); return n;
+}
+export function updateNote(id, text) {
+  const n = data.bulletin.find((x) => x.id === id);
+  if (!n) return;
+  n.text = String(text).trim(); n.updatedAt = now(); touch();
+}
+export function togglePin(id) {
+  const n = data.bulletin.find((x) => x.id === id);
+  if (!n) return;
+  n.pinned = !n.pinned; n.pinnedAt = n.pinned ? now() : null; touch();
+}
+export function deleteNote(id) { data.bulletin = data.bulletin.filter((x) => x.id !== id); touch(); }
+/** Pinned notes first (most recently pinned first), then the rest by last edit. */
+export function notesSorted() {
+  const idx = new Map(data.bulletin.map((n, i) => [n.id, i]));
+  const by = (k) => (a, b) => String(b[k] || '').localeCompare(String(a[k] || '')) || idx.get(b.id) - idx.get(a.id);
+  return [...data.bulletin.filter((n) => n.pinned).sort(by('pinnedAt')), ...data.bulletin.filter((n) => !n.pinned).sort(by('updatedAt'))];
 }
 
 // ---- Deload ------------------------------------------------------------------------------------

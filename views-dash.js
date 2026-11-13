@@ -62,7 +62,7 @@ export function dashboardView() {
   dash.slotId = 'all';
   const movementSelect = pickerField('Exercise', [...have.keys()].map((id) => [id, S.exerciseName(id)]), dash.exerciseId,
     (v) => { dash.exerciseId = v; nav.refresh(); });
-  const routineSelect = pickerField('Routine', [['all', 'All routines'], ...routines.map((r) => [r.id, r.name])], dash.routineId,
+  const routineSelect = pickerField('Programme', [['all', 'All programmes'], ...routines.map((r) => [r.id, r.name])], dash.routineId,
     (v) => { dash.routineId = v; dash.exerciseId = null; nav.refresh(); });
   const ranges = h('div', { class: 'seg seg-scroll', role: 'group', 'aria-label': 'Time range' }, RANGES.map(([id, , label]) =>
     h('button', { type: 'button', class: 'seg-btn' + (dash.range === id ? ' is-on' : ''), 'aria-pressed': String(dash.range === id), text: label, onclick: () => { dash.range = id; nav.refresh(); } })));
@@ -92,7 +92,7 @@ export function dashboardView() {
   content.append(card('Estimated 1RM',
     h('p', { class: 'card-note', text: `Best set each session · ${formula} · sets up to ${S.data.settings.maxReps} reps` }),
     lineChart({
-      label: `Estimated 1RM for ${name}`, unit: ' kg',
+      label: `Estimated 1RM for ${name}`, unit: ' kg', target: S.targetFor(dash.exerciseId),
       points: withE.map((r) => ({ t: +new Date(r.date), y: r.stats.e1rm, title: `${fmt(r.stats.e1rm)} kg`, detail: `${fmtDate(r.date)} · from ${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}${dash.slotId === 'all' ? ' · ' + S.workoutName(r.session) : ''}` })),
     }),
     dataTable(['Date', 'Est. 1RM (kg)', 'From'], withE.map((r) => [fmtDate(r.date), fmt(r.stats.e1rm), `${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}`]))));

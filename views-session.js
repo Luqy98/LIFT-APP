@@ -12,7 +12,7 @@ import { notesList, addNote, canAddNote, editFreeNote } from './notes.js';
 import { workoutView } from './views-workouts.js';
 
 // ---- Rest timer (kept across re-renders) --------------------------------------
-import { startRest, adjustRest, clearRest, getRest } from './live.js';
+import { startRest, adjustRest, clearRest, getRest, getStopwatch, swElapsed, swStart, swPause, swReset } from './live.js';
 
 // ---- Starting / resuming -------------------------------------------------------
 export async function startWorkout(workoutId) {
@@ -63,6 +63,7 @@ export function sessionView({ sessionId }) {
   if (s.deload) content.append(h('div', { class: 'deload-banner' },
     h('span', { class: 'tag-deload', text: 'Deload' }),
     h('span', { text: `Weights are suggested at ${Math.round(DELOAD_PCT * 100)}% of your best 1RM. This session does not count towards 1RM, records or exercise charts.` })));
+  if (active) content.append(stopwatchCard(s));
   if (!active) content.append(summaryCard(s));
 
   if (!s.entries.length) content.append(emptyState('No exercises yet', 'Add the first exercise to start logging sets.'));
@@ -88,6 +89,19 @@ export function sessionView({ sessionId }) {
     : null;
 
   return { title: S.workoutName(s), subtitle: subtitle(), color: S.sessionColor(s), mode: active ? 'log' : 'review', actions, content, footer, sessionId: s.id };
+}
+
+function stopwatchCard(s) {
+  const x = getStopwatch(s.id);
+  const running = !!x && x.since != null;
+  const started = !!x && (running || x.base > 0);
+  return h('div', { class: 'card sw-card' },
+    icon('timer', 18),
+    h('span', { class: 'sw-label', text: 'Stopwatch' }),
+    h('span', { class: 'sw-time', 'data-sw-time': '', 'aria-live': 'off', text: fmtDuration(swElapsed(x)) }),
+    h('button', { class: 'btn btn-sm' + (running ? '' : ' btn-primary'), text: running ? 'Pause' : started ? 'Resume' : 'Start',
+      onclick: () => { if (running) swPause(); else swStart(s.id); nav.refresh(); } }),
+    started ? h('button', { class: 'btn btn-sm', text: 'Reset', onclick: () => { swReset(); nav.refresh(); } }) : null);
 }
 
 function summaryCard(s) {
@@ -337,7 +351,7 @@ export function movementHistoryView(params) {
 const hf = { routineId: 'all' };
 export function historyContent() {
   const all = S.sessionsDesc();
-  if (!all.length) return emptyState('No workouts logged yet', 'Start a workout from a routine and finish it. It will show up here, and you can amend it any time.');
+  if (!all.length) return emptyState('No workouts logged yet', 'Start a workout from a programme and finish it. It will show up here, and you can amend it any time.');
   const routines = new Map();
   for (const s of all) routines.set(s.routineId, S.routineName(s));
   if (hf.routineId !== 'all' && !routines.has(hf.routineId)) hf.routineId = 'all';
@@ -345,7 +359,7 @@ export function historyContent() {
 
   const out = [];
   if (routines.size > 1) {
-    out.push(pickerField('Filter by routine', [['all', 'All routines'], ...routines], hf.routineId, (v) => { hf.routineId = v; nav.refresh(); }));
+    out.push(pickerField('Filter by programme', [['all', 'All programmes'], ...routines], hf.routineId, (v) => { hf.routineId = v; nav.refresh(); }));
   }
   let month = '';
   for (const s of list) {

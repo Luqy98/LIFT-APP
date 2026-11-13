@@ -8,6 +8,8 @@ export const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dash' },
   { id: 'workouts', label: 'Workouts', icon: 'lift' },
   { id: 'movements', label: 'Exercises', icon: 'list' },
+  { id: 'targets', label: 'Targets', icon: 'target' },
+  { id: 'bulletin', label: 'Bulletin', icon: 'note' },
   { id: 'settings', label: 'Settings', icon: 'gear' },
 ];
 
@@ -98,7 +100,7 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
     h('button', {
       class: 'tab' + (t.id === tab ? ' is-active' : ''), 'aria-current': t.id === tab ? 'page' : null,
       onclick: () => switchTab(t.id),
-    }, icon(t.icon, 24), h('span', { text: t.label }))));
+    }, icon(t.icon, 22), h('span', { text: t.label }))));
 }
 
 // When the rest timer ends (or the workout disappears) redraw so the bar/footers update.

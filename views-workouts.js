@@ -8,7 +8,7 @@ import { SET_TYPES, typeInfo, parseNum, fmtW, fmtDate, WORKOUT_COLORS } from './
 import { pickMovement } from './picker.js';
 import { startWorkout, historyContent, sessionView, movementHistoryView } from './views-session.js';
 
-const ui = { seg: 'routines' };
+const ui = { seg: 'programmes' };
 
 const notFound = (what) => ({ title: what, content: emptyState('Not found', 'This item no longer exists. Go back and pick another.') });
 const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
@@ -26,18 +26,18 @@ function weekProgress(wk) {
 
 // ---- Root: routines | history ----------------------------------------------------------
 export function workoutsRoot() {
-  const body = ui.seg === 'routines' ? routinesContent() : historyContent();
+  const body = ui.seg === 'programmes' ? routinesContent() : historyContent();
   return {
     title: 'Workouts',
-    actions: ui.seg === 'routines' ? [iconBtn('plus', 'New routine', newRoutine)] : [],
-    content: h('div', { class: 'page' }, segmented([['routines', 'Routines'], ['history', 'History']], ui.seg, (v) => { ui.seg = v; nav.refresh(); }), body),
+    actions: ui.seg === 'programmes' ? [iconBtn('plus', 'New programme', newRoutine)] : [],
+    content: h('div', { class: 'page' }, segmented([['programmes', 'Programmes'], ['history', 'History']], ui.seg, (v) => { ui.seg = v; nav.refresh(); }), body),
   };
 }
 
 function routinesContent() {
   if (!S.data.routines.length) {
-    return emptyState('Plan your first routine', 'A routine is made of weeks, each week of workouts, each workout of exercises and sets. You control every level.',
-      h('button', { class: 'btn btn-primary', text: 'Create a routine', onclick: newRoutine }));
+    return emptyState('Plan your first programme', 'A programme is made of weeks, each week of workouts, each workout of exercises and sets. You control every level.',
+      h('button', { class: 'btn btn-primary', text: 'Create a programme', onclick: newRoutine }));
   }
   return h('div', { class: 'list' }, S.data.routines.map((r) => {
     const p = routineProgress(r);
@@ -51,15 +51,15 @@ function routinesContent() {
 
 async function newRoutine() {
   const v = await formDialog({
-    title: 'New routine',
+    title: 'New programme',
     message: 'Weeks and workouts are created blank so you can rename and fill them in. Use 0 to start empty.',
     fields: [
-      { key: 'name', label: 'Routine name', placeholder: 'e.g. Strength block', capitalize: 'words' },
+      { key: 'name', label: 'Programme name', placeholder: 'e.g. Strength block', capitalize: 'words' },
       { key: 'weeks', label: 'Weeks', type: 'number', value: '4', inputmode: 'numeric', min: 0, max: 52 },
       { key: 'per', label: 'Workouts per week', type: 'number', value: '5', inputmode: 'numeric', min: 0, max: 14 },
     ],
     ok: 'Create',
-    validate: (x) => (!x.name.trim() ? 'Give the routine a name.' : null),
+    validate: (x) => (!x.name.trim() ? 'Give the programme a name.' : null),
   });
   if (!v) return;
   const weeks = Math.max(0, Math.min(52, parseInt(v.weeks, 10) || 0));
@@ -74,19 +74,19 @@ async function routineMenu(r, thenPop = false) {
     title: r.name,
     options: [
       { label: 'Rename', value: 'rename' },
-      { label: 'Duplicate routine', value: 'dup', sub: 'Copies every week and workout. History starts fresh.' },
-      { label: 'Delete routine', value: 'del', danger: true },
+      { label: 'Duplicate programme', value: 'dup', sub: 'Copies every week and workout. History starts fresh.' },
+      { label: 'Delete programme', value: 'del', danger: true },
     ],
   });
   if (v === 'rename') {
-    const x = await formDialog({ title: 'Rename routine', fields: [{ key: 'name', label: 'Routine name', value: r.name, capitalize: 'words' }], validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : null) });
+    const x = await formDialog({ title: 'Rename programme', fields: [{ key: 'name', label: 'Programme name', value: r.name, capitalize: 'words' }], validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : null) });
     if (x) { S.renameRoutine(r.id, x.name); nav.refresh(); }
   } else if (v === 'dup') {
     S.duplicateRoutine(r.id);
-    toast('Routine duplicated');
+    toast('Programme duplicated');
     nav.refresh();
   } else if (v === 'del') {
-    const ok = await confirmDialog({ title: `Delete “${r.name}”?`, message: 'The plan is removed. Workouts you have already logged stay in your history and charts.', ok: 'Delete routine', danger: true });
+    const ok = await confirmDialog({ title: `Delete “${r.name}”?`, message: 'The plan is removed. Workouts you have already logged stay in your history and charts.', ok: 'Delete programme', danger: true });
     if (!ok) return;
     S.deleteRoutine(r.id);
     if (thenPop) nav.pop(); else nav.refresh();
@@ -96,7 +96,7 @@ async function routineMenu(r, thenPop = false) {
 // ---- Routine: weeks ------------------------------------------------------------------------
 export function routineView({ routineId }) {
   const r = S.routineById(routineId);
-  if (!r) return notFound('Routine');
+  if (!r) return notFound('Programme');
   const content = h('div', { class: 'page' });
   if (!r.weeks.length) content.append(emptyState('No weeks yet', 'Add a week, then add workouts to it.'));
   else {
@@ -110,7 +110,7 @@ export function routineView({ routineId }) {
     })));
   }
   content.append(h('button', { class: 'btn btn-block btn-ghost', onclick: () => addWeek(r) }, icon('plus', 18), h('span', { text: 'Add week' })));
-  return { title: r.name, subtitle: plural(r.weeks.length, 'week'), actions: [iconBtn('more', 'Routine options', () => routineMenu(r, true))], content };
+  return { title: r.name, subtitle: plural(r.weeks.length, 'week'), actions: [iconBtn('more', 'Programme options', () => routineMenu(r, true))], content };
 }
 
 async function addWeek(r) {

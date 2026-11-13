@@ -98,7 +98,7 @@ async function importBackup() {
   const file = await pickFile();
   if (!file) return;
   const text = await file.text();
-  const ok = await confirmDialog({ title: 'Replace everything with this backup?', message: 'Your current routines, logs and settings on this phone will be overwritten.', ok: 'Continue', danger: true });
+  const ok = await confirmDialog({ title: 'Replace everything with this backup?', message: 'Your current programmes, logs and settings on this phone will be overwritten.', ok: 'Continue', danger: true });
   if (!ok) return;
   let result = null;
   const v = await formDialog({
@@ -106,7 +106,7 @@ async function importBackup() {
     validate: async (f) => { try { result = await S.importBackup(f.p, text); return null; } catch (e) { return e.message; } },
   });
   if (!v) return;
-  toast(`Restored ${result.routines} routines and ${result.sessions} workouts`);
+  toast(`Restored ${result.routines} programmes and ${result.sessions} workouts`);
   nav.resetAll();
   nav.refresh();
 }
@@ -114,7 +114,7 @@ async function importBackup() {
 async function wipe() {
   const v = await formDialog({
     title: 'Erase all data?', danger: true, ok: 'Erase everything',
-    message: 'This permanently deletes every routine, log and your passcode from this phone. Export a backup first if you might want it back.',
+    message: 'This permanently deletes every programme, log and your passcode from this phone. Export a backup first if you might want it back.',
     fields: [{ key: 'confirm', label: 'Type DELETE to confirm', autocomplete: 'off', capitalize: 'characters' }],
     validate: (f) => (f.confirm.trim() === 'DELETE' ? null : 'Type DELETE exactly to continue.'),
   });

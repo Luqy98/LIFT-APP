@@ -8,6 +8,8 @@ import { dashboardView } from './views-dash.js';
 import { workoutsRoot } from './views-workouts.js';
 import { movementsRoot } from './views-library.js';
 import { settingsRoot } from './views-settings.js';
+import { targetsRoot } from './views-targets.js';
+import { bulletinRoot } from './views-bulletin.js';
 import { applyTheme } from './theme.js';
 import { setResume } from './live.js';
 import { sessionView } from './views-session.js';
@@ -15,6 +17,8 @@ import { sessionView } from './views-session.js';
 nav.registerRoot('dashboard', dashboardView);
 nav.registerRoot('workouts', workoutsRoot);
 nav.registerRoot('movements', movementsRoot);
+nav.registerRoot('targets', targetsRoot);
+nav.registerRoot('bulletin', bulletinRoot);
 nav.registerRoot('settings', settingsRoot);
 setResume((sessionId) => nav.push(sessionView, { sessionId }));
 

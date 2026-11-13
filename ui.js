@@ -38,6 +38,10 @@ export function s(tag, attrs, ...kids) {
 const ICONS = {
   back: 'M15 5l-7 7 7 7',
   plus: 'M12 5v14M5 12h14',
+  target: 'M12 3a9 9 0 100 18 9 9 0 000-18zM12 7.500a4.500 4.500 0 100 9 4.500 4.500 0 000-9zM12 11.500v1',
+  note: 'M6 3h8l5 5v13H6zM14 3v5h5M9 13h7M9 17h7',
+  pin: 'M9 3h6l-1.200 6L17 12v2H7v-2l3.200-3zM12 14v7',
+  timer: 'M9 2h6M12 8v5l3 2M12 5a8 8 0 100 16 8 8 0 000-16z',
   calendar: 'M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
   check: 'M5 12.5l4.5 4.5L19 7.5',
