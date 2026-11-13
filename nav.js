@@ -1,7 +1,7 @@
 // Tabs + a view stack per tab. A "view" is a function (params) => { title, subtitle, actions[], content, footer }.
 // Views read the store fresh on every render, so state changes just call refresh().
 
-import { h, icon, iconBtn, backHandlers, ensureGuard, clearTick } from './ui.js';
+import { h, icon, iconBtn, backHandlers, ensureGuard, clearTick, titleCase } from './ui.js';
 import { liveBar, setOnChange } from './live.js';
 
 export const TABS = [
@@ -78,7 +78,7 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
   if (depth > 1) hdrKids.push(iconBtn('back', 'Back', () => pop(), 'hdr-back'));
   hdrKids.push(
     h('div', { class: 'hdr-title' },
-      h('h1', { text: view.title || '' }),
+      h('h1', { text: titleCase(view.title || '') }),
       view.subtitle ? h('div', { class: 'hdr-sub', id: 'hdr-sub', text: view.subtitle }) : null),
     h('div', { class: 'hdr-actions' },
       depth > 1 ? iconBtn('home', `Back to start of ${TABS.find((x) => x.id === tab).label}`, () => goHome(), 'hdr-home') : null,

@@ -4,13 +4,15 @@
   "version": "1.0.0",
   "description": "Android wrapper for LIFT. The web files are bundled into the app; nothing is loaded from the internet.",
   "dependencies": {
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/core": "^7.0.0",
-    "@capacitor/filesystem": "^7.0.0",
-    "@capacitor/share": "^7.0.0"
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
+    "@capacitor/haptics": "^8.0.0",
+    "@capgo/capacitor-native-biometric": "^8.4.0"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^7.0.0"
+    "@capacitor/cli": "^8.0.0"
   }
 }

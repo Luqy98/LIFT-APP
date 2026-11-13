@@ -56,3 +56,17 @@ export function scheduleBell(delayMs = 0) {
     },
   };
 }
+
+/** Vibrate in the same rhythm as the bell: three pulses. Uses the app's native haptics when available. */
+export function buzz() {
+  try {
+    const H = window.Capacitor?.isNativePlatform?.() && window.Capacitor.Plugins?.Haptics;
+    if (H?.vibrate) {
+      H.vibrate({ duration: 300 });
+      setTimeout(() => H.vibrate({ duration: 300 }), 600);
+      setTimeout(() => H.vibrate({ duration: 300 }), 1200);
+      return;
+    }
+    navigator.vibrate?.([300, 300, 300, 300, 300]);
+  } catch { /* vibration is optional */ }
+}

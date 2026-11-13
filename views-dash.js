@@ -7,7 +7,6 @@ import { FORMULAS, repRecords, fmt, fmtW, fmtSign, fmtVol, fmtDate, setLabel, ty
 import { lineChart, barChart, dataTable } from './charts.js';
 import { sessionView } from './views-session.js';
 import { calendarView } from './views-calendar.js';
-import { runBackup } from './backup.js';
 
 const dash = { exerciseId: null, slotId: 'all', range: '12w', routineId: 'all' };
 const RANGES = [['4w', 28, '4 wks'], ['12w', 84, '12 wks'], ['6m', 182, '6 mo'], ['1y', 365, '1 yr'], ['all', 0, 'All']];
@@ -21,14 +20,6 @@ export function dashboardView() {
   const have = S.exercisesWithData(rid);
   const ov = S.overview();
   const content = h('div', { class: 'page' });
-
-  const unbacked = S.unbackedCount();
-  const age = S.backupAgeDays();
-  if (unbacked > 0 && (age == null || age >= 7)) {
-    content.append(h('div', { class: 'backup-banner' },
-      h('p', { text: age == null ? `You haven’t backed up yet. ${unbacked} ${unbacked === 1 ? 'workout is' : 'workouts are'} only on this phone.` : `${unbacked} ${unbacked === 1 ? 'workout' : 'workouts'} since your last backup (${age} days ago).` }),
-      h('button', { class: 'btn btn-sm btn-primary', text: 'Back up', onclick: async () => { await runBackup(); nav.refresh(); } })));
-  }
 
   content.append(greetingCard(), weekCard());
   const wp = S.weekProgress();
@@ -159,7 +150,7 @@ function weekCard() {
     deloadPct > 0 ? h('div', { class: 'meter-fill meter-deload w-' + step(deloadPct) }) : null);
   return card(null,
     h('div', { class: 'week-head' },
-      h('h2', { class: 'card-title', text: 'This week' }),
+      h('h2', { class: 'card-title', text: 'This Week' }),
       h('button', { class: 'btn btn-sm cal-btn', 'aria-label': 'Open calendar', onclick: () => nav.push(calendarView, {}) }, icon('calendar', 16), h('span', { text: 'Calendar' }))),
     h('div', { class: 'week-row' },
       h('span', { class: 'week-count', text: `${w.done} / ${w.goal} workouts` }),

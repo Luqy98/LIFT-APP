@@ -2,11 +2,18 @@
   "appId": "io.github.luqy98.lift",
   "appName": "LIFT",
   "webDir": "www",
-  "server": { "androidScheme": "https" },
+  "server": {
+    "androidScheme": "https"
+  },
   "android": {
     "backgroundColor": "#0b0a10",
-    "adjustMarginsForEdgeToEdge": "force",
     "allowMixedContent": false
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "DEFAULT"
+    }
   },
   "loggingBehavior": "none"
 }

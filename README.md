@@ -136,3 +136,10 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.3.1
 - Groundwork for the Android app: inside it the Settings page hides the browser-only items (update check, install, storage protection, fingerprint for now), and backups open Android's share sheet.
+
+## 2.4.0
+- Dashboard backup reminder removed (data now lives in the Android app's own storage). Backup and Restore buttons sit side by side.
+- Headings use Title Case (sentences and questions are left as written).
+- Typing: while a text box is focused, pop-ups move to the top of the screen and the page scrolls the field into view, so the keyboard never hides what you type.
+- Android app: native fingerprint unlock (secret held in the Android Keystore behind the fingerprint, PIN always works), see-through status and navigation bars (edge-to-edge, bar icons follow the theme), bell is paired with vibration, new logo.
+- Android shell moved to Capacitor 8.

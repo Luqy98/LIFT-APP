@@ -92,7 +92,16 @@ export function closeAllOverlays() { while (closeTopOverlay()); }
 backHandlers.push(closeTopOverlay);
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTopOverlay(); });
 
-export function sheet(content, { title, onClose, wide = false } = {}) {
+const SMALL = new Set(['a', 'an', 'and', 'or', 'of', 'the', 'to', 'in', 'on', 'for', 'at', 'by', 'vs', 'per', 'with', 'but', 'nor', 'as', 'from']);
+/** Capitalise the first letter of each word, except small words (and, or, of…). Other letters are left alone. */
+export function titleCase(s) {
+  s = String(s ?? '');
+  if (/[?.!]$/.test(s) || s.split(' ').length > 7) return s; // full sentences stay as written
+  return s.split(' ').map((w, i) => (!w || (i > 0 && SMALL.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+}
+
+export function sheet(content, { title: rawTitle, onClose, wide = false } = {}) {
+  const title = rawTitle ? titleCase(rawTitle) : rawTitle;
   const backdrop = h('div', { class: 'backdrop', onpointerdown: (e) => { if (e.target === backdrop) close(); } });
   const panel = h('div', { class: 'sheet' + (wide ? ' sheet-wide' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': title || 'Dialog' },
     h('div', { class: 'sheet-grip' }),
@@ -231,7 +240,7 @@ export const selectField = (label, options, value, onchange) =>
       options.map(([v, l]) => h('option', { value: String(v), text: l }))));
 
 export const card = (title, ...kids) =>
-  h('section', { class: 'card' }, title ? h('h2', { class: 'card-title', text: title }) : null, ...kids);
+  h('section', { class: 'card' }, title ? h('h2', { class: 'card-title', text: titleCase(title) }) : null, ...kids);
 
 // "79.2 kg" -> big number + small unit; the unit may drop to a second line but nothing is ever cut off.
 const tileValue = (value) => {
@@ -247,7 +256,7 @@ export const tile = (label, value, sub, tone = '') =>
     sub ? h('div', { class: 'tile-sub' + (tone ? ' tone-' + tone : ''), text: sub }) : null);
 
 export const emptyState = (title, body, action) =>
-  h('div', { class: 'empty' }, h('h2', { text: title }), body ? h('p', { text: body }) : null, action || null);
+  h('div', { class: 'empty' }, h('h2', { text: titleCase(title) }), body ? h('p', { text: body }) : null, action || null);
 
 /** Opens the system file picker. Resolves a File or null. */
 export const pickFile = () => new Promise((resolve) => {
@@ -288,3 +297,19 @@ export function modeBanner(kind, title, sub) {
   return h('div', { class: 'mode mode-' + kind }, lead,
     h('div', { class: 'mode-main' }, h('span', { class: 'mode-title', text: title }), h('span', { class: 'mode-sub', text: sub })));
 }
+
+// ---- Keep the field being typed in visible above the on-screen keyboard -------------------------------
+// The keyboard can cover the bottom half of the screen without the page being told, so while a text field has
+// focus, sheets move to the top of the screen, the page gets room to scroll, and the field is scrolled into view.
+const typesText = (el) => el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'submit', 'range', 'file', 'date', 'color'].includes(el.type)));
+let kbTimer = 0;
+document.addEventListener('focusin', (e) => {
+  if (!typesText(e.target)) return;
+  clearTimeout(kbTimer);
+  document.documentElement.classList.add('kb-open');
+  setTimeout(() => { try { e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { /* ignore */ } }, 300);
+});
+document.addEventListener('focusout', () => {
+  clearTimeout(kbTimer);
+  kbTimer = setTimeout(() => { if (!typesText(document.activeElement)) document.documentElement.classList.remove('kb-open'); }, 200);
+});

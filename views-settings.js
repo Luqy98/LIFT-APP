@@ -72,7 +72,7 @@ async function checkUpdate() {
 }
 
 async function enableFingerprint() {
-  if (!(await WA.fingerprintAvailable())) { toast('This phone has no fingerprint or screen lock set up for Chrome.', { ms: 6000 }); return; }
+  if (!(await WA.fingerprintAvailable())) { toast(NATIVE ? 'Set up a fingerprint in your phone’s Settings first, then try again.' : 'This phone has no fingerprint or screen lock set up for Chrome.', { ms: 6000 }); return; }
   const v = await formDialog({
     title: 'Turn on fingerprint',
     message: 'Enter your PIN once to confirm. Then your phone will ask for your fingerprint. Your PIN keeps working as a backup way in.',
@@ -89,6 +89,7 @@ async function enableFingerprint() {
   nav.refresh();
 }
 async function disableFingerprint() {
+  await WA.forget(S.bioParams()?.credId);
   await S.disableBio();
   toast('Fingerprint unlock is off');
   nav.refresh();
@@ -119,6 +120,7 @@ async function wipe() {
     validate: (f) => (f.confirm.trim() === 'DELETE' ? null : 'Type DELETE exactly to continue.'),
   });
   if (!v) return;
+  await WA.forget(S.bioParams()?.credId);
   await S.wipeAll();
   try { localStorage.removeItem('gymlog-theme'); } catch { /* ignore */ }
   location.reload();
@@ -139,7 +141,7 @@ export function settingsRoot() {
         NATIVE ? null : h('button', { class: 'btn btn-sm', text: 'Check for update', onclick: checkUpdate }))),
     card('Security',
       selectField('Lock after leaving the app', [[0, 'Immediately'], [1, '1 minute'], [5, '5 minutes'], [15, '15 minutes'], [30, '30 minutes']], st.autoLockMin, (v) => set('autoLockMin', +v)),
-      NATIVE ? null : h('div', { class: 'row-between' },
+      h('div', { class: 'row-between' },
         h('div', {}, h('div', { class: 'row-title', text: 'Fingerprint unlock' }), h('div', { class: 'hint', text: S.vaultInfo().bio ? 'On. Your PIN still works too.' : 'Off' })),
         S.vaultInfo().bio
           ? h('button', { class: 'btn btn-sm', text: 'Turn off', onclick: disableFingerprint })
@@ -162,7 +164,7 @@ export function settingsRoot() {
       selectField('Count sets up to', [5, 6, 8, 10, 12, 15].map((n) => [n, `${n} reps`]), st.maxReps, (v) => set('maxReps', +v)),
       selectField('Rest timer', [[0, 'Off'], [60, '1:00'], [90, '1:30'], [120, '2:00'], [150, '2:30'], [180, '3:00'], [240, '4:00'], [300, '5:00']], st.restSec, (v) => set('restSec', +v)),
       h('div', { class: 'row-between' },
-        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'Round-start bell' })),
+        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'Round-start bell and vibration' })),
         h('div', { class: 'btn-row' },
           h('button', { class: 'btn btn-sm' + (st.restBell !== false ? ' btn-primary' : ''), 'aria-pressed': String(st.restBell !== false), text: st.restBell !== false ? 'On' : 'Off', onclick: () => set('restBell', st.restBell === false) }))),
       h('p', { class: 'hint', text: 'Estimates get less reliable as reps go up, so sets above the limit are left out of the 1RM chart. Warm-up and drop sets are never used. The blend averages three well-known formulas to smooth out any single formula’s bias.' })),
@@ -172,9 +174,9 @@ export function settingsRoot() {
 
     card('Backup and restore',
       h('p', { class: 'hint', text: st.lastBackup ? `Last backup: ${fmtDateLong(st.lastBackup)}` : 'No backup yet.' }),
-      h('div', { class: 'btn-row' },
+      h('div', { class: 'btn-pair' },
         h('button', { class: 'btn btn-primary', text: 'Back up now', onclick: async () => { await runBackup(); nav.refresh(); } }),
-        h('button', { class: 'btn', text: 'Restore from backup', onclick: importBackup })),
+        h('button', { class: 'btn', text: 'Restore', onclick: importBackup })),
       NATIVE ? h('p', { class: 'hint', text: 'Uninstalling the app, or choosing Clear storage for it in Android settings, erases its data. Back up first and keep the file in Google Drive or email.' }) : h('p', { class: 'hint', text: 'Clearing Chrome’s “Cookies and site data” deletes this app’s data (clearing only browsing history or cached files does not). Back up before you clear, and keep the file in Google Drive or email.' }),
       NATIVE ? null : persistLine,
       NATIVE ? null : h('button', { class: 'btn btn-sm', text: 'Ask the browser to protect this data', onclick: async () => {

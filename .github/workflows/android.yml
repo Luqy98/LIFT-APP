@@ -40,7 +40,7 @@ jobs:
       - name: Install Capacitor and create the Android project
         working-directory: apk
         run: |
-          npm install --no-audit --no-fund
+          npm install --no-audit --no-fund --legacy-peer-deps
           npx cap add android
           npx cap sync android
 
@@ -50,19 +50,66 @@ jobs:
           M=app/src/main/AndroidManifest.xml
           sed -i '/android.permission.INTERNET/d' "$M"
           sed -i 's/android:allowBackup="true"/android:allowBackup="false"/' "$M"
+          # vibration (rest bell) and fingerprint unlock
+          sed -i 's#<application#<uses-permission android:name="android.permission.VIBRATE" />\n    <uses-permission android:name="android.permission.USE_BIOMETRIC" />\n    <application#' "$M"
           grep -n "permission\|allowBackup" "$M" || true
+
+      - name: Edge-to-edge (draw behind the status and navigation bars)
+        working-directory: apk/android
+        run: |
+          F=$(find app/src/main/java -name 'MainActivity.*' | head -1)
+          echo "MainActivity: $F"; cat "$F"
+          PKG=$(grep -m1 '^package ' "$F" | sed 's/package //; s/;//')
+          case "$F" in
+            *.java)
+              cat > "$F" <<JAVA
+          package $PKG;
+
+          import android.os.Bundle;
+          import androidx.activity.EdgeToEdge;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              EdgeToEdge.enable(this);
+              super.onCreate(savedInstanceState);
+            }
+          }
+          JAVA
+              ;;
+            *.kt)
+              cat > "$F" <<KOTLIN
+          package $PKG
+
+          import android.os.Bundle
+          import androidx.activity.EdgeToEdge
+          import com.getcapacitor.BridgeActivity
+
+          class MainActivity : BridgeActivity() {
+            override fun onCreate(savedInstanceState: Bundle?) {
+              EdgeToEdge.enable(this)
+              super.onCreate(savedInstanceState)
+            }
+          }
+          KOTLIN
+              ;;
+          esac
+          cat "$F"
 
       - name: App icon
         working-directory: apk
         continue-on-error: true
-        run: npx capacitor-assets generate --android --iconBackgroundColor '#171421' --iconBackgroundColorDark '#171421'
+        run: npx capacitor-assets generate --android
 
       - name: Set version numbers
         working-directory: apk/android
         run: |
-          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" app/build.gradle
-          sed -i "s/versionName \"1.0\"/versionName \"${{ steps.v.outputs.version }}\"/" app/build.gradle
-          grep -n "versionCode\|versionName" app/build.gradle
+          G=$(ls app/build.gradle app/build.gradle.kts 2>/dev/null | head -1)
+          sed -i -E "s/versionCode[ =]+[0-9]+/versionCode = ${{ github.run_number }}/" "$G"
+          sed -i -E "s/versionName[ =]+\"[^\"]*\"/versionName = \"${{ steps.v.outputs.version }}\"/" "$G"
+          grep -n "versionCode\|versionName" "$G"
+          grep -q "versionCode = ${{ github.run_number }}" "$G"
 
       - name: Build release APK
         working-directory: apk/android

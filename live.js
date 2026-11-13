@@ -3,7 +3,7 @@
 import { h } from './ui.js';
 import * as S from './store.js';
 import { fmtDuration } from './calc.js';
-import { scheduleBell } from './sound.js';
+import { scheduleBell, buzz } from './sound.js';
 
 let rest = null;       // { end:ms, bell:{cancel}|null, rung:boolean }
 let onChange = () => {};
@@ -60,7 +60,7 @@ setInterval(() => {
         // If the bell wasn't pre-scheduled on the audio clock (no audio support), ring now.
         if (!rest.bell && S.data.settings.restBell !== false) scheduleBell(0);
         rest = null;
-        navigator.vibrate?.([200, 100, 200, 100, 200]);
+        if (S.data.settings.restBell !== false) buzz();
         onChange(true);
         return;
       }
