@@ -508,8 +508,23 @@ export function setTarget(exerciseId, kg, date = undefined) {
   const t = data.targets.find((x) => x.exerciseId === exerciseId);
   if (t) { t.kg = kg; if (date !== undefined) { if (date) t.date = date; else delete t.date; } }
   else data.targets.push({ id: uid(), exerciseId, kg, ...(date ? { date } : {}) });
+  checkTargets();
   touch();
 }
+const localKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+/** Marks targets as reached (or un-reaches them if the goal moved). Returns the ones newly reached. */
+export function checkTargets() {
+  const hit = [];
+  for (const t of data.targets) {
+    const best = bestE1rm(t.exerciseId);
+    if (best != null && best >= t.kg) {
+      if (!t.reachedAt) { t.reachedAt = localKey(); t.reachedKg = best; hit.push({ ...t, best }); }
+    } else if (t.reachedAt) { delete t.reachedAt; delete t.reachedKg; }
+  }
+  if (hit.length || data.targets.length) touch();
+  return hit;
+}
+export const localDateKey = localKey;
 export function removeTarget(exerciseId) {
   data.targets = data.targets.filter((t) => t.exerciseId !== exerciseId);
   touch();

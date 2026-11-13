@@ -894,4 +894,56 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .target-foot { display: flex; justify-content: space-between; gap: 8px; }
 .target-days { font-weight: 600; color: var(--ink2); font-variant-numeric: tabular-nums; }
 .target-days.is-late { color: var(--c-deload, #f59e0b); }
-.sw-card { position: sticky; top: 0; z-index: 3; background: var(--surface); box-shadow: 0 6px 14px -8px rgba(0,0,0,.5); }
+.sw-card { position: sticky; top: 6px; z-index: 3; background: var(--surface); box-shadow: 0 6px 14px -8px rgba(0,0,0,.5); }
+
+/* ---- 2.2: calendar targets, celebration ---- */
+.cal-day { position: relative; }
+.cal-mark { position: absolute; top: 3px; right: 3px; display: inline-flex; color: var(--accent); }
+.cal-mark.is-won { color: var(--ok, #43cf76); }
+.key-target { display: inline-flex; color: var(--accent); }
+.cal-target { flex-direction: row; align-items: center; gap: 10px; color: var(--accent); }
+.cal-target .row-title { color: var(--ink); }
+.cal-target.is-won { color: var(--ok, #43cf76); border-color: color-mix(in srgb, var(--ok, #43cf76) 55%, var(--line)); }
+.target-trophy { display: inline-flex; color: var(--ok, #43cf76); }
+.target-won { color: var(--ok, #43cf76); font-weight: 600; }
+.target-card.is-done { border-color: color-mix(in srgb, var(--ok, #43cf76) 55%, var(--line)); box-shadow: 0 0 18px -6px color-mix(in srgb, var(--ok, #43cf76) 60%, transparent); }
+.celebrate { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 4px 0 8px; overflow: hidden; }
+.celebrate-trophy { width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--ok, #43cf76); background: color-mix(in srgb, var(--ok, #43cf76) 16%, var(--surface2)); border: 2px solid var(--ok, #43cf76); animation: pop .5s cubic-bezier(.2,1.4,.4,1) both; }
+.celebrate-msg { margin: 0; font-size: 16px; font-weight: 600; }
+.celebrate-list { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.celebrate-row { display: flex; flex-direction: column; padding: 8px 12px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line); }
+.celebrate-name { font-weight: 650; }
+.celebrate-kg { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.confetti i { position: absolute; top: -10px; width: 7px; height: 12px; border-radius: 2px; opacity: 0; animation: confetti-fall 2.6s ease-in both; }
+@keyframes confetti-fall { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 0; transform: translateY(340px) rotate(540deg); } }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.confetti i:nth-child(1) { left: 0%; background: var(--accent); animation-delay: 0.00s; animation-duration: 2.20s; }
+.confetti i:nth-child(2) { left: 37%; background: var(--c-deload,#f59e0b); animation-delay: 0.12s; animation-duration: 2.45s; }
+.confetti i:nth-child(3) { left: 74%; background: var(--ok,#43cf76); animation-delay: 0.24s; animation-duration: 2.70s; }
+.confetti i:nth-child(4) { left: 11%; background: #f472b6; animation-delay: 0.36s; animation-duration: 2.95s; }
+.confetti i:nth-child(5) { left: 48%; background: #60a5fa; animation-delay: 0.48s; animation-duration: 3.20s; }
+.confetti i:nth-child(6) { left: 85%; background: var(--accent); animation-delay: 0.60s; animation-duration: 2.20s; }
+.confetti i:nth-child(7) { left: 22%; background: var(--c-deload,#f59e0b); animation-delay: 0.72s; animation-duration: 2.45s; }
+.confetti i:nth-child(8) { left: 59%; background: var(--ok,#43cf76); animation-delay: 0.00s; animation-duration: 2.70s; }
+.confetti i:nth-child(9) { left: 96%; background: #f472b6; animation-delay: 0.12s; animation-duration: 2.95s; }
+.confetti i:nth-child(10) { left: 33%; background: #60a5fa; animation-delay: 0.24s; animation-duration: 3.20s; }
+.confetti i:nth-child(11) { left: 70%; background: var(--accent); animation-delay: 0.36s; animation-duration: 2.20s; }
+.confetti i:nth-child(12) { left: 7%; background: var(--c-deload,#f59e0b); animation-delay: 0.48s; animation-duration: 2.45s; }
+.confetti i:nth-child(13) { left: 44%; background: var(--ok,#43cf76); animation-delay: 0.60s; animation-duration: 2.70s; }
+.confetti i:nth-child(14) { left: 81%; background: #f472b6; animation-delay: 0.72s; animation-duration: 2.95s; }
+.confetti i:nth-child(15) { left: 18%; background: #60a5fa; animation-delay: 0.00s; animation-duration: 3.20s; }
+.confetti i:nth-child(16) { left: 55%; background: var(--accent); animation-delay: 0.12s; animation-duration: 2.20s; }
+.confetti i:nth-child(17) { left: 92%; background: var(--c-deload,#f59e0b); animation-delay: 0.24s; animation-duration: 2.45s; }
+.confetti i:nth-child(18) { left: 29%; background: var(--ok,#43cf76); animation-delay: 0.36s; animation-duration: 2.70s; }
+.confetti i:nth-child(19) { left: 66%; background: #f472b6; animation-delay: 0.48s; animation-duration: 2.95s; }
+.confetti i:nth-child(20) { left: 3%; background: #60a5fa; animation-delay: 0.60s; animation-duration: 3.20s; }
+.confetti i:nth-child(21) { left: 40%; background: var(--accent); animation-delay: 0.72s; animation-duration: 2.20s; }
+.confetti i:nth-child(22) { left: 77%; background: var(--c-deload,#f59e0b); animation-delay: 0.00s; animation-duration: 2.45s; }
+.confetti i:nth-child(23) { left: 14%; background: var(--ok,#43cf76); animation-delay: 0.12s; animation-duration: 2.70s; }
+.confetti i:nth-child(24) { left: 51%; background: #f472b6; animation-delay: 0.24s; animation-duration: 2.95s; }
+.confetti i:nth-child(25) { left: 88%; background: #60a5fa; animation-delay: 0.36s; animation-duration: 3.20s; }
+.confetti i:nth-child(26) { left: 25%; background: var(--accent); animation-delay: 0.48s; animation-duration: 2.20s; }
+.confetti i:nth-child(27) { left: 62%; background: var(--c-deload,#f59e0b); animation-delay: 0.60s; animation-duration: 2.45s; }
+.confetti i:nth-child(28) { left: 99%; background: var(--ok,#43cf76); animation-delay: 0.72s; animation-duration: 2.70s; }
+@media (prefers-reduced-motion: reduce) { .confetti { display: none; } .celebrate-trophy { animation: none; } }

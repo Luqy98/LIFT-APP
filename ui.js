@@ -38,6 +38,7 @@ export function s(tag, attrs, ...kids) {
 const ICONS = {
   back: 'M15 5l-7 7 7 7',
   plus: 'M12 5v14M5 12h14',
+  trophy: 'M8 4h8v5a4 4 0 01-8 0zM8 6H5v1a3 3 0 003 3M16 6h3v1a3 3 0 01-3 3M12 13v4M9 20h6M10 17h4',
   target: 'M12 3a9 9 0 100 18 9 9 0 000-18zM12 7.500a4.500 4.500 0 100 9 4.500 4.500 0 000-9zM12 11.500v1',
   note: 'M6 3h8l5 5v13H6zM14 3v5h5M9 13h7M9 17h7',
   pin: 'M9 3h6l-1.200 6L17 12v2H7v-2l3.200-3zM12 14v7',

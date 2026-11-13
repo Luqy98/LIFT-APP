@@ -1,5 +1,5 @@
 // Targets: pick a 1RM goal for any exercise and watch the progress towards it.
-import { h, iconBtn, formDialog, choiceSheet, confirmDialog, toast, emptyState } from './ui.js';
+import { h, icon, iconBtn, formDialog, choiceSheet, confirmDialog, toast, emptyState } from './ui.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { fmt, fmtW } from './calc.js';
@@ -82,11 +82,11 @@ export function targetsRoot() {
           h('span', { class: 'target-main' },
             h('span', { class: 'row-title', text: name }),
             h('span', { class: 'row-sub', text: best != null ? `Now ${fmt(best)} kg · Target ${fmtW(t.kg)} kg` : `No 1RM logged yet · Target ${fmtW(t.kg)} kg` })),
-          h('span', { class: 'target-pct', text: `${pct}%` })),
+          done ? h('span', { class: 'target-pct target-trophy' }, icon('trophy', 26)) : h('span', { class: 'target-pct', text: `${pct}%` })),
         h('div', { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': pct, 'aria-label': `${name} progress to target` },
           pct > 0 ? h('div', { class: 'meter-fill' + (done ? ' meter-done' : '') + ' w-' + step5(pct) }) : null),
         h('div', { class: 'target-foot' },
-          h('span', { text: done ? 'Target reached' : best != null ? `${fmt(t.kg - best)} kg to go` : 'Log a set to start tracking' }),
+          h('span', { class: done ? 'target-won' : '', text: done ? `Target reached${t.reachedAt ? ' · ' + new Date(t.reachedAt + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}` : best != null ? `${fmt(t.kg - best)} kg to go` : 'Log a set to start tracking' }),
           t.date ? h('span', { class: 'target-days' + (!done && S.daysLeft(t.date) < 0 ? ' is-late' : ''), text: daysText(t.date) }) : null)))));
   return { title: 'Targets', subtitle: `${rows.length} ${rows.length === 1 ? 'goal' : 'goals'}`, actions, content };
 }

@@ -287,7 +287,9 @@ async function finish(s) {
   }
   S.finishSession(s, mode);
   clearRest();
+  const hit = s.deload ? [] : S.checkTargets();
   await loggedSheet(s);
+  if (hit.length) celebrate(hit);
 }
 
 /** "Workout logged" popup: optional note, then back to the start of Workouts or the summary. */
@@ -305,9 +307,24 @@ async function loggedSheet(s) {
       h('div', { class: 'sheet-actions' },
         h('button', { class: 'btn', text: 'View summary', onclick: () => leave('summary') }),
         h('button', { class: 'btn btn-primary', id: 'logged-home', text: 'Back to Workouts', onclick: () => leave('home') }))),
-    { title: 'Workout logged', onClose: () => { keep(); resolve(); } });
+    { title: 'Workout Logged', onClose: () => { keep(); resolve(); } });
   });
   if (go === 'home') nav.goHome('workouts'); else nav.refresh();
+  toast('Workout Logged Successfully');
+}
+
+/** Pop-up with confetti when a workout takes an exercise's estimated 1RM to its target. */
+function celebrate(hit) {
+  if (navigator.userActivation?.hasBeenActive) navigator.vibrate?.([120, 60, 120, 60, 240]);
+  const confetti = h('div', { class: 'confetti', 'aria-hidden': 'true' }, Array.from({ length: 28 }, () => h('i')));
+  const body = h('div', { class: 'celebrate' }, confetti,
+    h('div', { class: 'celebrate-trophy' }, icon('trophy', 44)),
+    h('p', { class: 'celebrate-msg', text: hit.length === 1 ? 'You hit your 1RM target.' : `You hit ${hit.length} 1RM targets.` }),
+    h('div', { class: 'celebrate-list' }, hit.map((t) => h('div', { class: 'celebrate-row' },
+      h('span', { class: 'celebrate-name', text: S.exerciseName(t.exerciseId) }),
+      h('span', { class: 'celebrate-kg', text: `${fmt(t.best)} kg · target ${fmtW(t.kg)} kg` })))),
+    h('button', { class: 'btn btn-primary btn-block', text: 'Nice', onclick: () => close() }));
+  const { close } = sheet(body, { title: 'Target reached' });
 }
 
 // ---- Per-exercise history, locked to one workout -----------------------------------

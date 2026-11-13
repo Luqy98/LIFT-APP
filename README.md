@@ -123,3 +123,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 ## 2.1.0
 - The workout stopwatch now stays pinned to the top of the screen while you scroll the workout.
 - Targets can have an optional date. The card shows days left (or days overdue) and the Estimated 1RM chart's dotted target line shows "· 23d left". Without a date nothing extra is shown.
+
+## 2.2.0
+- A small gap between the pinned stopwatch and the header line. The finish pop-up title is "Workout Logged", and choosing View summary or Back to Workouts shows a "Workout Logged Successfully" toast.
+- Targets appear on the Dashboard calendar: a target icon on each target date, a trophy on the day a target was reached, with details when you tap the day.
+- Celebration when a workout takes an exercise's estimated 1RM to its target: a confetti pop-up, then a green trophy and "Target reached · date" on its Targets card. Deload sessions never count. Raise the target and it becomes an active goal again.
