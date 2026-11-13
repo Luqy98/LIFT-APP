@@ -947,3 +947,9 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .confetti i:nth-child(27) { left: 62%; background: var(--c-deload,#f59e0b); animation-delay: 0.60s; animation-duration: 2.45s; }
 .confetti i:nth-child(28) { left: 99%; background: var(--ok,#43cf76); animation-delay: 0.72s; animation-duration: 2.70s; }
 @media (prefers-reduced-motion: reduce) { .confetti { display: none; } .celebrate-trophy { animation: none; } }
+
+/* ---- 2.3: tab bar with equal side margins, green target line ---- */
+#tabs { display: flex; justify-content: space-between; padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); }
+#tabs .tab { flex: 0 0 auto; padding-inline: 2px; letter-spacing: 0; font-size: 10.5px; }
+.chart-svg .target-line.is-met { stroke: var(--ok, #43cf76); }
+.chart-svg .target-label.is-met { fill: var(--ok, #43cf76); }

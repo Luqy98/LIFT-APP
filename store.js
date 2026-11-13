@@ -55,6 +55,7 @@ function newData() {
     settings: { ...DEFAULT_SETTINGS },
     exercises: STARTER.map((name) => ({ id: uid(), name, archived: false })),
     routines: [],
+    achievements: [],
     targets: [],
     bulletin: [],
     activeSessionId: null,
@@ -123,6 +124,11 @@ async function load() {
 /** Brings data saved by older versions up to date (workout colours, per-log notes). */
 function migrate() {
   let planChanged = false;
+  if (!Array.isArray(data.achievements)) {
+    data.achievements = [];
+    for (const t of data.targets || []) if (t.reachedAt) data.achievements.push({ id: uid(), targetId: t.id, exerciseId: t.exerciseId, name: exerciseName(t.exerciseId), kg: t.kg, reachedKg: t.reachedKg, date: t.reachedAt });
+    planChanged = true;
+  }
   if (!Array.isArray(data.targets)) { data.targets = []; planChanged = true; }
   if (!Array.isArray(data.bulletin)) { data.bulletin = []; planChanged = true; }
   const have = new Set(data.exercises.map((e) => norm(e.name).toLowerCase()));
@@ -508,17 +514,26 @@ export function setTarget(exerciseId, kg, date = undefined) {
   const t = data.targets.find((x) => x.exerciseId === exerciseId);
   if (t) { t.kg = kg; if (date !== undefined) { if (date) t.date = date; else delete t.date; } }
   else data.targets.push({ id: uid(), exerciseId, kg, ...(date ? { date } : {}) });
-  checkTargets();
+  checkTargets(false);
   touch();
 }
 const localKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 /** Marks targets as reached (or un-reaches them if the goal moved). Returns the ones newly reached. */
-export function checkTargets() {
+/** Permanent record of a reached target; survives editing or removing the target. */
+function recordAchievement(t) {
+  if (data.achievements.some((a) => a.targetId === t.id && a.kg === t.kg)) return;
+  data.achievements.push({ id: uid(), targetId: t.id, exerciseId: t.exerciseId, name: exerciseName(t.exerciseId), kg: t.kg, reachedKg: t.reachedKg, date: t.reachedAt });
+}
+export const targetMet = (exerciseId) => !!data.targets.find((t) => t.exerciseId === exerciseId)?.reachedAt;
+export function checkTargets(record = true) {
   const hit = [];
   for (const t of data.targets) {
     const best = bestE1rm(t.exerciseId);
     if (best != null && best >= t.kg) {
-      if (!t.reachedAt) { t.reachedAt = localKey(); t.reachedKg = best; hit.push({ ...t, best }); }
+      if (!t.reachedAt) {
+        t.reachedAt = localKey(); t.reachedKg = best; hit.push({ ...t, best });
+        if (record) recordAchievement(t);
+      }
     } else if (t.reachedAt) { delete t.reachedAt; delete t.reachedKg; }
   }
   if (hit.length || data.targets.length) touch();

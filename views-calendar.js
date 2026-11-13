@@ -32,9 +32,9 @@ export function calendarView(params) {
   const targetsOn = new Map();
   const mark = (k, item) => { if (!targetsOn.has(k)) targetsOn.set(k, []); targetsOn.get(k).push(item); };
   for (const t of S.data.targets) {
-    if (t.reachedAt) mark(t.reachedAt, { kind: 'won', t });
-    if (t.date) mark(t.date, { kind: 'due', t });
+    if (t.date && !t.reachedAt) mark(t.date, { kind: 'due', t });
   }
+  for (const a of S.data.achievements) mark(a.date, { kind: 'won', t: { exerciseId: a.exerciseId, name: a.name, kg: a.kg, reachedKg: a.reachedKg } });
 
   const shiftMonth = (n) => { params.month = new Date(first.getFullYear(), first.getMonth() + n, 1).toISOString(); params.day = null; nav.refresh(); };
   const atCurrent = first.getFullYear() === today.getFullYear() && first.getMonth() === today.getMonth();
@@ -66,12 +66,12 @@ export function calendarView(params) {
   if (selDate) {
     detail.push(h('h3', { class: 'month', text: selDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) }));
     for (const { kind, t } of targetsOn.get(params.day) || []) {
-      const name = S.exerciseName(t.exerciseId);
+      const name = t.name || S.exerciseName(t.exerciseId);
       detail.push(h('div', { class: 'row-card cal-target' + (kind === 'won' ? ' is-won' : '') },
         icon(kind === 'won' ? 'trophy' : 'target', 20),
         h('span', { class: 'row-main' },
           h('span', { class: 'row-title', text: kind === 'won' ? `Target reached · ${name}` : `Target date · ${name}` }),
-          h('span', { class: 'row-sub', text: kind === 'won' ? `Estimated 1RM ${fmt(t.reachedKg)} kg, target ${fmtW(t.kg)} kg` : t.reachedAt ? `Target ${fmtW(t.kg)} kg, reached` : `Target ${fmtW(t.kg)} kg` }))));
+          h('span', { class: 'row-sub', text: kind === 'won' ? `Estimated 1RM ${fmt(t.reachedKg)} kg, target ${fmtW(t.kg)} kg` : `Target ${fmtW(t.kg)} kg` }))));
     }
     if (!selList.length) detail.push(h('p', { class: 'hint', text: 'No workouts logged this day.' }));
     for (const s of selList) {

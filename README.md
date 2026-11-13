@@ -128,3 +128,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - A small gap between the pinned stopwatch and the header line. The finish pop-up title is "Workout Logged", and choosing View summary or Back to Workouts shows a "Workout Logged Successfully" toast.
 - Targets appear on the Dashboard calendar: a target icon on each target date, a trophy on the day a target was reached, with details when you tap the day.
 - Celebration when a workout takes an exercise's estimated 1RM to its target: a confetti pop-up, then a green trophy and "Target reached · date" on its Targets card. Deload sessions never count. Raise the target and it becomes an active goal again.
+
+## 2.3.0
+- Once a target is reached its dotted line on the Estimated 1RM chart turns green and says "reached".
+- Reached targets are saved permanently as achievements. Editing or removing the target no longer removes the trophy from the calendar, so you can always find it. Existing reached targets were carried over.
+- Bottom tab bar has equal margins on the left and right.
