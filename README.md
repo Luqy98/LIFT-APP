@@ -148,6 +148,12 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Red eyes found on far more mascots in light mode.
 - Behind the scenes: every exercise now has its primary and secondary muscles recorded, ready for the body map.
 
+
+## 2.12.0
+- 20 new mascot drawings in (pull-ups, rows, calf raises and more), including a separate underhand pull-up.
+- The Exercises filter now uses muscle groups: All, Chest, Back, Shoulders, Arms, Legs, Core.
+- Deadlifts (all variants) now count the whole back (lower back, mid back, traps, lats) plus glutes and hamstrings.
+
 ## 2.11.1
 - Cleaner mascot illustrations: leftover frames, captions and edge fragments removed from most exercises that still had them.
 

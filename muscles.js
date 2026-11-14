@@ -53,8 +53,8 @@ const RULES = [
   [/curl/, 'bi', 'fa'],
   // --- legs ---
   [/leg extension|sissy/, 'q', ''],
-  [/romanian|stiff-leg|rdl|single-leg romanian|b-stance romanian|kettlebell swing|hip hinge|pull-through|pull through/, 'ham', 'gl lb'],
-  [/deadlift|trap bar/, 'gl ham lb', 'q tr fa'],
+  [/romanian|stiff-leg|rdl|single-leg romanian|b-stance romanian|kettlebell swing|hip hinge|pull-through|pull through/, 'ham gl lb', 'mb tr la fa'],
+  [/deadlift|trap bar/, 'lb mb tr la gl ham', 'q fa'],
   [/hip thrust|glute bridge|frog pump|glute kickback|donkey kick|kickback \(cable\)|cable kickback|hip extension/, 'gl', 'ham'],
   [/fire hydrant|clamshell|hip abduction|abductor|cable abduction|lateral band/, 'abd', 'gl'],
   [/hip adduction|adduction|adductor|copenhagen/, 'ad', ''],
@@ -73,4 +73,19 @@ export function musclesFor(name) {
   const n = String(name || '').toLowerCase();
   for (const [re, p, s] of RULES) if (re.test(n)) return { primary: m(p), secondary: m(s) };
   return null;
+}
+
+// High-level groups for filtering. A group is decided by the first primary muscle.
+export const MUSCLE_GROUPS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core'];
+const GROUP_OF = {
+  'Upper Chest': 'Chest', Chest: 'Chest', 'Lower Chest': 'Chest',
+  'Front Delts': 'Shoulders', 'Side Delts': 'Shoulders', 'Rear Delts': 'Shoulders', 'Rotator Cuff': 'Shoulders',
+  Biceps: 'Arms', Triceps: 'Arms', Forearms: 'Arms',
+  Traps: 'Back', Lats: 'Back', 'Mid Back': 'Back', 'Lower Back': 'Back',
+  Abs: 'Core', Obliques: 'Core', 'Hip Flexors': 'Core',
+  Quads: 'Legs', Hamstrings: 'Legs', Glutes: 'Legs', Adductors: 'Legs', Abductors: 'Legs', Calves: 'Legs', Tibialis: 'Legs',
+};
+export function groupFor(name) {
+  const mm = musclesFor(name);
+  return (mm && GROUP_OF[mm.primary[0]]) || 'Other';
 }
