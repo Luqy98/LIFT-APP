@@ -218,3 +218,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.15.0
 - The Exercises library now comes with every exercise that has a mascot drawing (about 435 in total), each with its image and muscles. It is added once on first open, so anything you delete stays deleted, and you can still add your own with the + button.
+
+## 2.15.1
+- Exercises tab: a "Removed Exercises" button lists every catalog exercise you have deleted, with a Copy List button.

@@ -5,6 +5,7 @@ import * as nav from './nav.js';
 import { fmtDate } from './calc.js';
 import { exerciseArt } from './art.js';
 import { groupFor, musclesOf, MUSCLE_GROUPS, MUSCLES_BY_GROUP } from './muscles.js';
+import { ICONS } from './icons.js';
 import { selectMovement } from './views-dash.js';
 
 const lib = { q: '', g: 'All' };
@@ -53,6 +54,26 @@ function editMuscles(e) {
       } })));
   const box = sheet(body, { title: `Muscles · ${e.name}`, wide: true });
   draw();
+}
+
+/** Catalog exercises that are no longer in this library (deleted by the user). */
+function removedCatalog() {
+  const have = new Set(S.data.exercises.map((e) => e.name.toLowerCase()));
+  return [...new Set(ICONS.map((i) => i[0]))].filter((n) => !have.has(n.toLowerCase())).sort((a, b) => a.localeCompare(b));
+}
+function showRemoved() {
+  const list = removedCatalog();
+  const text = list.join('\n');
+  const area = h('textarea', { class: 'search removed-list', rows: '10', readonly: 'true', 'aria-label': 'Removed exercises', text });
+  const box = sheet(h('div', {},
+    h('p', { class: 'sheet-msg', text: list.length ? `${list.length} catalog exercises are no longer in your library. Copy the list and send it over to change the default for everyone.` : 'You haven’t removed any catalog exercises yet.' }),
+    list.length ? area : null,
+    h('div', { class: 'sheet-actions' },
+      h('button', { class: 'btn', text: 'Close', onclick: () => box.close() }),
+      list.length ? h('button', { class: 'btn btn-primary', text: 'Copy List', onclick: async () => {
+        try { await navigator.clipboard.writeText(text); toast('List copied'); } catch { area.focus(); area.select(); toast('Select the text and copy it'); }
+      } }) : null)),
+  { title: 'Removed Exercises' });
 }
 
 async function movementMenu(e, stats) {
@@ -124,6 +145,7 @@ export function movementsRoot() {
     content: h('div', { class: 'page' }, search,
       h('div', { class: 'chips-row', role: 'group', 'aria-label': 'Filter by group' }, ['All', ...MUSCLE_GROUPS].map((g) =>
         h('button', { type: 'button', class: 'fchip' + (lib.g === g ? ' is-on' : ''), 'aria-pressed': String(lib.g === g), text: g, onclick: () => { lib.g = g; nav.refresh(); } }))),
-      list, archivedBox),
+      list, archivedBox,
+      h('button', { class: 'btn btn-block', text: 'Removed Exercises', onclick: showRemoved })),
   };
 }

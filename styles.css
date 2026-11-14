@@ -944,3 +944,5 @@ body { position: fixed; inset: 0; width: 100%; }
 .mus-opts .fchip { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
 
 .ex-row { content-visibility: auto; contain-intrinsic-size: auto 68px; }
+
+.removed-list { width: 100%; font-size: 13px; resize: none; }
