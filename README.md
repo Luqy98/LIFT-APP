@@ -210,3 +210,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 ## 2.13.0
 - Muscles: tap an exercise's ⋮ menu → Muscles to choose which muscles it trains as Primary or Secondary. Your choice is kept and used for the body map; Reset goes back to the built-in guess.
 - Every exercise's built-in muscles were reviewed one by one (for example: pull-ups and chin-ups, handstand push-ups, rows, carries, wrist curls, calf raises, leg press and hack squat, core moves).
+
+## 2.14.0
+- Muscles are now split into parts: chest (upper, mid, lower), biceps (long head, short head, brachialis), triceps (long, lateral, medial head), forearms (wrist flexors, wrist extensors, brachioradialis), quads (rectus femoris, vastus lateralis, vastus medialis), hamstrings (outer, inner), calves (gastrocnemius, soleus), upper and lower abs, glute medius.
+- Every exercise was re-mapped to the parts (incline and drag curls lean on the long head, preacher and spider on the short head, hammer curls on the brachialis, overhead and skull-crusher work on the long head of the triceps, and so on).
+- The Muscles editor lists the parts, and anything you set before is carried over.
