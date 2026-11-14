@@ -1,5 +1,7 @@
 // Which muscles each exercise trains: primary (main movers) and secondary (assisting). Matched on the exercise name, first rule wins.
 // Muscle names are the ones the body map will use.
+
+import { RENAMED_FROM } from './catalog.js';
 export const MUSCLES = [
   'Upper Chest', 'Mid Chest', 'Lower Chest',
   'Front Delts', 'Side Delts', 'Rear Delts', 'Rotator Cuff',
@@ -204,7 +206,8 @@ export function musclesOf(ex) {
     const ok = (a) => [...new Set((Array.isArray(a) ? a : []).flatMap((x) => LEGACY[x] || [x]).filter((x) => MUSCLES.includes(x)))];
     return { primary: ok(ex.muscles.primary), secondary: ok(ex.muscles.secondary), custom: true };
   }
-  const r = musclesFor(ex && ex.name) || (ex && ex.from ? musclesFor(ex.from) : null);   // a renamed catalog exercise keeps its muscles
+  const was = ex && (ex.from || RENAMED_FROM.get(String(ex.name).toLowerCase()));
+  const r = (was && musclesFor(was)) || musclesFor(ex && ex.name);   // a renamed catalog exercise keeps its muscles
   return r ? { ...r, custom: false } : { primary: [], secondary: [], custom: false };
 }
 

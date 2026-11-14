@@ -81,7 +81,7 @@ function newData() {
   return {
     v: 1,
     settings: { ...DEFAULT_SETTINGS },
-    exercises: STARTER.map((name) => ({ id: uid(), name, archived: false })),
+    exercises: STARTER.map((name) => ({ id: uid(), name: CATALOG_RENAMES[name] || name, archived: false })),
     routines: [],
     achievements: [],
     targets: [],

@@ -40,7 +40,8 @@ function buildIndex() {
 
 /** The mascot icon for an exercise name, or null when there is no good match. */
 // Exercises you renamed keep the picture of the catalog name they started as.
-const USER_ALIASES = new Map();
+import { RENAMED_FROM } from './catalog.js';
+const USER_ALIASES = new Map(RENAMED_FROM);
 export function setIconAlias(name, from) { USER_ALIASES.set(String(name).trim().toLowerCase(), from); }
 
 export function iconFor(name) {

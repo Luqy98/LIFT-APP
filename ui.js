@@ -231,7 +231,11 @@ export function sortableList(rows, onChange) {
 
 export function sheet(content, { title: rawTitle, onClose, wide = false } = {}) {
   const title = rawTitle ? titleCase(rawTitle) : rawTitle;
-  const backdrop = h('div', { class: 'backdrop', onpointerdown: (e) => { if (e.target === backdrop) close(); } });
+  // Tapping the dim background only closes the sheet: it closes on the click itself (which the backdrop swallows), so the tap never reaches what's behind.
+  let downOnBackdrop = false;
+  const backdrop = h('div', { class: 'backdrop',
+    onpointerdown: (e) => { downOnBackdrop = e.target === backdrop; },
+    onclick: (e) => { if (e.target === backdrop && downOnBackdrop) { e.preventDefault(); e.stopPropagation(); close(); } downOnBackdrop = false; } });
   const panel = h('div', { class: 'sheet' + (wide ? ' sheet-wide' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': title || 'Dialog' },
     h('div', { class: 'sheet-grip' }),
     title ? h('h2', { class: 'sheet-title', text: title }) : null,
