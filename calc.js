@@ -121,7 +121,7 @@ export function toLocalInput(iso) {
 }
 
 // ---- Workout colours and weeks ----------------------------------------------
-export const WORKOUT_COLORS = ['Blue', 'Violet', 'Pink', 'Orange', 'Green', 'Sky'];
+export const WORKOUT_COLORS = ['Violet', 'Blue', 'Pink', 'Orange', 'Green', 'Sky', 'Red', 'Yellow', 'Teal', 'Lime', 'Fuchsia', 'Slate'];
 
 /** Local midnight on the Monday that starts the week containing `d`. */
 export function weekStart(d) {

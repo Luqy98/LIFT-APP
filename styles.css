@@ -31,7 +31,7 @@
   --c-failure: #f0716f;
   --c-backoff: #25ad80;
   --c-hold: #3aa7d8;
-  --wk0: #8b5cf6; --wk1: #5b9dff; --wk2: #f472b6; --wk3: #fb923c; --wk4: #4ade80; --wk5: #38bdf8;
+  --wk0: #8b5cf6; --wk1: #5b9dff; --wk2: #f472b6; --wk3: #fb923c; --wk4: #4ade80; --wk5: #38bdf8; --wk6: #f87171; --wk7: #facc15; --wk8: #2dd4bf; --wk9: #a3e635; --wk10: #e879f9; --wk11: #94a3b8;
   --note-cues: #f5b942;
   --note-general: #6fc3c0;
   --hdr-bg: #171421; --hdr-bg2: #0e0c15; --hdr-ink: #ffffff; --hdr-sub: #b0aac4;
@@ -66,7 +66,7 @@
   --c-failure: #d93f3d;
   --c-backoff: #17a173;
   --c-hold: #1f8fc4;
-  --wk0: #7c3aed; --wk1: #2563eb; --wk2: #db2777; --wk3: #ea580c; --wk4: #16a34a; --wk5: #0284c7;
+  --wk0: #7c3aed; --wk1: #2563eb; --wk2: #db2777; --wk3: #ea580c; --wk4: #16a34a; --wk5: #0284c7; --wk6: #dc2626; --wk7: #ca8a04; --wk8: #0d9488; --wk9: #65a30d; --wk10: #c026d3; --wk11: #64748b;
   --note-cues: #a8500a;
   --note-general: #0f766e;
   --hdr-bg: #ffffff; --hdr-bg2: #f7f5fd; --hdr-ink: #14101f; --hdr-sub: #6f6a85;
@@ -101,7 +101,7 @@
   --c-failure: #d93f3d;
   --c-backoff: #17a173;
   --c-hold: #1f8fc4;
-  --wk0: #7c3aed; --wk1: #2563eb; --wk2: #db2777; --wk3: #ea580c; --wk4: #16a34a; --wk5: #0284c7;
+  --wk0: #7c3aed; --wk1: #2563eb; --wk2: #db2777; --wk3: #ea580c; --wk4: #16a34a; --wk5: #0284c7; --wk6: #dc2626; --wk7: #ca8a04; --wk8: #0d9488; --wk9: #65a30d; --wk10: #c026d3; --wk11: #64748b;
   --note-cues: #a8500a;
   --note-general: #0f766e;
   --hdr-bg: #ffffff; --hdr-bg2: #f7f5fd; --hdr-ink: #14101f; --hdr-sub: #6f6a85;
@@ -375,6 +375,8 @@ button.row-card .row-main { padding: 0; }
 /* ---- Workout colours: each workout carries its own colour wherever it appears ---- */
 .wk-0 { --wk: var(--wk0); } .wk-1 { --wk: var(--wk1); } .wk-2 { --wk: var(--wk2); }
 .wk-3 { --wk: var(--wk3); } .wk-4 { --wk: var(--wk4); } .wk-5 { --wk: var(--wk5); }
+.wk-6 { --wk: var(--wk6); } .wk-7 { --wk: var(--wk7); } .wk-8 { --wk: var(--wk8); }
+.wk-9 { --wk: var(--wk9); } .wk-10 { --wk: var(--wk10); } .wk-11 { --wk: var(--wk11); }
 .row-card.wk, .hist-row.wk {
   background: color-mix(in srgb, var(--wk) 15%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--wk) 55%, transparent);
@@ -991,3 +993,7 @@ body { position: fixed; inset: 0; width: 100%; }
 .sheet-actions { gap: 10px; }
 .sheet-actions .btn { white-space: nowrap; padding-inline: 12px; }
 .sheet-actions .btn:last-child { flex: 1.35; }
+
+/* ---- 2.10: colour sheet: room before Cancel ---- */
+.swatches { margin-bottom: 14px; }
+.swatch { min-width: 0; }
