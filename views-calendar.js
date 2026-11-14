@@ -73,7 +73,7 @@ export function calendarView(params) {
           h('span', { class: 'row-title', text: kind === 'won' ? `Target reached · ${name}` : `Target date · ${name}` }),
           h('span', { class: 'row-sub', text: kind === 'won' ? `Estimated 1RM ${fmt(t.reachedKg)} kg, target ${fmtW(t.kg)} kg` : `Target ${fmtW(t.kg)} kg` }))));
     }
-    if (!selList.length) detail.push(h('p', { class: 'hint', text: 'No workouts logged this day.' }));
+    if (!selList.length) detail.push(h('p', { class: 'hint', text: params.day > keyOf(today) ? 'Nothing logged yet. Set a target date on this day from the Targets tab.' : 'No workouts logged this day.' }));
     for (const s of selList) {
       detail.push(h('button', { class: `row-card row-btn wk wk-${S.sessionColor(s)}`, onclick: () => nav.push(sessionView, { sessionId: s.id }) },
         h('span', { class: 'row-main' },
@@ -89,7 +89,8 @@ export function calendarView(params) {
     h('div', { class: 'cal-head' },
       h('button', { class: 'btn btn-sm btn-ghost cal-nav', 'aria-label': 'Previous month', onclick: () => shiftMonth(-1) }, icon('back', 18)),
       h('div', { class: 'cal-title', text: monthLabel }),
-      h('button', { class: 'btn btn-sm btn-ghost cal-nav', 'aria-label': 'Next month', disabled: atCurrent, onclick: () => shiftMonth(1) }, icon('right', 18))),
+      h('button', { class: 'btn btn-sm btn-ghost cal-nav', 'aria-label': 'Next month', onclick: () => shiftMonth(1) }, icon('right', 18))),
+    atCurrent ? null : h('button', { class: 'btn btn-sm cal-today', onclick: () => { params.month = new Date(today.getFullYear(), today.getMonth(), 1).toISOString(); params.day = keyOf(today); nav.refresh(); } }, h('span', { text: 'Back to Today' })),
     h('div', { class: 'cal-grid' }, WEEKDAYS.map((w) => h('span', { class: 'cal-wd', text: w })), cells),
     h('div', { class: 'chart-key cal-key' }, h('span', { class: 'key-swatch' }), h('span', { text: 'Workout' }), h('span', { class: 'key-swatch key-deload' }), h('span', { text: 'Deload' }), h('span', { class: 'key-target' }, icon('target', 12)), h('span', { text: 'Target' })),
     h('div', { class: 'tiles tiles-3' }, tile('Workouts', String(workouts), deloads ? `${deloads} deload` : ''), tile('Time', total ? fmtMinsLong(total) : '–'), tile('Avg length', workouts ? fmtMinsLong(Math.round(total / workouts)) : '–')),

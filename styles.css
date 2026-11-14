@@ -983,3 +983,5 @@ body { position: fixed; inset: 0; width: 100%; }
 .drag-handle { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin-right: 2px; color: var(--muted); touch-action: none; cursor: grab; border-radius: 12px; }
 .sortable { gap: 8px; }
 .sort-item .row-main { min-width: 0; padding: 12px 8px 12px 14px; }
+
+.cal-today { align-self: center; }
