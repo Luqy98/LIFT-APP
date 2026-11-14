@@ -1,8 +1,8 @@
 // Offline app shell. Cache-first for the app's own files; never touches the network for anything else.
-const CACHE = 'gymlog-v2.11.1';
+const CACHE = 'gymlog-v2.11.2';
 const FILES = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest',
-  'app.js', 'art.js', 'icons.js', 'icon-match.js', 'live.js', 'sound.js', 'calc.js', 'charts.js', 'backup.js', 'notes.js', 'crypto.js', 'db.js', 'nav.js', 'picker.js', 'store.js',
+  'app.js', 'art.js', 'icons.js', 'muscles.js', 'icon-match.js', 'live.js', 'sound.js', 'calc.js', 'charts.js', 'backup.js', 'notes.js', 'crypto.js', 'db.js', 'nav.js', 'picker.js', 'store.js',
   'theme.js', 'theme-boot.js', 'ui.js', 'version.js', 'webauthn.js',
   'views-dash.js', 'views-calendar.js', 'views-targets.js', 'views-bulletin.js', 'views-lock.js', 'views-library.js', 'views-session.js', 'views-settings.js', 'views-workouts.js', 'views-reorder.js',
   'fonts/inter-400.woff', 'fonts/inter-500.woff', 'fonts/inter-600.woff', 'fonts/inter-700.woff', 'fonts/inter-display-600.woff', 'fonts/inter-display-700.woff',
