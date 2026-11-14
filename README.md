@@ -144,6 +144,9 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Android app: native fingerprint unlock (secret held in the Android Keystore behind the fingerprint, PIN always works), see-through status and navigation bars (edge-to-edge, bar icons follow the theme), bell is paired with vibration, new logo.
 - Android shell moved to Capacitor 8.
 
+## 2.9.1
+- Confirm dialogs: more space between the message and the buttons; the confirm button is a little wider so labels like "Delete programme" stay on one line.
+
 ## 2.9.0
 - Calendar: you can now browse future months (to see target dates ahead of time), with a "Back to Today" button when you are away from the current month.
 

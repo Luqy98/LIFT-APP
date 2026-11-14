@@ -985,3 +985,9 @@ body { position: fixed; inset: 0; width: 100%; }
 .sort-item .row-main { min-width: 0; padding: 12px 8px 12px 14px; }
 
 .cal-today { align-self: center; }
+
+/* ---- 2.9.1: breathing room between a dialog's text and its buttons; the confirm button gets the wider share so labels stay on one line ---- */
+.sheet-msg { margin-bottom: 20px; line-height: 1.45; }
+.sheet-actions { gap: 10px; }
+.sheet-actions .btn { white-space: nowrap; padding-inline: 12px; }
+.sheet-actions .btn:last-child { flex: 1.35; }
