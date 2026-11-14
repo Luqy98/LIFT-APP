@@ -320,6 +320,14 @@ export function exerciseUsage(id) {
   for (const s of sessionMap.values()) logs += s.entries.filter((e) => e.exerciseId === id).length;
   return { plan, logs };
 }
+/** Saves the muscles the user chose for an exercise (primary/secondary names); null goes back to the built-in guess. */
+export function setExerciseMuscles(id, muscles) {
+  const e = exerciseById(id);
+  if (!e) return;
+  if (muscles) e.muscles = { primary: [...muscles.primary], secondary: [...muscles.secondary] };
+  else delete e.muscles;
+  touch();
+}
 /** Deletes an unused exercise; archives one that has history so past logs stay intact. -> 'deleted' | 'archived' */
 export function removeExercise(id) {
   const u = exerciseUsage(id);

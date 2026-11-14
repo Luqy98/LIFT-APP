@@ -206,3 +206,7 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - App lock is optional. First launch offers "Skip, no lock"; Settings → Security has App lock Turn on / Turn off. With the lock off the app opens straight away (the data key is wrapped with a built-in secret, so this is convenience rather than protection).
 - Backups are always named LIFT-backup.json so the newest copy is easy to spot and old ones are easy to replace.
 - New logo with no background: just the white tile, dumbbell and LIFT. Splash image removed (it was being stretched behind the status bar).
+
+## 2.13.0
+- Muscles: tap an exercise's ⋮ menu → Muscles to choose which muscles it trains as Primary or Secondary. Your choice is kept and used for the body map; Reset goes back to the built-in guess.
+- Every exercise's built-in muscles were reviewed one by one (for example: pull-ups and chin-ups, handstand push-ups, rows, carries, wrist curls, calf raises, leg press and hack squat, core moves).

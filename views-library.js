@@ -1,10 +1,10 @@
 // Exercises tab: the shared library every workout draws from, so "Bench Press" is one exercise everywhere.
-import { h, iconBtn, formDialog, choiceSheet, confirmDialog, toast, emptyState } from './ui.js';
+import { h, iconBtn, formDialog, choiceSheet, confirmDialog, toast, emptyState, sheet } from './ui.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { fmtDate } from './calc.js';
 import { exerciseArt } from './art.js';
-import { groupFor, MUSCLE_GROUPS } from './muscles.js';
+import { groupFor, musclesOf, MUSCLE_GROUPS, MUSCLES_BY_GROUP } from './muscles.js';
 import { selectMovement } from './views-dash.js';
 
 const lib = { q: '', g: 'All' };
@@ -21,6 +21,40 @@ async function addMovement() {
   nav.refresh();
 }
 
+/** Pick which muscles an exercise trains: each muscle is Off, Primary or Secondary. */
+function editMuscles(e) {
+  const cur = musclesOf(e);
+  const state = new Map();
+  cur.primary.forEach((x) => state.set(x, 'primary'));
+  cur.secondary.forEach((x) => { if (!state.has(x)) state.set(x, 'secondary'); });
+  const rows = [];
+  const draw = () => rows.forEach((r) => r());
+  const body = h('div', { class: 'mus-edit' },
+    h('p', { class: 'sheet-msg', text: 'Primary muscles do the main work. Secondary muscles assist. The body map uses these.' }),
+    ...MUSCLES_BY_GROUP.map(([g, list]) => h('div', { class: 'mus-group' },
+      h('h3', { class: 'mus-head', text: g }),
+      ...list.map((name) => {
+        const btns = [['', 'Off'], ['primary', 'Primary'], ['secondary', 'Secondary']].map(([val, label]) =>
+          h('button', { type: 'button', class: 'fchip', text: label, onclick: () => { if (val) state.set(name, val); else state.delete(name); draw(); } }));
+        rows.push(() => btns.forEach((b, i) => {
+          const on = ['', 'primary', 'secondary'][i] === (state.get(name) || '');
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-pressed', String(on));
+        }));
+        return h('div', { class: 'mus-row' }, h('span', { class: 'mus-name', text: name }), h('div', { class: 'mus-opts' }, ...btns));
+      }))),
+    h('div', { class: 'sheet-actions' },
+      h('button', { class: 'btn', text: 'Reset', onclick: () => { S.setExerciseMuscles(e.id, null); box.close(); toast('Back to the default muscles'); nav.refresh(); } }),
+      h('button', { class: 'btn btn-primary', text: 'Save', onclick: () => {
+        const pick = (k) => MUSCLES_BY_GROUP.flatMap(([, l]) => l).filter((x) => state.get(x) === k);
+        if (!pick('primary').length) { toast('Pick at least one primary muscle'); return; }
+        S.setExerciseMuscles(e.id, { primary: pick('primary'), secondary: pick('secondary') });
+        box.close(); toast('Muscles saved'); nav.refresh();
+      } })));
+  const box = sheet(body, { title: `Muscles · ${e.name}`, wide: true });
+  draw();
+}
+
 async function movementMenu(e, stats) {
   const used = S.exerciseUsage(e.id);
   const inUse = used.plan || used.logs;
@@ -28,6 +62,7 @@ async function movementMenu(e, stats) {
     title: e.name,
     options: [
       { label: 'Rename', value: 'rename' },
+      { label: 'Muscles', value: 'muscles', sub: (() => { const m = musclesOf(e); return (m.primary.join(', ') || 'None set') + (m.custom ? ' · yours' : ''); })() },
       ...(stats ? [{ label: 'View on dashboard', value: 'dash' }] : []),
       inUse ? { label: 'Archive', value: 'del', sub: 'Hides it from the picker. Past logs and charts are kept.' } : { label: 'Delete', value: 'del', danger: true },
     ],
@@ -39,6 +74,8 @@ async function movementMenu(e, stats) {
       validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : S.findExerciseByName(f.name, e.id) ? 'You already have an exercise with that name.' : null),
     });
     if (x) { S.renameExercise(e.id, x.name); nav.refresh(); }
+  } else if (v === 'muscles') {
+    editMuscles(e);
   } else if (v === 'dash') {
     selectMovement(e.id);
     nav.switchTab('dashboard');
@@ -57,14 +94,14 @@ export function movementsRoot() {
 
   const draw = () => {
     const q = lib.q.trim().toLowerCase();
-    const items = S.data.exercises.filter((e) => !e.archived && e.name.toLowerCase().includes(q) && (lib.g === 'All' || groupFor(e.name) === lib.g)).sort((a, b) => a.name.localeCompare(b.name));
+    const items = S.data.exercises.filter((e) => !e.archived && e.name.toLowerCase().includes(q) && (lib.g === 'All' || groupFor(e) === lib.g)).sort((a, b) => a.name.localeCompare(b.name));
     list.replaceChildren(...(items.length ? items.map((e) => {
       const st = have.get(e.id);
       return h('div', { class: 'row-card ex-row' },
         h('span', { class: 'art-tile', 'aria-hidden': 'true' }, exerciseArt(e.name, 34)),
         h('button', { class: 'row-main row-btn', onclick: () => movementMenu(e, st) },
           h('span', { class: 'row-title', text: e.name }),
-          h('span', { class: 'row-sub', text: `${groupFor(e.name) === 'Other' ? '' : groupFor(e.name) + ' · '}${st ? `${st.count}× · last ${fmtDate(st.last)}` : 'Not logged yet'}` })),
+          h('span', { class: 'row-sub', text: `${groupFor(e) === 'Other' ? '' : groupFor(e) + ' · '}${st ? `${st.count}× · last ${fmtDate(st.last)}` : 'Not logged yet'}` })),
         iconBtn('more', `Options for ${e.name}`, () => movementMenu(e, st)));
     }) : [h('p', { class: 'hint', text: q ? 'No match. Add it with the + button.' : 'No exercises yet.' })]));
 

@@ -934,3 +934,11 @@ body { position: fixed; inset: 0; width: 100%; }
 /* ---- 2.10: colour sheet: room before Cancel ---- */
 .swatches { margin-bottom: 14px; }
 .swatch { min-width: 0; }
+
+.mus-edit { display: flex; flex-direction: column; gap: 14px; max-height: 70vh; overflow-y: auto; }
+.mus-group { display: flex; flex-direction: column; gap: 6px; }
+.mus-head { margin: 0; font-size: 13px; color: var(--muted); font-weight: 650; }
+.mus-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.mus-name { font-size: 15px; font-weight: 550; min-width: 96px; }
+.mus-opts { display: flex; gap: 6px; }
+.mus-opts .fchip { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
