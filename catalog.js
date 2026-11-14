@@ -203,6 +203,13 @@ export const CATALOG_DROP = [
   "Straight-Arm Pushdown",
   "Sumo Squat (Dumbbell)",
   "Rear Delt Fly (Cable)",
+  // v2.18.0
+  "Seated Hamstring Curl (Machine)",
+  "Seated Leg Curl",
+  "Spiderman Plank",
+  "Triceps Extension (Machine)",
+  "Overhead Triceps Extension (Cable)",
+  "Triceps Overhead Extension (Cable)",
 ];
 
 // Catalog names renamed in the default library: { 'Old Name': 'New Name' }.
@@ -212,7 +219,6 @@ export const CATALOG_RENAMES = {
   "Dumbbell Spider Curl": "Spider Curl (Dumbbell)",
   "High Machine Row": "Machine Row",
   "Kettlebell Farmer Walk": "Farmers Carry (Kettlebell)",
-  "Overhead Triceps Extension (Cable)": "Triceps Overhead Extension (Cable)",
   "Overhead Triceps Extension (Dumbbell)": "Triceps Overhead Extension (Dumbbell)",
   "Rope Overhead Extension": "Triceps Overhead Extension (Rope)",
   "Seated Curl (Machine)": "Preacher Curl (EZ-Bar)",
@@ -224,7 +230,12 @@ export const CATALOG_RENAMES = {
   "Smith Machine Bench Press": "Bench Press (Smith Machine)",
   "Standing Calf Raise (Machine)": "Calf Raise (Standing)",
   "Straight-Arm Cable Pullover": "Lat Pullover (Rope)",
+  "Pendulum Squat (Machine)": "Pendulum Squat",
 };
+// Renames that were made default and later dropped; kept so older libraries still recognise them as default renames.
+const PAST_RENAMES = { 'Overhead Triceps Extension (Cable)': 'Triceps Overhead Extension (Cable)' };
+/** True when renaming `from` to `name` was a default-library rename (not one the user made). */
+export const isCatalogRename = (from, name) => (CATALOG_RENAMES[from] || PAST_RENAMES[from]) === name;
 /** New name (lower case) -> the catalog name it was renamed from, so it keeps that drawing and its muscles. */
 export const RENAMED_FROM = new Map(Object.entries(CATALOG_RENAMES).map(([a, b]) => [b.toLowerCase(), a]));
 

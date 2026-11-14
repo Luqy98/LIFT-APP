@@ -9,7 +9,7 @@
 
 import * as C from './crypto.js';
 import { ICONS } from './icons.js';
-import { catalogNames, CATALOG_DROP, CATALOG_RENAMES } from './catalog.js';
+import { catalogNames, CATALOG_DROP, CATALOG_RENAMES, isCatalogRename } from './catalog.js';
 import { setIconAlias } from './icon-match.js';
 import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT } from './calc.js';
 
@@ -187,7 +187,7 @@ function migrate() {
       if (done.has(name)) continue;
       data.catalogDropped.push(name);
       const e = data.exercises.find((x) => x.name.toLowerCase() === name.toLowerCase());
-      if (!e || e.muscles || e.from) continue;
+      if (!e || e.muscles || (e.from && !isCatalogRename(e.from, e.name))) continue;   // keep ones you customised or renamed yourself
       const u = exerciseUsage(e.id);
       if (u.plan || u.logs || (data.targets || []).some((t) => t.exerciseId === e.id)) continue;
       data.exercises = data.exercises.filter((x) => x !== e);

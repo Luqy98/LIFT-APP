@@ -5,7 +5,7 @@ import * as nav from './nav.js';
 import { fmtDate } from './calc.js';
 import { exerciseArt } from './art.js';
 import { groupFor, musclesOf, MUSCLE_GROUPS, MUSCLES_BY_GROUP } from './muscles.js';
-import { catalogNames, CATALOG_RENAMES } from './catalog.js';
+import { catalogNames, isCatalogRename } from './catalog.js';
 import { selectMovement } from './views-dash.js';
 
 const lib = { q: '', g: 'All' };
@@ -60,7 +60,7 @@ function editMuscles(e) {
 function libraryChanges() {
   const have = new Set(S.data.exercises.flatMap((e) => [e.name.toLowerCase(), ...(e.from ? [e.from.toLowerCase()] : [])]));
   const removed = catalogNames().filter((n) => !have.has(n.toLowerCase())).sort((a, b) => a.localeCompare(b));
-  const renamed = S.data.exercises.filter((e) => e.from && e.from !== e.name && CATALOG_RENAMES[e.from] !== e.name).sort((a, b) => a.from.localeCompare(b.from)).map((e) => `${e.from} -> ${e.name}`);
+  const renamed = S.data.exercises.filter((e) => e.from && e.from !== e.name && !isCatalogRename(e.from, e.name)).sort((a, b) => a.from.localeCompare(b.from)).map((e) => `${e.from} -> ${e.name}`);
   return { removed, renamed };
 }
 function showChanges() {
