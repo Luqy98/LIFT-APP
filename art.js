@@ -76,6 +76,11 @@ export function exerciseArt(name, size = 44) {
     const el = h('span', { class: ic.eyes ? 'art-img' : 'art-img noeye', 'aria-hidden': 'true' });
     el.style.setProperty('--m', `url(img/ex/${ic.slug}.webp)`);
     if (ic.eyes) el.style.setProperty('--e', `url(img/ex/${ic.slug}-e.webp)`);
+    if (ic.light) {   // light mode has its own drawing (dark mascot, red eyes)
+      el.classList.add('lt');
+      el.style.setProperty('--ml', `url(img/ex/${ic.light}.webp)`);
+      el.style.setProperty('--el', `url(img/ex/${ic.light}-e.webp)`);
+    }
     return el;
   }
   const { glyph } = exerciseKind(name);

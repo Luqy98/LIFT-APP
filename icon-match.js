@@ -41,18 +41,26 @@ function buildIndex() {
 /** The mascot icon for an exercise name, or null when there is no good match. */
 // Exercises you renamed keep the picture of the catalog name they started as.
 import { RENAMED_FROM } from './catalog.js';
-import { ICONS_V2 } from './icons-v2.js';
+import { ICONS_V2, ICONS_LIGHT } from './icons-v2.js';
+const LIGHT = new Map(ICONS_LIGHT.map(([name, slug]) => [name.toLowerCase(), slug]));
 const V2 = new Map(ICONS_V2.map(([name, slug, eyes]) => [name.toLowerCase(), { name, slug, eyes: !!eyes }]));
 const USER_ALIASES = new Map(RENAMED_FROM);
 export function setIconAlias(name, from) { USER_ALIASES.set(String(name).trim().toLowerCase(), from); }
 
+/** Drawing for an exercise name, plus `light` (slug of a light-mode-only drawing) when there is one. */
 export function iconFor(name) {
+  const ic = baseIcon(name);
+  const light = LIGHT.get(String(name || '').trim().toLowerCase());
+  return ic && light ? { ...ic, light } : ic;
+}
+
+function baseIcon(name) {
   const raw = String(name || '').trim();
   if (!raw) return null;
   const v2 = V2.get(raw.toLowerCase());
   if (v2) return v2;
   const was = USER_ALIASES.get(raw.toLowerCase());
-  if (was && was.toLowerCase() !== raw.toLowerCase()) return iconFor(was);
+  if (was && was.toLowerCase() !== raw.toLowerCase()) return baseIcon(was);
   if (!INDEX) buildIndex();
   const { byKey, bySorted, byBase, list } = INDEX;
   const k = keyOf(raw);

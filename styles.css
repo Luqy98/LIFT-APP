@@ -807,6 +807,12 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 .art-img::before { background-color: currentColor; -webkit-mask-image: var(--m); mask-image: var(--m); }
 .art-img::after { background-color: var(--art-eyes); -webkit-mask-image: var(--e); mask-image: var(--e); }
 .art-img.noeye::after { display: none; }
+:root[data-theme="light"] .art-img.lt::before { -webkit-mask-image: var(--ml); mask-image: var(--ml); }
+:root[data-theme="light"] .art-img.lt::after { display: block; -webkit-mask-image: var(--el); mask-image: var(--el); }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .art-img.lt::before { -webkit-mask-image: var(--ml); mask-image: var(--ml); }
+  :root:not([data-theme="dark"]) .art-img.lt::after { display: block; -webkit-mask-image: var(--el); mask-image: var(--el); }
+}
 .art-tile .art-img { width: 42px; height: 42px; }
 .art-tile.art-sm .art-img { width: 36px; height: 36px; }
 
