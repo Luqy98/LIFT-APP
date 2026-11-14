@@ -231,6 +231,7 @@ export const CATALOG_RENAMES = {
   "Standing Calf Raise (Machine)": "Calf Raise (Standing)",
   "Straight-Arm Cable Pullover": "Lat Pullover (Rope)",
   "Pendulum Squat (Machine)": "Pendulum Squat",
+  "JM Press (Barbell)": "JM Press (Smith Machine)",
 };
 // Renames that were made default and later dropped; kept so older libraries still recognise them as default renames.
 const PAST_RENAMES = { 'Overhead Triceps Extension (Cable)': 'Triceps Overhead Extension (Cable)' };
