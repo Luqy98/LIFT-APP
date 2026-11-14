@@ -138,7 +138,7 @@ function enableDragToClose(panel, backdrop, close) {
       setTimeout(() => { panel.style.transition = ''; backdrop.style.transition = ''; }, ms);
     }
   };
-  const zone = () => Math.max(160, panel.offsetHeight * 0.4); // the top part of the sheet
+  const zone = () => Math.max(200, panel.offsetHeight * 0.5); // the top part of the sheet
   const inZone = (y) => y - panel.getBoundingClientRect().top <= zone();
 
   // Fingers: any touch that starts in the top part of the sheet and moves downwards (while the sheet is not scrolled) pulls it down.
