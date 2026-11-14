@@ -8,6 +8,7 @@
 // bench press on a rep day never mixes with a bench press on a heavy-single day.
 
 import * as C from './crypto.js';
+import { ICONS } from './icons.js';
 import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT } from './calc.js';
 
 export const uid = () => crypto.randomUUID();
@@ -162,6 +163,18 @@ function migrate() {
     if (data.libAdded.includes(name)) continue;
     data.libAdded.push(name);
     if (!have.has(name.toLowerCase())) data.exercises.push({ id: uid(), name, archived: false });
+    planChanged = true;
+  }
+  // The whole exercise catalog (every exercise that has a mascot drawing) goes into the library once; deleting one later keeps it deleted.
+  if (!data.catalogAdded) {
+    data.catalogAdded = true;
+    const seen = new Set(have);
+    for (const name of data.libAdded) seen.add(name.toLowerCase());
+    for (const name of new Set(ICONS.map((i) => i[0]))) {
+      if (seen.has(name.toLowerCase())) continue;
+      seen.add(name.toLowerCase());
+      data.exercises.push({ id: uid(), name, archived: false });
+    }
     planChanged = true;
   }
   for (const r of data.routines) {

@@ -215,3 +215,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Muscles are now split into parts: chest (upper, mid, lower), biceps (long head, short head, brachialis), triceps (long, lateral, medial head), forearms (wrist flexors, wrist extensors, brachioradialis), quads (rectus femoris, vastus lateralis, vastus medialis), hamstrings (outer, inner), calves (gastrocnemius, soleus), upper and lower abs, glute medius.
 - Every exercise was re-mapped to the parts (incline and drag curls lean on the long head, preacher and spider on the short head, hammer curls on the brachialis, overhead and skull-crusher work on the long head of the triceps, and so on).
 - The Muscles editor lists the parts, and anything you set before is carried over.
+
+## 2.15.0
+- The Exercises library now comes with every exercise that has a mascot drawing (about 435 in total), each with its image and muscles. It is added once on first open, so anything you delete stays deleted, and you can still add your own with the + button.
