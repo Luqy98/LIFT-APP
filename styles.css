@@ -804,74 +804,11 @@ button.row-card, .row-btn.row-card { padding: 13px 16px; }
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --art-eyes: #ff3b3b; } }
 .art-img { position: relative; display: inline-block; width: 40px; height: 40px; }
 .art-img::before, .art-img::after { content: ""; position: absolute; inset: 0; -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat; }
-.art-img::before { background-color: currentColor; }
-.art-img::after { background-color: var(--art-eyes); }
+.art-img::before { background-color: currentColor; -webkit-mask-image: var(--m); mask-image: var(--m); }
+.art-img::after { background-color: var(--art-eyes); -webkit-mask-image: var(--e); mask-image: var(--e); }
+.art-img.noeye::after { display: none; }
 .art-tile .art-img { width: 42px; height: 42px; }
 .art-tile.art-sm .art-img { width: 36px; height: 36px; }
-.ai-back-squat::before { -webkit-mask-image: url(img/ex-back-squat.png); mask-image: url(img/ex-back-squat.png); }
-.ai-back-squat::after { -webkit-mask-image: url(img/ex-back-squat-eyes.png); mask-image: url(img/ex-back-squat-eyes.png); }
-.ai-front-squat::before { -webkit-mask-image: url(img/ex-front-squat.png); mask-image: url(img/ex-front-squat.png); }
-.ai-front-squat::after { -webkit-mask-image: url(img/ex-front-squat-eyes.png); mask-image: url(img/ex-front-squat-eyes.png); }
-.ai-deadlift::before { -webkit-mask-image: url(img/ex-deadlift.png); mask-image: url(img/ex-deadlift.png); }
-.ai-deadlift::after { -webkit-mask-image: url(img/ex-deadlift-eyes.png); mask-image: url(img/ex-deadlift-eyes.png); }
-.ai-romanian-deadlift::before { -webkit-mask-image: url(img/ex-romanian-deadlift.png); mask-image: url(img/ex-romanian-deadlift.png); }
-.ai-romanian-deadlift::after { -webkit-mask-image: url(img/ex-romanian-deadlift-eyes.png); mask-image: url(img/ex-romanian-deadlift-eyes.png); }
-.ai-barbell-row::before { -webkit-mask-image: url(img/ex-barbell-row.png); mask-image: url(img/ex-barbell-row.png); }
-.ai-barbell-row::after { -webkit-mask-image: url(img/ex-barbell-row-eyes.png); mask-image: url(img/ex-barbell-row-eyes.png); }
-.ai-bench-press::before { -webkit-mask-image: url(img/ex-bench-press.png); mask-image: url(img/ex-bench-press.png); }
-.ai-bench-press::after { -webkit-mask-image: url(img/ex-bench-press-eyes.png); mask-image: url(img/ex-bench-press-eyes.png); }
-.ai-incline-bench-press::before { -webkit-mask-image: url(img/ex-incline-bench-press.png); mask-image: url(img/ex-incline-bench-press.png); }
-.ai-incline-bench-press::after { -webkit-mask-image: url(img/ex-incline-bench-press-eyes.png); mask-image: url(img/ex-incline-bench-press-eyes.png); }
-.ai-dumbbell-press::before { -webkit-mask-image: url(img/ex-dumbbell-press.png); mask-image: url(img/ex-dumbbell-press.png); }
-.ai-dumbbell-press::after { -webkit-mask-image: url(img/ex-dumbbell-press-eyes.png); mask-image: url(img/ex-dumbbell-press-eyes.png); }
-.ai-incline-dumbbell-press::before { -webkit-mask-image: url(img/ex-incline-dumbbell-press.png); mask-image: url(img/ex-incline-dumbbell-press.png); }
-.ai-incline-dumbbell-press::after { -webkit-mask-image: url(img/ex-incline-dumbbell-press-eyes.png); mask-image: url(img/ex-incline-dumbbell-press-eyes.png); }
-.ai-overhead-press::before { -webkit-mask-image: url(img/ex-overhead-press.png); mask-image: url(img/ex-overhead-press.png); }
-.ai-overhead-press::after { -webkit-mask-image: url(img/ex-overhead-press-eyes.png); mask-image: url(img/ex-overhead-press-eyes.png); }
-.ai-chest-press-machine::before { -webkit-mask-image: url(img/ex-chest-press-machine.png); mask-image: url(img/ex-chest-press-machine.png); }
-.ai-chest-press-machine::after { -webkit-mask-image: url(img/ex-chest-press-machine-eyes.png); mask-image: url(img/ex-chest-press-machine-eyes.png); }
-.ai-pec-deck::before { -webkit-mask-image: url(img/ex-pec-deck.png); mask-image: url(img/ex-pec-deck.png); }
-.ai-pec-deck::after { -webkit-mask-image: url(img/ex-pec-deck-eyes.png); mask-image: url(img/ex-pec-deck-eyes.png); }
-.ai-chest-flyes-high-low::before { -webkit-mask-image: url(img/ex-chest-flyes-high-low.png); mask-image: url(img/ex-chest-flyes-high-low.png); }
-.ai-chest-flyes-high-low::after { -webkit-mask-image: url(img/ex-chest-flyes-high-low-eyes.png); mask-image: url(img/ex-chest-flyes-high-low-eyes.png); }
-.ai-chest-flyes-low-high::before { -webkit-mask-image: url(img/ex-chest-flyes-low-high.png); mask-image: url(img/ex-chest-flyes-low-high.png); }
-.ai-chest-flyes-low-high::after { -webkit-mask-image: url(img/ex-chest-flyes-low-high-eyes.png); mask-image: url(img/ex-chest-flyes-low-high-eyes.png); }
-.ai-chest-flyes-mid::before { -webkit-mask-image: url(img/ex-chest-flyes-mid.png); mask-image: url(img/ex-chest-flyes-mid.png); }
-.ai-chest-flyes-mid::after { -webkit-mask-image: url(img/ex-chest-flyes-mid-eyes.png); mask-image: url(img/ex-chest-flyes-mid-eyes.png); }
-.ai-chest-dip::before { -webkit-mask-image: url(img/ex-chest-dip.png); mask-image: url(img/ex-chest-dip.png); }
-.ai-chest-dip::after { -webkit-mask-image: url(img/ex-chest-dip-eyes.png); mask-image: url(img/ex-chest-dip-eyes.png); }
-.ai-jm-press-bench::before { -webkit-mask-image: url(img/ex-jm-press-bench.png); mask-image: url(img/ex-jm-press-bench.png); }
-.ai-jm-press-bench::after { -webkit-mask-image: url(img/ex-jm-press-bench-eyes.png); mask-image: url(img/ex-jm-press-bench-eyes.png); }
-.ai-jm-press-machine::before { -webkit-mask-image: url(img/ex-jm-press-machine.png); mask-image: url(img/ex-jm-press-machine.png); }
-.ai-jm-press-machine::after { -webkit-mask-image: url(img/ex-jm-press-machine-eyes.png); mask-image: url(img/ex-jm-press-machine-eyes.png); }
-.ai-skull-crusher::before { -webkit-mask-image: url(img/ex-skull-crusher.png); mask-image: url(img/ex-skull-crusher.png); }
-.ai-skull-crusher::after { -webkit-mask-image: url(img/ex-skull-crusher-eyes.png); mask-image: url(img/ex-skull-crusher-eyes.png); }
-.ai-triceps-pushdown::before { -webkit-mask-image: url(img/ex-triceps-pushdown.png); mask-image: url(img/ex-triceps-pushdown.png); }
-.ai-triceps-pushdown::after { -webkit-mask-image: url(img/ex-triceps-pushdown-eyes.png); mask-image: url(img/ex-triceps-pushdown-eyes.png); }
-.ai-pull-up::before { -webkit-mask-image: url(img/ex-pull-up.png); mask-image: url(img/ex-pull-up.png); }
-.ai-pull-up::after { -webkit-mask-image: url(img/ex-pull-up-eyes.png); mask-image: url(img/ex-pull-up-eyes.png); }
-.ai-lat-pulldown::before { -webkit-mask-image: url(img/ex-lat-pulldown.png); mask-image: url(img/ex-lat-pulldown.png); }
-.ai-lat-pulldown::after { -webkit-mask-image: url(img/ex-lat-pulldown-eyes.png); mask-image: url(img/ex-lat-pulldown-eyes.png); }
-.ai-face-pull::before { -webkit-mask-image: url(img/ex-face-pull.png); mask-image: url(img/ex-face-pull.png); }
-.ai-face-pull::after { -webkit-mask-image: url(img/ex-face-pull-eyes.png); mask-image: url(img/ex-face-pull-eyes.png); }
-.ai-seated-cable-row::before { -webkit-mask-image: url(img/ex-seated-cable-row.png); mask-image: url(img/ex-seated-cable-row.png); }
-.ai-seated-cable-row::after { -webkit-mask-image: url(img/ex-seated-cable-row-eyes.png); mask-image: url(img/ex-seated-cable-row-eyes.png); }
-.ai-dumbbell-curl::before { -webkit-mask-image: url(img/ex-dumbbell-curl.png); mask-image: url(img/ex-dumbbell-curl.png); }
-.ai-dumbbell-curl::after { -webkit-mask-image: url(img/ex-dumbbell-curl-eyes.png); mask-image: url(img/ex-dumbbell-curl-eyes.png); }
-.ai-hammer-curl::before { -webkit-mask-image: url(img/ex-hammer-curl.png); mask-image: url(img/ex-hammer-curl.png); }
-.ai-hammer-curl::after { -webkit-mask-image: url(img/ex-hammer-curl-eyes.png); mask-image: url(img/ex-hammer-curl-eyes.png); }
-.ai-lateral-raise::before { -webkit-mask-image: url(img/ex-lateral-raise.png); mask-image: url(img/ex-lateral-raise.png); }
-.ai-lateral-raise::after { -webkit-mask-image: url(img/ex-lateral-raise-eyes.png); mask-image: url(img/ex-lateral-raise-eyes.png); }
-.ai-leg-press::before { -webkit-mask-image: url(img/ex-leg-press.png); mask-image: url(img/ex-leg-press.png); }
-.ai-leg-press::after { -webkit-mask-image: url(img/ex-leg-press-eyes.png); mask-image: url(img/ex-leg-press-eyes.png); }
-.ai-leg-extension::before { -webkit-mask-image: url(img/ex-leg-extension.png); mask-image: url(img/ex-leg-extension.png); }
-.ai-leg-extension::after { -webkit-mask-image: url(img/ex-leg-extension-eyes.png); mask-image: url(img/ex-leg-extension-eyes.png); }
-.ai-leg-curl::before { -webkit-mask-image: url(img/ex-leg-curl.png); mask-image: url(img/ex-leg-curl.png); }
-.ai-leg-curl::after { -webkit-mask-image: url(img/ex-leg-curl-eyes.png); mask-image: url(img/ex-leg-curl-eyes.png); }
-.ai-calf-raise::before { -webkit-mask-image: url(img/ex-calf-raise.png); mask-image: url(img/ex-calf-raise.png); }
-.ai-calf-raise::after { -webkit-mask-image: url(img/ex-calf-raise-eyes.png); mask-image: url(img/ex-calf-raise-eyes.png); }
-.ai-hip-thrust::before { -webkit-mask-image: url(img/ex-hip-thrust.png); mask-image: url(img/ex-hip-thrust.png); }
-.ai-hip-thrust::after { -webkit-mask-image: url(img/ex-hip-thrust-eyes.png); mask-image: url(img/ex-hip-thrust-eyes.png); }
 
 /* ---- 2.0: Targets, Bulletin, stopwatch ---- */
 #tabs .tab { font-size: 10.5px; min-width: 0; }

@@ -64,53 +64,21 @@ export function exerciseKind(name) {
 const flat = (a) => a.flatMap((x) => (Array.isArray(x[0]) ? flat(x) : [x]));
 export const GROUPS = ['Push', 'Pull', 'Legs', 'Core'];
 
-// Mascot illustrations (img/ex-<slug>.png plus a red-eyes overlay), drawn as one-colour masks so they follow the theme.
-// First match wins; anything else keeps its pictogram.
-const IMAGE_RULES = [
-  [/front squat/, 'front-squat'],
-  [/back squat|^squat$|^barbell squat$/, 'back-squat'],
-  [/romanian|\brdl\b/, 'romanian-deadlift'],
-  [/deadlift/, 'deadlift'],
-  [/seated.*row|cable row/, 'seated-cable-row'],
-  [/barbell row|bent.?over|^row$/, 'barbell-row'],
-  [/incline.*(db|dumbbell)|(db|dumbbell).*incline/, 'incline-dumbbell-press'],
-  [/incline.*(press|bench)/, 'incline-bench-press'],
-  [/(db|dumbbell) (bench )?press|dumbbell bench/, 'dumbbell-press'],
-  [/chest press|machine press/, 'chest-press-machine'],
-  [/pec ?deck|pec dec/, 'pec-deck'],
-  [/(fly|flye).*high.*low|high.*low.*(fly|flye)/, 'chest-flyes-high-low'],
-  [/(fly|flye).*low.*high|low.*high.*(fly|flye)/, 'chest-flyes-low-high'],
-  [/chest fly|chest flye|cable fly|^fly$/, 'chest-flyes-mid'],
-  [/jm press.*machine|machine.*jm press/, 'jm-press-machine'],
-  [/jm press/, 'jm-press-bench'],
-  [/bench press|^bench$/, 'bench-press'],
-  [/overhead press|\bohp\b|military|shoulder press/, 'overhead-press'],
-  [/\bdips?\b/, 'chest-dip'],
-  [/pulldown|pull down/, 'lat-pulldown'],
-  [/pull[- ]?up|chin[- ]?up/, 'pull-up'],
-  [/face pull/, 'face-pull'],
-  [/leg curl|hamstring curl/, 'leg-curl'],
-  [/hammer curl/, 'hammer-curl'],
-  [/\bcurl/, 'dumbbell-curl'],
-  [/pushdown|push down/, 'triceps-pushdown'],
-  [/skull/, 'skull-crusher'],
-  [/lateral raise|side raise/, 'lateral-raise'],
-  [/leg press/, 'leg-press'],
-  [/leg extension|quad extension/, 'leg-extension'],
-  [/hip thrust/, 'hip-thrust'],
-  [/calf|calves/, 'calf-raise'],
-];
-export const imageSlug = (name) => {
-  const n = String(name || '').toLowerCase();
-  for (const [re, slug] of IMAGE_RULES) if (re.test(n)) return slug;
-  return null;
-};
+// Mascot illustrations: one white-body mask plus an optional eyes mask per icon (img/ex/<slug>.webp, <slug>-e.webp), drawn as
+// theme-following masks (white/black body, black/red eyes). Names are matched loosely; anything else keeps its pictogram.
+import { iconFor, imageSlug } from './icon-match.js';
+export { iconFor, imageSlug };
 
 /** Pictogram (or mascot illustration) for an exercise. */
 export function exerciseArt(name, size = 44) {
+  const ic = iconFor(name);
+  if (ic) {
+    const el = h('span', { class: ic.eyes ? 'art-img' : 'art-img noeye', 'aria-hidden': 'true' });
+    el.style.setProperty('--m', `url(img/ex/${ic.slug}.webp)`);
+    if (ic.eyes) el.style.setProperty('--e', `url(img/ex/${ic.slug}-e.webp)`);
+    return el;
+  }
   const { glyph } = exerciseKind(name);
-  const slug = imageSlug(name);
-  if (slug) return h('span', { class: `art-img ai-${slug}`, 'aria-hidden': 'true' });
   const svg = s('svg', { class: 'art-svg', viewBox: '0 0 48 48', width: size, height: size, 'aria-hidden': 'true' });
   for (const [tag, attrs] of flat(GLYPHS[glyph])) svg.append(s(tag, attrs));
   return svg;
