@@ -144,6 +144,9 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Android app: native fingerprint unlock (secret held in the Android Keystore behind the fingerprint, PIN always works), see-through status and navigation bars (edge-to-edge, bar icons follow the theme), bell is paired with vibration, new logo.
 - Android shell moved to Capacitor 8.
 
+## 2.11.1
+- Cleaner mascot illustrations: leftover frames, captions and edge fragments removed from most exercises that still had them.
+
 ## 2.11.0
 - New mascot illustrations: about 450 exercises, cleaned up (frames and backgrounds removed, sharpened and upscaled), each with a white body and dark eyes on the dark theme and a black body with red eyes on the light theme.
 - The exercise art is chosen by name (loose matching, so "Bench Press" and "Incline DB Press" find their picture). Anything without a picture keeps its simple drawing.
