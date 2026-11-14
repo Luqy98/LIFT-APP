@@ -1,1 +1,1 @@
-Build 23: LIFT 2.15.1
+Build 24: LIFT 2.16.0

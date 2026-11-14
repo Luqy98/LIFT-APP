@@ -39,9 +39,15 @@ function buildIndex() {
 }
 
 /** The mascot icon for an exercise name, or null when there is no good match. */
+// Exercises you renamed keep the picture of the catalog name they started as.
+const USER_ALIASES = new Map();
+export function setIconAlias(name, from) { USER_ALIASES.set(String(name).trim().toLowerCase(), from); }
+
 export function iconFor(name) {
   const raw = String(name || '').trim();
   if (!raw) return null;
+  const was = USER_ALIASES.get(raw.toLowerCase());
+  if (was && was.toLowerCase() !== raw.toLowerCase()) return iconFor(was);
   if (!INDEX) buildIndex();
   const { byKey, bySorted, byBase, list } = INDEX;
   const k = keyOf(raw);

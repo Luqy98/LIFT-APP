@@ -204,7 +204,7 @@ export function musclesOf(ex) {
     const ok = (a) => [...new Set((Array.isArray(a) ? a : []).flatMap((x) => LEGACY[x] || [x]).filter((x) => MUSCLES.includes(x)))];
     return { primary: ok(ex.muscles.primary), secondary: ok(ex.muscles.secondary), custom: true };
   }
-  const r = musclesFor(ex && ex.name);
+  const r = musclesFor(ex && ex.name) || (ex && ex.from ? musclesFor(ex.from) : null);   // a renamed catalog exercise keeps its muscles
   return r ? { ...r, custom: false } : { primary: [], secondary: [], custom: false };
 }
 

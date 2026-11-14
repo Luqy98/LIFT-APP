@@ -9,6 +9,8 @@
 
 import * as C from './crypto.js';
 import { ICONS } from './icons.js';
+import { catalogNames, CATALOG_DROP, CATALOG_RENAMES } from './catalog.js';
+import { setIconAlias } from './icon-match.js';
 import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT } from './calc.js';
 
 export const uid = () => crypto.randomUUID();
@@ -170,13 +172,38 @@ function migrate() {
     data.catalogAdded = true;
     const seen = new Set(have);
     for (const name of data.libAdded) seen.add(name.toLowerCase());
-    for (const name of new Set(ICONS.map((i) => i[0]))) {
+    for (const name of catalogNames()) {
       if (seen.has(name.toLowerCase())) continue;
       seen.add(name.toLowerCase());
       data.exercises.push({ id: uid(), name, archived: false });
     }
     planChanged = true;
   }
+  // Catalog exercises later dropped from the default: take them out of libraries that got them, unless you've used them.
+  data.catalogDropped = data.catalogDropped || [];
+  if (data.catalogDropped.length < CATALOG_DROP.length) {
+    const done = new Set(data.catalogDropped);
+    for (const name of CATALOG_DROP) {
+      if (done.has(name)) continue;
+      data.catalogDropped.push(name);
+      const e = data.exercises.find((x) => x.name.toLowerCase() === name.toLowerCase());
+      if (!e || e.muscles || e.from) continue;
+      const u = exerciseUsage(e.id);
+      if (u.plan || u.logs || (data.targets || []).some((t) => t.exerciseId === e.id)) continue;
+      data.exercises = data.exercises.filter((x) => x !== e);
+    }
+    planChanged = true;
+  }
+  // Catalog exercises renamed in the default: rename them in existing libraries too (once each).
+  data.catalogRenamed = data.catalogRenamed || [];
+  for (const [from, to] of Object.entries(CATALOG_RENAMES)) {
+    if (data.catalogRenamed.includes(from)) continue;
+    data.catalogRenamed.push(from);
+    const e = data.exercises.find((x) => x.name.toLowerCase() === from.toLowerCase());
+    if (e && !findExerciseByName(to, e.id)) { e.name = to; e.from = e.from || from; }
+    planChanged = true;
+  }
+  for (const e of data.exercises) if (e.from) setIconAlias(e.name, e.from);
   for (const r of data.routines) {
     const bySlot = new Map();
     for (const wk of r.weeks) for (const w of wk.workouts) if (w.color != null && !bySlot.has(w.slotId)) bySlot.set(w.slotId, w.color);
@@ -300,6 +327,8 @@ async function doSave() {
 }
 
 // ---- Exercise library ------------------------------------------------------
+let catalogSet = null;
+const CATALOG_NAMES = () => (catalogSet ||= new Set(ICONS.map((i) => i[0].toLowerCase())));
 export const exerciseById = (id) => data.exercises.find((e) => e.id === id);
 export const exerciseName = (id, fallback = 'Deleted exercise') => exerciseById(id)?.name ?? fallback;
 export const findExerciseByName = (name, exceptId) => {
@@ -321,7 +350,12 @@ export function renameExercise(id, name) {
   name = norm(name);
   if (!name) return 'empty';
   if (findExerciseByName(name, id)) return 'duplicate';
-  exerciseById(id).name = name;
+  const e = exerciseById(id);
+  // Remember the catalog name it started as: keeps its picture and feeds the Library Changes list.
+  if (!e.from && CATALOG_NAMES().has(e.name.toLowerCase())) e.from = e.name;
+  e.name = name;
+  if (e.from && e.from.toLowerCase() === name.toLowerCase()) delete e.from;
+  else if (e.from) setIconAlias(name, e.from);
   touch();
   return 'ok';
 }
