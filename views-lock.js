@@ -25,6 +25,8 @@ export function renderLock(root, onDone) {
 
 function setupForm(onDone) {
   let kind = 'pin';
+  const nameIn = h('input', { type: 'text', class: 'lock-input', autocomplete: 'given-name', autocapitalize: 'words', maxlength: '30', placeholder: 'Your name (for the greeting)', 'aria-label': 'Your name' });
+  const saveName = async () => { const v = nameIn.value.trim(); if (v) { S.data.settings.name = v; S.touch(); } };
   const p1 = h('input', { type: 'password', class: 'lock-input', autocomplete: 'new-password', inputmode: 'numeric', placeholder: 'PIN (4+ digits)', 'aria-label': 'New passcode' });
   const p2 = h('input', { type: 'password', class: 'lock-input', autocomplete: 'new-password', inputmode: 'numeric', placeholder: 'Repeat PIN', 'aria-label': 'Repeat passcode' });
   const hint = h('div', { class: 'lock-hint' });
@@ -54,17 +56,17 @@ function setupForm(onDone) {
       if (a !== p2.value) { err.textContent = 'The two entries don’t match.'; return; }
       btn.disabled = true; btn.textContent = 'Encrypting…';
       await nextFrame();
-      try { await S.setup(a); onDone(); }
+      try { await S.setup(a); await saveName(); onDone(); }
       catch (ex) { console.error(ex); err.textContent = 'Could not set up secure storage on this browser.'; btn.disabled = false; btn.textContent = 'Create and encrypt'; }
     },
   },
   h('div', { class: 'lock-mark' }, dumbbellMark(120)),
   h('h1', { class: 'lock-brand', text: 'LIFT' }),
   h('p', { class: 'lock-lead', text: 'Choose a PIN to lock the app, or skip it. Everything you log stays on this phone and is never sent anywhere.' }),
-  segHost, p1, p2, hint, err, btn,
+  nameIn, segHost, p1, p2, hint, err, btn,
   h('button', { type: 'button', class: 'btn btn-block', text: 'Restore from a backup', onclick: () => restoreFlow(onDone) }),
   h('button', { type: 'button', class: 'btn btn-block', text: 'Skip, no lock', onclick: async () => {
-    try { await S.setupWithoutLock(); onDone(); } catch (ex) { console.error(ex); err.textContent = 'Could not set up storage on this device.'; }
+    try { await S.setupWithoutLock(); await saveName(); onDone(); } catch (ex) { console.error(ex); err.textContent = 'Could not set up storage on this device.'; }
   } }),
   h('p', { class: 'lock-fine', text: 'If you choose a PIN there is no reset. If you forget it, the data can’t be recovered, so back up regularly. You can turn the lock on or off later in Settings.' }));
 }

@@ -291,3 +291,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.31.0
 - Added a download page at luqy98.github.io/LIFT-APP/download.html. Its Android button always gets the newest APK: each build now also publishes a fixed-name LIFT.apk as the latest release.
+
+## 2.32.0
+- New installs no longer start with a preset name. The first-run setup asks for your name for the dashboard greeting (optional; it shows "Lifter" if left blank). It can be changed later in Settings. Existing installs keep their name.

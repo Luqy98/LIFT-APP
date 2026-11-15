@@ -30,7 +30,7 @@ const LIBRARY_ADDITIONS = [
   'Cable Curl (Single Arm)', 'Incline Bench Press (Smith Machine)', 'Triceps Extension Cable (Single-Arm)', 'Triceps Pushdown Single-Arm (Cable)', 'Sulek Curl',
 ];
 
-const DEFAULT_SETTINGS = { name: 'Luqy', weeklyGoal: 4, theme: 'dark', formula: 'blend', maxReps: 10, restSec: 120, autoLockMin: 5, lastBackup: null };
+const DEFAULT_SETTINGS = { name: '', weeklyGoal: 4, theme: 'dark', formula: 'blend', maxReps: 10, restSec: 120, autoLockMin: 5, lastBackup: null };
 
 // Lock-out after repeated wrong passcodes: [failures, seconds]
 const THROTTLE = [[5, 30], [6, 60], [7, 300], [8, 900], [9, 3600]];
