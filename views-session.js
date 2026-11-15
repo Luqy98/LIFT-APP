@@ -58,13 +58,16 @@ export function sessionView({ sessionId }) {
   const rest = active ? getRest() : null;
 
   const content = h('div', { class: 'page' });
-  if (active) content.append(h('div', { class: 'live-head' }, modeBanner('log', 'Logging', 'Tick each set as you do it'), stopwatchCard(s)));
-  // While logging, the Logging banner and the stopwatch are one pinned block, so they always move together.
-  if (!active) content.append(modeBanner('review', 'Logged workout', 'Changes here update your history'));
+  // While logging, the banner scrolls away but the stopwatch stays pinned, with the green live dot in it.
+  // A logged workout keeps its banner pinned instead, so you always know you're editing history.
+  content.append(active
+    ? modeBanner('log', 'Logging', 'Tick each set as you do it')
+    : h('div', { class: 'review-head' }, modeBanner('review', 'Logged workout', 'Changes here update your history')));
   if (s.deload) content.append(h('div', { class: 'deload-banner' },
     h('span', { class: 'tag-deload', text: 'Deload' }),
     h('span', { text: `Weights are suggested at ${Math.round(DELOAD_PCT * 100)}% of your best 1RM. This session does not count towards 1RM, records or exercise charts.` })));
   if (s.planNote) content.append(h('div', { class: 'note note-general' }, h('span', { class: 'note-label', text: 'Workout Notes' }), h('span', { class: 'note-text', text: s.planNote })));
+  if (active) content.append(stopwatchCard(s));
   if (!active) content.append(summaryCard(s));
 
   if (!s.entries.length) content.append(emptyState('No exercises yet', 'Add the first exercise to start logging sets.'));
@@ -97,6 +100,7 @@ function stopwatchCard(s) {
   const running = !!x && x.since != null;
   const started = !!x && (running || x.base > 0);
   return h('div', { class: 'card sw-card' },
+    h('span', { class: 'banner-dot', title: 'Logging', 'aria-label': 'Logging' }),
     icon('timer', 18),
     h('span', { class: 'sw-label', text: 'Stopwatch' }),
     h('span', { class: 'sw-time', 'data-sw-time': '', 'aria-live': 'off', text: fmtDuration(swElapsed(x)) }),

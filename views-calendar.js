@@ -1,5 +1,5 @@
 // Month calendar: which days you trained, how long, and whether it was a normal or deload workout.
-import { h, tile, emptyState, icon } from './ui.js';
+import { h, tile, emptyState, icon, iconBtn, confirmDialog } from './ui.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { fmtDate, fmt, fmtW } from './calc.js';
@@ -34,7 +34,7 @@ export function calendarView(params) {
   for (const t of S.data.targets) {
     if (t.date && !t.reachedAt) mark(t.date, { kind: 'due', t });
   }
-  for (const a of S.data.achievements) mark(a.date, { kind: 'won', t: { exerciseId: a.exerciseId, name: a.name, kg: a.kg, reachedKg: a.reachedKg } });
+  for (const a of S.data.achievements) mark(a.date, { kind: 'won', t: { exerciseId: a.exerciseId, name: a.name, kg: a.kg, reachedKg: a.reachedKg }, achId: a.id });
 
   const shiftMonth = (n) => { params.month = new Date(first.getFullYear(), first.getMonth() + n, 1).toISOString(); params.day = null; nav.refresh(); };
   const atCurrent = first.getFullYear() === today.getFullYear() && first.getMonth() === today.getMonth();
@@ -65,13 +65,18 @@ export function calendarView(params) {
   const detail = [];
   if (selDate) {
     detail.push(h('h3', { class: 'month', text: selDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) }));
-    for (const { kind, t } of targetsOn.get(params.day) || []) {
+    for (const { kind, t, achId } of targetsOn.get(params.day) || []) {
       const name = t.name || S.exerciseName(t.exerciseId);
       detail.push(h('div', { class: 'row-card cal-target' + (kind === 'won' ? ' is-won' : '') },
         icon(kind === 'won' ? 'trophy' : 'target', 20),
         h('span', { class: 'row-main' },
           h('span', { class: 'row-title', text: kind === 'won' ? `Target reached · ${name}` : `Target date · ${name}` }),
-          h('span', { class: 'row-sub', text: kind === 'won' ? `Estimated 1RM ${fmt(t.reachedKg)} kg, target ${fmtW(t.kg)} kg` : `Target ${fmtW(t.kg)} kg` }))));
+          h('span', { class: 'row-sub', text: kind === 'won' ? `Estimated 1RM ${fmt(t.reachedKg)} kg, target ${fmtW(t.kg)} kg` : `Target ${fmtW(t.kg)} kg` })),
+        kind === 'won' ? iconBtn('x', 'Remove from calendar', async () => {
+          if (!(await confirmDialog({ title: 'Remove from calendar?', message: `Takes "Target reached · ${name}" off the calendar. Your target and logged workouts don't change.`, ok: 'Remove', danger: true }))) return;
+          S.removeAchievement(achId);
+          nav.refresh();
+        }) : null));
     }
     if (!selList.length) detail.push(h('p', { class: 'hint', text: params.day > keyOf(today) ? 'Nothing logged yet. Set a target date on this day from the Targets tab.' : 'No workouts logged this day.' }));
     for (const s of selList) {

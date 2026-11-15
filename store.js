@@ -702,6 +702,11 @@ function recordAchievement(t) {
   if (data.achievements.some((a) => a.targetId === t.id && a.kg === t.kg)) return;
   data.achievements.push({ id: uid(), targetId: t.id, exerciseId: t.exerciseId, name: exerciseName(t.exerciseId), kg: t.kg, reachedKg: t.reachedKg, date: t.reachedAt });
 }
+/** Take a reached-target record off the calendar. The target itself is unchanged. */
+export function removeAchievement(id) {
+  data.achievements = data.achievements.filter((a) => a.id !== id);
+  touch();
+}
 export const targetMet = (exerciseId) => !!data.targets.find((t) => t.exerciseId === exerciseId)?.reachedAt;
 export function checkTargets(record = true) {
   const hit = [];
