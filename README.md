@@ -263,3 +263,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Exercise picker: the body-part chips are no longer cut off.
 - Reorder screen: the exercise pictures have space around them and no longer touch the edge of the card.
 - Body Map: Front/Back is now an underlined tab pair, so it looks different from the Map/Table switch above it.
+
+## 2.27.3
+- Exercises without an illustration (such as ones you add yourself) now show just the dumbbell from the app logo, black in light mode and white in dark mode, instead of a stick figure.

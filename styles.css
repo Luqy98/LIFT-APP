@@ -1001,3 +1001,4 @@ body { position: fixed; inset: 0; width: 100%; }
 .picker .chips-row { padding: 4px 0 6px; }
 .sort-item { padding: 10px 6px 10px 12px; gap: 12px; }
 .sort-item .row-main { padding: 4px 4px 4px 0; }
+.art-plain { display: block; fill: currentColor; stroke: none; }

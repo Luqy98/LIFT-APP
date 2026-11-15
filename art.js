@@ -1,6 +1,6 @@
 // Exercise pictograms and group inference. Drawn with currentColor, so they are white on the dark theme
 // and black on the light theme. Everything is vector and local: no images are downloaded.
-import { h, s } from './ui.js';
+import { h, s, dumbbellMark } from './ui.js';
 
 const L = (x1, y1, x2, y2) => ['line', { x1, y1, x2, y2 }];
 const P = (d) => ['path', { d }];
@@ -83,10 +83,10 @@ export function exerciseArt(name, size = 44) {
     }
     return el;
   }
-  const { glyph } = exerciseKind(name);
-  const svg = s('svg', { class: 'art-svg', viewBox: '0 0 48 48', width: size, height: size, 'aria-hidden': 'true' });
-  for (const [tag, attrs] of flat(GLYPHS[glyph])) svg.append(s(tag, attrs));
-  return svg;
+  // No illustration for this exercise (for example one a user made): just the dumbbell from the app logo, black on light and white on dark.
+  const mark = dumbbellMark(Math.round(size * 0.95));
+  mark.classList.add('art-plain');
+  return mark;
 }
 
 /** Barbell sleeve with a loaded rubber plate, drawn with shading so it reads as an object rather than an icon. */
