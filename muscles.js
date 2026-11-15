@@ -17,7 +17,7 @@ const m = (s) => s.split(' ').filter(Boolean);
 const SIMPLE = {
   uc: 'Upper Chest', c: 'Mid Chest', lc: 'Lower Chest', fd: 'Front Delts', sd: 'Side Delts', rd: 'Rear Delts', rc: 'Rotator Cuff',
   tr: 'Upper Traps', la: 'Lats', mb: 'Mid Back', lb: 'Lower Back', ob: 'Obliques', hf: 'Hip Flexors',
-  gl: 'Legs', abd: 'Glute Medius', ad: 'Adductors', ti: 'Tibialis',
+  gl: 'Glutes', abd: 'Glute Medius', ad: 'Adductors', ti: 'Tibialis',
 };
 // Old (2.13.0) names saved by the user's own choices -> the new, more specific names.
 const LEGACY = {
@@ -73,7 +73,7 @@ function detail(n, pk, sk) {
     }
     if (k === 'ham') return put(role, 'Outer Hamstrings', 'Inner Hamstrings');
     if (k === 'ca') {
-      if (is(/seated calf|soleus/)) { put(role, 'Soleus'); return put('secondary', 'Gastrocnemius'); }
+      if (is(/seated calf|calf raise \(seated|soleus/)) { put(role, 'Soleus'); return put('secondary', 'Gastrocnemius'); }
       put(role, 'Gastrocnemius');
       return prim ? put('secondary', 'Soleus') : undefined;
     }
@@ -87,7 +87,8 @@ function detail(n, pk, sk) {
 // [pattern, primary, secondary]. First match wins, so specific variants sit above general ones.
 const RULES = [
   // --- hamstring isolation ---
-  [/leg curl|hamstring curl|nordic|glute-ham|ghr/, 'ham', 'gl ca'],
+  [/nordic|glute-ham|ghr/, 'ham', 'gl ca'],
+  [/leg curl|hamstring curl/, 'ham', 'ca'],
   // --- rear delts / upper back isolation ---
   [/face pull/, 'rd rc', 'mb tr sd'],
   [/rear delt|reverse fly|reverse pec deck|pec deck \(reverse\)|bent-over reverse|bent-over lateral|prone w|w raise|incline reverse/, 'rd', 'mb tr rc'],
@@ -157,9 +158,9 @@ const RULES = [
   [/single-leg romanian|b-stance romanian/, 'ham gl', 'lb ab abd fa'],
   [/kettlebell swing|hip hinge/, 'gl ham', 'lb q fa fd'],
   [/pull-through|pull through/, 'gl ham', 'lb fa'],
-  [/romanian|stiff-leg|rdl/, 'ham gl lb', 'mb tr la fa'],
+  [/romanian|stiff-leg|rdl/, 'ham gl', 'lb tr fa'],
   [/sumo deadlift/, 'lb mb tr la gl ham', 'q ad fa'],
-  [/deadlift|trap bar/, 'lb mb tr la gl ham', 'q fa ab'],
+  [/deadlift|trap bar/, 'gl ham lb', 'q tr la mb fa ab'],
   [/hip thrust|glute bridge|frog pump|glute kickback|donkey kick|kickback \(cable\)|cable kickback|hip extension/, 'gl', 'ham ad'],
   [/fire hydrant|clamshell|hip abduction|abductor|cable abduction|lateral band/, 'abd', 'gl'],
   [/hip adduction|adduction|adductor|copenhagen/, 'ad', ''],
@@ -169,7 +170,7 @@ const RULES = [
   [/curtsy/, 'gl q', 'ad abd ham'],
   [/skater|shrimp|pistol/, 'q gl', 'ham ad abd ca'],
   [/lateral step up/, 'q gl', 'abd ham'],
-  [/lunge|split squat|step[- ]?up|step down|bulgarian/, 'q gl', 'ham ad ca'],
+  [/lunge|split squat|step[- ]?up|step down|bulgarian/, 'q gl', 'abd ad ham ca'],
   [/front squat|landmine squat|sandbag front/, 'q', 'gl ad ab lb'],
   [/overhead squat/, 'q gl', 'fd tr ab lb rc'],
   [/zercher/, 'q gl', 'ab lb ad bi'],

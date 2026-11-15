@@ -314,3 +314,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.34.4
 - The empty Programmes screen now has two compact rounded buttons, Create (filled, with a +) and Import (purple outline, with a download arrow). They no longer look like the Programmes/History tabs above them.
+
+## 2.34.5
+- Fixed glutes missing from the body map. Squats, split squats, leg press, deadlifts, RDLs, hip thrusts, sled pushes and every other glute exercise now count them.
+- Deadlifts: glutes, hamstrings and lower back are now primary, and the upper back (traps, lats, mid back) secondary. RDLs: hamstrings and glutes primary, lower back secondary.
+- Leg curls no longer list glutes. Split squats and lunges add glute medius as secondary. Seated calf raises now count the soleus as primary.
