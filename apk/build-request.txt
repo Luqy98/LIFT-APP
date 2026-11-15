@@ -1,1 +1,1 @@
-Build 38: LIFT 2.24.1
+Build 39: LIFT 2.25.0

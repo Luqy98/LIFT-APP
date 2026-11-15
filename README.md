@@ -238,3 +238,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.24.1
 - Lock screen: the dumbbell now matches the app logo exactly and sits on its own, no purple box. Dark in light mode, white in dark mode.
+
+## 2.25.0
+- Body Map: new anatomical models (front and back, black for light mode, white for dark mode) with muscle areas stretched to fit each model exactly, so the colour sits on the muscles with a clean edge and no grainy outline.
