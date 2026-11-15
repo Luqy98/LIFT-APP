@@ -38,9 +38,9 @@ export function workoutsRoot() {
 function routinesContent() {
   if (!S.data.routines.length) {
     return emptyState('Plan your first programme', 'A programme is made of weeks, each week of workouts, each workout of exercises and sets. You control every level.',
-      h('div', { class: 'btn-pair' },
-        h('button', { class: 'btn btn-primary', text: 'Create a programme', onclick: newRoutine }),
-        h('button', { class: 'btn', text: 'Import programme', onclick: importProgrammeFile })));
+      h('div', { class: 'empty-actions' },
+        h('button', { class: 'btn btn-primary btn-pill', onclick: newRoutine }, icon('plus', 18), h('span', { text: 'Create' })),
+        h('button', { class: 'btn btn-pill btn-outline', onclick: importProgrammeFile }, icon('import', 18), h('span', { text: 'Import' }))));
   }
   return [h('div', { class: 'list' }, S.data.routines.map((r) => {
     const p = routineProgress(r);

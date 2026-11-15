@@ -311,3 +311,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.34.3
 - The App Lock line in Settings now just says On or Off.
+
+## 2.34.4
+- The empty Programmes screen now has two compact rounded buttons, Create (filled, with a +) and Import (purple outline, with a download arrow). They no longer look like the Programmes/History tabs above them.
