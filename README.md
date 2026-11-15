@@ -224,3 +224,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.22.2
 - Lock screen: the lock icon is replaced by the LIFT dumbbell.
+
+## 2.23.0
+- Body Map (Dashboard → Open Body Map): a front and back model that colours the muscles your programme trains. Pick a programme and week, or all of them. Primary muscles show in purple and secondary in teal, stronger colour for more sets.
+- Tap a muscle for its sets, reps and workouts as primary and as secondary, and which exercises they come from. A Table view lists every muscle with the same numbers.
+- Swipe, or tap Front/Back, to turn the model. White model in dark mode, black model with red eyes in light mode.

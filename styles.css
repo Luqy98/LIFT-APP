@@ -957,3 +957,33 @@ body { position: fixed; inset: 0; width: 100%; }
 .ex-row { content-visibility: auto; contain-intrinsic-size: auto 68px; }
 
 .removed-list { width: 100%; font-size: 13px; resize: none; }
+
+/* Body map */
+.bm-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.bm-turn { width: 100%; max-width: 360px; }
+.bm-stage { position: relative; width: 100%; max-width: 330px; aspect-ratio: 400 / 852; touch-action: pan-y; user-select: none; -webkit-user-select: none; transition: transform 0.16s ease, opacity 0.16s ease; }
+.bm-stage.is-turning { transform: scaleX(0.04); opacity: 0.3; }
+.bm-base, .bm-hl { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.bm-hl { pointer-events: auto; cursor: pointer; filter: blur(0.6px); }
+.bm-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: center; font-size: 13px; color: var(--ink2); }
+.bm-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.bm-dot-p { background: rgb(139, 92, 246); }
+.bm-dot-s { background: rgb(34, 211, 238); }
+.bm-status { text-align: center; }
+.bm-h { margin: 0; font-size: 14px; font-weight: 650; color: var(--muted); }
+.bm-detail { display: flex; flex-direction: column; gap: 14px; max-height: 65vh; overflow-y: auto; }
+.bm-role { display: flex; flex-direction: column; gap: 4px; }
+.bm-sum { margin: 0; font-size: 16px; }
+.bm-ex { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; }
+.bm-ex li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.bm-n { color: var(--muted); font-size: 13.5px; white-space: nowrap; }
+.bm-table-wrap { width: 100%; overflow-x: auto; }
+.bm-table th.bm-c, .bm-table td.bm-c { text-align: right; padding-left: 4px; padding-right: 4px; width: 15%; }
+.bm-table td, .bm-table th { background: none; border-left: 0; border-right: 0; }
+.bm-table th.bm-span { text-align: center; border-bottom: 1px solid var(--line); }
+.bm-table td:first-child { padding-left: 6px; }
+.bm-grp th { text-align: left; padding: 12px 6px 4px; font-size: 13px; color: var(--accent); font-weight: 700; }
+.bm-row { cursor: pointer; }
+.bm-row.is-dim td { color: var(--muted); }
+.bm-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) { .bm-stage { transition: none; } }
