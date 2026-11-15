@@ -17,7 +17,7 @@ const m = (s) => s.split(' ').filter(Boolean);
 const SIMPLE = {
   uc: 'Upper Chest', c: 'Mid Chest', lc: 'Lower Chest', fd: 'Front Delts', sd: 'Side Delts', rd: 'Rear Delts', rc: 'Rotator Cuff',
   tr: 'Upper Traps', la: 'Lats', mb: 'Mid Back', lb: 'Lower Back', ob: 'Obliques', hf: 'Hip Flexors',
-  gl: 'Glutes', abd: 'Glute Medius', ad: 'Adductors', ti: 'Tibialis',
+  gl: 'Legs', abd: 'Glute Medius', ad: 'Adductors', ti: 'Tibialis',
 };
 // Old (2.13.0) names saved by the user's own choices -> the new, more specific names.
 const LEGACY = {
@@ -216,26 +216,21 @@ export function musclesOf(ex) {
 }
 
 // Groups for filtering and the muscle editor, each inside a body region. A group is decided by the first primary muscle.
-export const MUSCLE_REGIONS = [
-  ['Upper Body', ['Chest', 'Back', 'Shoulders']],
-  ['Arms', ['Biceps', 'Triceps', 'Forearms']],
-  ['Core', ['Core']],
-  ['Legs', ['Quads', 'Hamstrings', 'Glutes', 'Calves']],
-];
-export const MUSCLE_GROUPS = MUSCLE_REGIONS.flatMap(([, g]) => g);
+export const MUSCLE_GROUPS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Forearms', 'Legs', 'Core'];
+export const MUSCLE_REGIONS = MUSCLE_GROUPS.map((g) => [g, [g]]);
 const GROUP_OF = {
   'Upper Chest': 'Chest', 'Mid Chest': 'Chest', 'Lower Chest': 'Chest',
   'Front Delts': 'Shoulders', 'Side Delts': 'Shoulders', 'Rear Delts': 'Shoulders', 'Rotator Cuff': 'Shoulders',
-  'Biceps Long Head': 'Biceps', 'Biceps Short Head': 'Biceps', Brachialis: 'Biceps',
-  'Triceps Long Head': 'Triceps', 'Triceps Lateral Head': 'Triceps', 'Triceps Medial Head': 'Triceps',
+  'Biceps Long Head': 'Arms', 'Biceps Short Head': 'Arms', Brachialis: 'Arms',
+  'Triceps Long Head': 'Arms', 'Triceps Lateral Head': 'Arms', 'Triceps Medial Head': 'Arms',
   'Flexor Carpi Radialis': 'Forearms', 'Flexor Carpi Ulnaris': 'Forearms', 'Palmaris Longus': 'Forearms', 'Flexor Digitorum Superficialis': 'Forearms',
   'Wrist Extensors': 'Forearms', Brachioradialis: 'Forearms',
   'Upper Traps': 'Back', Lats: 'Back', 'Mid Back': 'Back', 'Lower Back': 'Back',
   'Upper Abs': 'Core', 'Lower Abs': 'Core', Obliques: 'Core', 'Hip Flexors': 'Core',
-  'Rectus Femoris': 'Quads', 'Vastus Lateralis': 'Quads', 'Vastus Medialis': 'Quads',
-  'Outer Hamstrings': 'Hamstrings', 'Inner Hamstrings': 'Hamstrings',
-  Glutes: 'Glutes', 'Glute Medius': 'Glutes', Adductors: 'Glutes',
-  Gastrocnemius: 'Calves', Soleus: 'Calves', Tibialis: 'Calves',
+  'Rectus Femoris': 'Legs', 'Vastus Lateralis': 'Legs', 'Vastus Medialis': 'Legs',
+  'Outer Hamstrings': 'Legs', 'Inner Hamstrings': 'Legs',
+  Glutes: 'Legs', 'Glute Medius': 'Legs', Adductors: 'Legs',
+  Gastrocnemius: 'Legs', Soleus: 'Legs', Tibialis: 'Legs',
 };
 /** Plain-English pointer for the less obvious muscle names. */
 export const MUSCLE_HINTS = {

@@ -275,3 +275,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.28.1
 - Pictures are back the way they were, so no existing exercise loses its picture. Exercises you create yourself from now on always get the plain dumbbell.
+
+## 2.29.0
+- The search and body-part tabs now stay fixed at the top of the Exercises list and the Add Exercise sheet while the list scrolls underneath.
+- The Body Map table keeps its Muscle / Primary / Secondary / Sets / Reps header fixed while you scroll.
+- Muscle groups are now Chest, Back, Shoulders, Arms, Forearms, Legs and Core.

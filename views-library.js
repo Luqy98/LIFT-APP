@@ -125,9 +125,9 @@ export function movementsRoot() {
   return {
     title: 'Exercises', subtitle: `${S.data.exercises.filter((e) => !e.archived).length} in your library`,
     actions: [iconBtn('plus', 'New exercise', addMovement)],
-    content: h('div', { class: 'page' }, search,
+    content: h('div', { class: 'page' }, h('div', { class: 'sticky-pane' }, search,
       h('div', { class: 'chips-row', role: 'group', 'aria-label': 'Filter by group' }, ['All', ...MUSCLE_GROUPS].map((g) =>
-        h('button', { type: 'button', class: 'fchip' + (lib.g === g ? ' is-on' : ''), 'aria-pressed': String(lib.g === g), text: g, onclick: () => { lib.g = g; nav.refresh(); } }))),
+        h('button', { type: 'button', class: 'fchip' + (lib.g === g ? ' is-on' : ''), 'aria-pressed': String(lib.g === g), text: g, onclick: () => { lib.g = g; nav.refresh(); } })))),
       list, archivedBox),
   };
 }

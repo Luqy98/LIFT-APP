@@ -36,7 +36,8 @@ export function pickMovement({ title = 'Add exercise' } = {}) {
     };
     search.addEventListener('input', render);
     search.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); search.blur(); } });
-    const { close } = sheet(h('div', { class: 'picker' }, search, chips, list), { title, wide: true, onClose: () => finish(null) });
+    const { close, panel } = sheet(h('div', { class: 'picker' }, search, chips, list), { title, wide: true, onClose: () => finish(null) });
+    panel.classList.add('sheet-picker');
     drawChips();
     render();
     requestAnimationFrame(() => search.focus());
