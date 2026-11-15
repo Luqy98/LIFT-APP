@@ -176,7 +176,7 @@ export function settingsRoot() {
     card('Security',
       S.vaultInfo().open
         ? h('div', { class: 'row-between' },
-            h('div', {}, h('div', { class: 'row-title', text: 'App lock' }), h('div', { class: 'hint', text: 'Off. The app opens straight away.' })),
+            h('div', {}, h('div', { class: 'row-title', text: 'App lock' }), h('div', { class: 'hint', text: 'Off' })),
             h('button', { class: 'btn btn-sm btn-primary', text: 'Turn on', onclick: turnLockOn }))
         : [
           selectField('Lock after leaving the app', [[0, 'Immediately'], [1, '1 minute'], [5, '5 minutes'], [15, '15 minutes'], [30, '30 minutes']], st.autoLockMin, (v) => set('autoLockMin', +v)),
@@ -189,7 +189,7 @@ export function settingsRoot() {
             h('button', { class: 'btn', text: 'Change PIN or passcode', onclick: changePasscode }),
             h('button', { class: 'btn', text: 'Lock now', onclick: () => window.dispatchEvent(new Event('gymlog:lock')) })),
           h('div', { class: 'row-between' },
-            h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'App lock' }), h('span', { class: 'row-sub', text: 'On. Turn off to open the app without a PIN.' })),
+            h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'App lock' }), h('span', { class: 'row-sub', text: 'On' })),
             h('button', { class: 'btn btn-sm', text: 'Turn off', onclick: turnLockOff })),
           h('p', { class: 'hint', text: 'Data is encrypted on this phone (AES-256). A 4-digit PIN only has 10,000 combinations, so it protects against people using your phone, not against someone copying its stored data. For that, use a longer passcode.' }),
         ]),

@@ -308,3 +308,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.34.2
 - Pause Squat now uses the same picture as the regular squat.
+
+## 2.34.3
+- The App Lock line in Settings now just says On or Off.
