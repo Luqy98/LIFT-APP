@@ -22,7 +22,8 @@ export function dashboardView() {
   const ov = S.overview();
   const content = h('div', { class: 'page' });
 
-  content.append(greetingCard(), weekCard());
+  content.append(greetingCard(), card('Body Map', h('p', { class: 'card-note', text: 'See which muscles your programme trains, and with how many sets.' }),
+    h('button', { class: 'btn btn-block', text: 'Open Body Map', onclick: () => nav.push(bodyMapView) })), weekCard());
   const wp = S.weekProgress();
   const lifts = S.liftProgress(6, rid);
   const top = lifts.slice().sort((a, b) => b.best - a.best)[0];
@@ -32,8 +33,6 @@ export function dashboardView() {
     tile('Top 1RM', top ? `${fmt(top.best)} kg` : '–', top ? (top.delta != null ? `▲ +${fmt(top.delta)} kg` : S.exerciseName(top.exerciseId)) : 'no lifts yet', top && top.delta != null ? 'up' : ''),
     tile('Sessions', String(ov.month), 'last 30 days')));
   if (lifts.length) content.append(liftsCard(lifts));
-  content.append(card('Body Map', h('p', { class: 'card-note', text: 'See which muscles your programme trains, and with how many sets.' }),
-    h('button', { class: 'btn btn-block', text: 'Open Body Map', onclick: () => nav.push(bodyMapView) })));
 
   if (!have.size) {
     content.append(emptyState('Your charts will appear here', 'Finish a workout and each exercise you trained gets an estimated 1RM trend, heaviest set and rep records.',

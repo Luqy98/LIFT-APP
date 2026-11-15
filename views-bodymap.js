@@ -178,23 +178,44 @@ function mapPanel(by, weeks) {
   const dark = document.documentElement.dataset.theme !== 'light';
   const base = h('img', { class: 'bm-base', alt: '', draggable: 'false' });
   const canvas = h('canvas', { class: 'bm-hl', role: 'img', 'aria-label': 'Muscle map. Tap a muscle for its sets and exercises, or use the table view.' });
-  const stage = h('div', { class: 'bm-stage' }, base, canvas);
+  const fig = h('div', { class: 'bm-fig' }, base, canvas);
+  const stage = h('div', { class: 'bm-stage' }, fig);
   const status = h('p', { class: 'hint bm-status', 'aria-live': 'polite' });
   let busy = false;
   const show = async (view) => {
     base.src = `img/map/${view}-${dark ? 'white' : 'black'}.webp`;
+    try { await base.decode(); } catch (e) { /* shown as soon as it loads */ }
     const map = await loadMap(view);
     const luma = await loadLuma(view, dark);
     paint(canvas, map, view, by, st.pick && REGIONS[view].includes(st.pick) ? st.pick : null, luma, dark);
     const missing = MUSCLES.filter((m) => (by.get(m).p.sets || by.get(m).s.sets) && !REGIONS.front.concat(REGIONS.back).some((r) => musclesIn(r).includes(m)));
     status.textContent = missing.length ? `Worked but not drawn on the model (see the table): ${missing.join(', ')}` : '';
   };
-  const turn = (view) => {
+  // The model turns like a turntable: the current side swings away into soft focus while the other swings in and settles.
+  const turn = async (view) => {
     if (busy || view === st.view) return;
     busy = true; st.view = view; st.pick = null;
-    stage.classList.add('is-turning');
     segBtns.forEach((b, i) => { const on = ['front', 'back'][i] === view; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); });
-    setTimeout(async () => { await show(view); stage.classList.remove('is-turning'); setTimeout(() => { busy = false; }, 160); }, 160);
+    const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dir = view === 'back' ? 1 : -1;
+    let ghost = null;
+    if (!calm && fig.animate) {
+      ghost = h('div', { class: 'bm-fig bm-ghost' }, base.cloneNode(false));
+      const gc = h('canvas', { class: 'bm-hl' }); gc.width = canvas.width; gc.height = canvas.height; gc.getContext('2d').drawImage(canvas, 0, 0);
+      ghost.append(gc); stage.append(ghost);
+      ghost.animate([
+        { transform: 'translateX(0) rotateY(0deg) scale(1)', opacity: 1, filter: 'blur(0px)' },
+        { transform: `translateX(${-dir * 16}%) rotateY(${dir * 34}deg) scale(0.92)`, opacity: 0, filter: 'blur(7px)' }],
+      { duration: 420, easing: 'cubic-bezier(0.4, 0, 0.6, 1)', fill: 'forwards' }).onfinish = () => ghost.remove();
+    }
+    await show(view);
+    if (!calm && fig.animate) {
+      fig.animate([
+        { transform: `translateX(${dir * 16}%) rotateY(${-dir * 34}deg) scale(0.92)`, opacity: 0, filter: 'blur(7px)' },
+        { transform: 'translateX(0) rotateY(0deg) scale(1)', opacity: 1, filter: 'blur(0px)' }],
+      { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+    }
+    setTimeout(() => { busy = false; }, calm ? 0 : 420);
   };
   const segBtns = ['front', 'back'].map((v) => h('button', { type: 'button', class: 'seg-btn' + (st.view === v ? ' is-on' : ''), 'aria-pressed': String(st.view === v), text: v === 'front' ? 'Front' : 'Back', onclick: () => turn(v) }));
 

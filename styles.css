@@ -962,8 +962,9 @@ body { position: fixed; inset: 0; width: 100%; }
 /* Body map */
 .bm-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .bm-turn { width: 100%; max-width: 360px; }
-.bm-stage { position: relative; width: 100%; max-width: 330px; aspect-ratio: 698 / 1476; touch-action: pan-y; user-select: none; -webkit-user-select: none; transition: transform 0.16s ease, opacity 0.16s ease; }
-.bm-stage.is-turning { transform: scaleX(0.04); opacity: 0.3; }
+.bm-stage { position: relative; width: 100%; max-width: 330px; aspect-ratio: 698 / 1476; touch-action: pan-y; user-select: none; -webkit-user-select: none; perspective: 1100px; }
+.bm-fig { position: absolute; inset: 0; transform-origin: 50% 55%; will-change: transform, opacity, filter; }
+.bm-ghost { pointer-events: none; }
 .bm-base, .bm-hl { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .bm-hl { pointer-events: auto; cursor: pointer; filter: blur(0.6px); }
 .bm-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: center; font-size: 13px; color: var(--ink2); }

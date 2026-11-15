@@ -249,3 +249,9 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Body Map: every muscle now has its own colour, and the colour gets stronger the more work the muscle gets (primary sets count in full, secondary sets count half). Tap a muscle for the primary and secondary split.
 - Rotator Cuff is no longer on the map, that area now belongs to Mid Back. It stays in the table.
 - The gaps at the back of the knees and on the outer thighs are now coloured in.
+
+## 2.27.0
+- Adding an exercise to a workout no longer lets you create one. New exercises are made and edited in the Exercises tab only.
+- The exercise picker now has body-part chips like the library, so you can find exercises by Chest, Back, Quads and so on.
+- Body Map: a smoother turn between front and back. The model swings round in soft focus like a turntable.
+- Dashboard: the Body Map card now sits right under the greeting.
