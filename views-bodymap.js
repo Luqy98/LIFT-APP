@@ -216,7 +216,7 @@ function mapPanel(by, weeks) {
     }
     setTimeout(() => { busy = false; }, calm ? 0 : 420);
   };
-  const segBtns = ['front', 'back'].map((v) => h('button', { type: 'button', class: 'seg-btn' + (st.view === v ? ' is-on' : ''), 'aria-pressed': String(st.view === v), text: v === 'front' ? 'Front' : 'Back', onclick: () => turn(v) }));
+  const segBtns = ['front', 'back'].map((v) => h('button', { type: 'button', class: 'bm-side-btn' + (st.view === v ? ' is-on' : ''), 'aria-pressed': String(st.view === v), text: v === 'front' ? 'Front' : 'Back', onclick: () => turn(v) }));
 
   let down = null;
   stage.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
@@ -238,7 +238,7 @@ function mapPanel(by, weeks) {
   });
   show(st.view);
   return h('div', { class: 'bm-wrap' },
-    h('div', { class: 'seg bm-turn', role: 'group', 'aria-label': 'Side' }, ...segBtns),
+    h('div', { class: 'bm-side', role: 'group', 'aria-label': 'Side' }, ...segBtns),
     stage, status,
     h('div', { class: 'bm-legend' },
       h('span', { class: 'bm-ramp' }), h('span', { text: 'More work = stronger colour' })));

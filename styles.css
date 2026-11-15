@@ -961,7 +961,12 @@ body { position: fixed; inset: 0; width: 100%; }
 
 /* Body map */
 .bm-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-.bm-turn { width: 100%; max-width: 360px; }
+.bm-side { display: flex; justify-content: center; gap: 34px; width: 100%; max-width: 360px; border-bottom: 1px solid var(--line); }
+.bm-side-btn { position: relative; min-height: 40px; padding: 0 6px; background: none; border: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; color: var(--muted); transition: color 0.2s ease; }
+.bm-side-btn::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); transform: scaleX(0); transform-origin: 50% 100%; transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+.bm-side-btn.is-on { color: var(--ink); }
+.bm-side-btn.is-on::after { transform: scaleX(1); }
+.bm-side-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 .bm-stage { position: relative; width: 100%; max-width: 330px; aspect-ratio: 698 / 1476; touch-action: pan-y; user-select: none; -webkit-user-select: none; perspective: 1100px; }
 .bm-fig { position: absolute; inset: 0; transform-origin: 50% 55%; will-change: transform, opacity, filter; }
 .bm-ghost { pointer-events: none; }
@@ -990,3 +995,9 @@ body { position: fixed; inset: 0; width: 100%; }
 .bm-row.is-dim td { color: var(--muted); }
 .bm-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) { .bm-stage { transition: none; } }
+
+/* ---- 2.27.2: exercise picker chips no longer squashed; reorder rows have room around the picture ---- */
+.picker > .search, .picker > .chips-row { flex: none; }
+.picker .chips-row { padding: 4px 0 6px; }
+.sort-item { padding: 10px 6px 10px 12px; gap: 12px; }
+.sort-item .row-main { padding: 4px 4px 4px 0; }

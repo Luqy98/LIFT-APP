@@ -258,3 +258,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.27.1
 - Body Map: removed the extra note under the legend and the "about x sets per week" line in the muscle detail.
+
+## 2.27.2
+- Exercise picker: the body-part chips are no longer cut off.
+- Reorder screen: the exercise pictures have space around them and no longer touch the edge of the card.
+- Body Map: Front/Back is now an underlined tab pair, so it looks different from the Map/Table switch above it.
