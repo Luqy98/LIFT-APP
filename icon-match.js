@@ -21,6 +21,8 @@ const ALIASES = {
   'leg curl': 'Leg Curl (Seated)', 'hip thrust': 'Hip Thrust (Barbell)', 'calf raise': 'Calf Raise (Standing)', 'calves raise': 'Calf Raise (Standing)',
   'jm press': 'JM Press (Barbell)', 'jm press machine': 'JM Press (Barbell)',
 };
+// Variations with no drawing of their own that use another exercise's picture.
+export const SHARED_ICONS = { 'paused deadlift': 'Deadlift (Conventional)', 'pause deadlift': 'Deadlift (Conventional)' };
 const STOP = new Set(['the', 'a', 'with']);
 const tokens = (str) => String(str || '').toLowerCase().replace(/\bdbs?\b/g, 'dumbbell').replace(/\bbbs?\b/g, 'barbell').replace(/\bez\b/g, 'ezbar')
   .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter((t) => t && !STOP.has(t)).map((t) => (t.length > 3 && t.endsWith('s') && !t.endsWith('ss') ? t.slice(0, -1) : t));

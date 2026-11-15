@@ -10,7 +10,7 @@
 import * as C from './crypto.js';
 import { ICONS } from './icons.js';
 import { catalogNames, CATALOG_ADD, CATALOG_DROP, CATALOG_RENAMES, isCatalogRename } from './catalog.js';
-import { setIconAlias, setPlainIcon } from './icon-match.js';
+import { setIconAlias, setPlainIcon, SHARED_ICONS } from './icon-match.js';
 import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT, SET_TYPES } from './calc.js';
 
 export const uid = () => crypto.randomUUID();
@@ -211,6 +211,11 @@ function migrate() {
     const e = data.exercises.find((x) => x.name.toLowerCase() === from.toLowerCase());
     if (e && !findExerciseByName(to, e.id)) { e.name = to; e.from = e.from || from; }
     planChanged = true;
+  }
+  // Variations that borrow a library drawing (e.g. Paused Deadlift uses the deadlift picture): give them it, once.
+  for (const e of data.exercises) {
+    const to = SHARED_ICONS[e.name.toLowerCase()];
+    if (to && !e.from) { e.from = to; delete e.plain; setPlainIcon(e.name, false); planChanged = true; }
   }
   for (const e of data.exercises) { if (e.from) setIconAlias(e.name, e.from); if (e.plain) setPlainIcon(e.name); }
   for (const r of data.routines) {
@@ -504,8 +509,10 @@ function exerciseForImport(name) {
   if (!name) return null;
   const found = findExerciseByName(name);
   if (found) { found.archived = false; return found; }
-  if (CATALOG_NAMES().has(name.toLowerCase())) {          // a library exercise you had deleted: comes back with its drawing
-    const e = { id: uid(), name, archived: false };
+  const shared = SHARED_ICONS[name.toLowerCase()];
+  if (CATALOG_NAMES().has(name.toLowerCase()) || shared) {  // a library exercise you had deleted (or a variation of one): gets its drawing
+    const e = { id: uid(), name, archived: false, ...(shared ? { from: shared } : {}) };
+    if (shared) setIconAlias(name, shared);
     data.exercises.push(e);
     return e;
   }

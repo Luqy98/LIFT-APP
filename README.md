@@ -302,3 +302,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 ## 2.34.0
 - Added Import Programme on the Programmes screen. Pick a programme file (.json) and it's added as a new programme. Your other programmes, logs and settings aren't touched. Exercises are matched to your library by name; any it doesn't find are added.
 - Weeks and workouts can now have their own notes. Use Add Week Notes or Add Workout Notes from the ⋮ menu. They show at the top as a General Note, and a workout's notes also show while you log it. Copying a week or programme copies its notes.
+
+## 2.34.1
+- Paused Deadlift now uses the deadlift picture instead of the plain dumbbell. This includes one that's already been imported.
