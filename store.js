@@ -10,7 +10,7 @@
 import * as C from './crypto.js';
 import { ICONS } from './icons.js';
 import { catalogNames, CATALOG_ADD, CATALOG_DROP, CATALOG_RENAMES, isCatalogRename } from './catalog.js';
-import { setIconAlias } from './icon-match.js';
+import { setIconAlias, setPlainIcon } from './icon-match.js';
 import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT } from './calc.js';
 
 export const uid = () => crypto.randomUUID();
@@ -212,7 +212,7 @@ function migrate() {
     if (e && !findExerciseByName(to, e.id)) { e.name = to; e.from = e.from || from; }
     planChanged = true;
   }
-  for (const e of data.exercises) if (e.from) setIconAlias(e.name, e.from);
+  for (const e of data.exercises) { if (e.from) setIconAlias(e.name, e.from); if (e.plain) setPlainIcon(e.name); }
   for (const r of data.routines) {
     const bySlot = new Map();
     for (const wk of r.weeks) for (const w of wk.workouts) if (w.color != null && !bySlot.has(w.slotId)) bySlot.set(w.slotId, w.color);
@@ -349,8 +349,9 @@ export function addExercise(name) {
   if (!name) return null;
   const existing = findExerciseByName(name);
   if (existing) { existing.archived = false; touch(); return existing; }
-  const e = { id: uid(), name, archived: false };
+  const e = { id: uid(), name, archived: false, plain: true };   // made by the user: always the plain dumbbell
   data.exercises.push(e);
+  setPlainIcon(name);
   touch();
   return e;
 }
@@ -362,6 +363,7 @@ export function renameExercise(id, name) {
   const e = exerciseById(id);
   // Remember the catalog name it started as: keeps its picture and feeds the Library Changes list.
   if (!e.from && CATALOG_NAMES().has(e.name.toLowerCase())) e.from = e.name;
+  if (e.plain) { setPlainIcon(e.name, false); setPlainIcon(name); }
   e.name = name;
   if (e.from && e.from.toLowerCase() === name.toLowerCase()) delete e.from;
   else if (e.from) setIconAlias(name, e.from);

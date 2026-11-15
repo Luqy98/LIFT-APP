@@ -1,26 +1,95 @@
 // Matches an exercise name to a mascot icon (pure logic, no DOM). See art.js for how it is drawn.
 import { ICONS } from './icons.js';
 
-import { ICONS_V2, ICONS_LIGHT } from './icons-v2.js';
-import { CATALOG_RENAMES } from './catalog.js';
+const ALIASES = {
+  'cable curl single arm': 'Cable Curl (Straight Bar)', 'triceps extension cable single arm': 'Overhead Triceps Extension (Cable)',
+  'triceps pushdown single arm cable': 'Triceps Pushdown (Straight Bar)', 'sulek curl': 'Wrist Curl (Cable)',
+  'bench press': 'Bench Press (Barbell)', bench: 'Bench Press (Barbell)', 'flat bench press': 'Bench Press (Barbell)',
+  'incline bench press': 'Incline Bench Press (Barbell)', 'incline db press': 'Incline Bench Press (Dumbbell)',
+  'incline dumbbell press': 'Incline Bench Press (Dumbbell)', 'dumbbell press': 'Bench Press (Dumbbell)', 'db press': 'Bench Press (Dumbbell)',
+  'dumbbell bench press': 'Bench Press (Dumbbell)', 'overhead press': 'Overhead Press (Barbell)', ohp: 'Overhead Press (Barbell)',
+  'military press': 'Overhead Press (Barbell)', 'shoulder press': 'Overhead Press (Dumbbell)', squat: 'Back Squat', 'barbell squat': 'Back Squat',
+  deadlift: 'Deadlift (Conventional)', rdl: 'Romanian Deadlift', 'barbell row': 'Barbell Row (Overhand)', row: 'Barbell Row (Overhand)',
+  'bent over row': 'Barbell Row (Overhand)', 'pull up': 'Pull-Up (Overhand)', pullup: 'Pull-Up (Overhand)', 'chin up': 'Chin-Up (Underhand)',
+  'lat pulldown': 'Lat Pulldown (Wide)', pulldown: 'Lat Pulldown (Wide)', 'dumbbell curl': 'Dumbbell Curl (Standing)', curl: 'Dumbbell Curl (Standing)',
+  'bicep curl': 'Dumbbell Curl (Standing)', 'biceps curl': 'Dumbbell Curl (Standing)', 'hammer curl': 'Hammer Curl (Standing)',
+  'triceps pushdown': 'Triceps Pushdown (Rope)', 'tricep pushdown': 'Triceps Pushdown (Rope)', pushdown: 'Triceps Pushdown (Rope)',
+  'skull crusher': 'Skull Crusher (EZ-Bar)', dip: 'Dips (Chest)', dips: 'Dips (Chest)', 'lateral raise': 'Lateral Raise (Dumbbell)',
+  'side raise': 'Lateral Raise (Dumbbell)', 'face pull': 'Face Pull (Cable)', 'chest fly': 'Chest Fly (Dumbbell)', fly: 'Chest Fly (Dumbbell)',
+  'chest press machine': 'Chest Press (Machine)', 'machine chest press': 'Chest Press (Machine)', 'pec deck': 'Pec Deck (Machine)',
+  'chest fly high to low': 'Cable Crossover (High-Low)', 'chest fly low to high': 'Cable Crossover (Low-High)',
+  'leg curl': 'Leg Curl (Seated)', 'hip thrust': 'Hip Thrust (Barbell)', 'calf raise': 'Calf Raise (Standing)', 'calves raise': 'Calf Raise (Standing)',
+  'jm press': 'JM Press (Barbell)', 'jm press machine': 'JM Press (Barbell)',
+};
+const STOP = new Set(['the', 'a', 'with']);
+const tokens = (str) => String(str || '').toLowerCase().replace(/\bdbs?\b/g, 'dumbbell').replace(/\bbbs?\b/g, 'barbell').replace(/\bez\b/g, 'ezbar')
+  .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter((t) => t && !STOP.has(t)).map((t) => (t.length > 3 && t.endsWith('s') && !t.endsWith('ss') ? t.slice(0, -1) : t));
+const keyOf = (str) => tokens(str).join(' ');
+const sortedKey = (str) => tokens(str).sort().join(' ');
 
-// A picture is only used when the exercise name is exactly a name in the default library (any capitals); everything else gets the plain dumbbell.
-const LIGHT = new Map(ICONS_LIGHT.map(([name, slug]) => [name.toLowerCase(), slug]));
-const EXACT = new Map();
-for (const [name, slug, eyes] of ICONS) {
-  const ic = { name, slug, eyes: !!eyes };
-  EXACT.set(name.toLowerCase(), ic);
-  if (CATALOG_RENAMES[name]) EXACT.set(CATALOG_RENAMES[name].toLowerCase(), ic);
+let INDEX = null;
+function buildIndex() {
+  const byKey = new Map(); const bySorted = new Map(); const byBase = new Map(); const list = [];
+  const seen = new Set();
+  for (const [name, slug, eyes] of ICONS) {
+    const ic = { name, slug, eyes: !!eyes, tok: new Set(tokens(name)) };
+    list.push(ic);
+    for (const [map, k] of [[byKey, keyOf(name)], [bySorted, sortedKey(name)], [byBase, keyOf(name.replace(/\(.*?\)/g, ''))]]) if (!map.has(k)) map.set(k, ic);
+    seen.add(slug);
+  }
+  INDEX = { byKey, bySorted, byBase, list };
 }
-for (const [name, slug, eyes] of ICONS_V2) EXACT.set(name.toLowerCase(), { name, slug, eyes: !!eyes });
-export function setIconAlias() { /* pictures no longer follow renames */ }
 
-/** Drawing for an exercise name (plus `light`, the light-mode drawing, when there is one), or null. */
+/** The mascot icon for an exercise name, or null when there is no good match. */
+// Exercises you renamed keep the picture of the catalog name they started as.
+import { RENAMED_FROM } from './catalog.js';
+import { ICONS_V2, ICONS_LIGHT } from './icons-v2.js';
+const LIGHT = new Map(ICONS_LIGHT.map(([name, slug]) => [name.toLowerCase(), slug]));
+const V2 = new Map(ICONS_V2.map(([name, slug, eyes]) => [name.toLowerCase(), { name, slug, eyes: !!eyes }]));
+const USER_ALIASES = new Map(RENAMED_FROM);
+// Exercises a user created themselves always get the plain dumbbell, never a matched picture.
+const PLAIN = new Set();
+export function setPlainIcon(name, on = true) { const k = String(name).trim().toLowerCase(); if (on) PLAIN.add(k); else PLAIN.delete(k); }
+export function setIconAlias(name, from) { USER_ALIASES.set(String(name).trim().toLowerCase(), from); }
+
+/** Drawing for an exercise name, plus `light` (slug of a light-mode-only drawing) when there is one. */
 export function iconFor(name) {
-  const key = String(name || '').trim().toLowerCase();
-  const ic = EXACT.get(key);
-  if (!ic) return null;
-  const light = LIGHT.get(key);
-  return light ? { ...ic, light } : ic;
+  if (PLAIN.has(String(name || '').trim().toLowerCase())) return null;
+  const ic = baseIcon(name);
+  const light = LIGHT.get(String(name || '').trim().toLowerCase());
+  return ic && light ? { ...ic, light } : ic;
+}
+
+function baseIcon(name) {
+  const raw = String(name || '').trim();
+  if (!raw) return null;
+  const v2 = V2.get(raw.toLowerCase());
+  if (v2) return v2;
+  const was = USER_ALIASES.get(raw.toLowerCase());
+  if (was && was.toLowerCase() !== raw.toLowerCase()) return baseIcon(was);
+  if (!INDEX) buildIndex();
+  const { byKey, bySorted, byBase, list } = INDEX;
+  const k = keyOf(raw);
+  const alias = ALIASES[raw.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()];
+  if (alias) return V2.get(alias.toLowerCase()) || byKey.get(keyOf(alias)) || null;
+  if (byKey.has(k)) return byKey.get(k);
+  const sk = sortedKey(raw);
+  if (bySorted.has(sk)) return bySorted.get(sk);
+  if (byBase.has(k)) return byBase.get(k);
+  const q = new Set(tokens(raw));
+  if (q.size < 2) return null;
+  let best = null;
+  for (const ic of list) {                       // every word of the icon's name appears in the exercise name
+    if (ic.tok.size < 2) continue;
+    let all = true; for (const t of ic.tok) if (!q.has(t)) { all = false; break; }
+    if (all && (!best || ic.tok.size > best.tok.size)) best = ic;
+  }
+  if (best) return best;
+  for (const ic of list) {                       // every word of the exercise name appears in the icon's name
+    let all = true; for (const t of q) if (!ic.tok.has(t)) { all = false; break; }
+    if (all && (!best || ic.tok.size < best.tok.size)) best = ic;
+  }
+  return best;
 }
 export const imageSlug = (name) => iconFor(name)?.slug || null;
+

@@ -272,3 +272,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - You can no longer press and hold to highlight or copy text anywhere in the app. Text can only be selected inside the boxes you type in. This also stops the highlighting when you drag to reorder.
 - Added Overhead Press (Smith Machine) to the library, with its pictures, for new and existing libraries.
 - Removed the Library Changes button. The default list is final.
+
+## 2.28.1
+- Pictures are back the way they were, so no existing exercise loses its picture. Exercises you create yourself from now on always get the plain dumbbell.
