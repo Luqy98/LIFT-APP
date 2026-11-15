@@ -40,6 +40,5 @@ export function pickMovement({ title = 'Add exercise' } = {}) {
     panel.classList.add('sheet-picker');
     drawChips();
     render();
-    requestAnimationFrame(() => search.focus());
   });
 }

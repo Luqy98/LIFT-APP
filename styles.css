@@ -1017,3 +1017,18 @@ img, svg, canvas { -webkit-user-drag: none; }
 .bm-table thead tr:first-child th { top: 0; }
 .bm-table thead tr:nth-child(2) th { top: 30px; box-shadow: 0 8px 0 var(--bg); border-bottom: 1px solid var(--line); }
 .bm-table thead tr:first-child th:first-child { box-shadow: 0 8px 0 var(--bg); border-bottom: 1px solid var(--line); }
+
+/* ---- 2.29.1 full-screen charts, steadier picker ---- */
+.note-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.note-row .card-note { flex: 1; min-width: 0; margin: 0; }
+.expand-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; }
+.sheet.sheet-full { height: 100dvh; max-height: 100dvh; max-width: none; border-radius: 0; padding-top: calc(var(--sat) + 8px); }
+.fs-chart { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }
+.fs-scroll { overflow-x: auto; overflow-y: hidden; flex: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.fs-inner .chart-svg { width: 100%; touch-action: pan-x pan-y; }
+.sheet.sheet-picker { max-height: 100%; }
+.fs-inner .chart-tip { position: sticky; left: 0; width: calc(100vw - 32px); }
+
+.fs-axis { position: sticky; left: 0; z-index: 3; background: var(--surface); align-self: flex-start; display: block; flex: none; }
+.fs-inner .chart-tip { padding-left: 6px; z-index: 4; position: sticky; }
+.fs-axis .axis-text { fill: var(--muted); font-size: 10.5px; font-variant-numeric: tabular-nums; }

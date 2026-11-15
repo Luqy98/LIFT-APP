@@ -1,10 +1,10 @@
 // Small dependency-free SVG charts (no third-party code, so nothing can phone home).
 // Colours come from CSS classes / variables so light and dark themes both work.
 
-import { h, s } from './ui.js';
+import { h, s, sheet } from './ui.js';
 import { fmtDate } from './calc.js';
 
-const W = 340, PAD = { l: 40, r: 14, t: 14, b: 26 };
+const PAD = { l: 40, r: 14, t: 14, b: 26 };
 
 function niceScale(min, max, count = 4, integer = false) {
   if (min === max) { const pad = Math.abs(min) * 0.05 || 1; min -= pad; max += pad; }
@@ -25,7 +25,7 @@ const tickLabel = (v) => (Math.abs(v) >= 10000 ? `${+(v / 1000).toFixed(1)}k` : 
  * points: [{ t: ms, y: number, title: 'value', detail: 'date · note' }] ascending by t.
  * Returns a card body: tooltip line + svg. Tap/drag anywhere to read a point.
  */
-export function lineChart({ points, height = 190, unit = '', zeroBase = false, label = 'Chart', target = null, targetNote = '', targetMet = false }) {
+export function lineChart({ points, height = 190, unit = '', zeroBase = false, label = 'Chart', target = null, targetNote = '', targetMet = false, width: W = 340 }) {
   const H = height;
   const wrap = h('div', { class: 'chart' });
   const tip = h('div', { class: 'chart-tip' });
@@ -43,6 +43,7 @@ export function lineChart({ points, height = 190, unit = '', zeroBase = false, l
   const X = (t) => (t1 === t0 ? PAD.l + iw / 2 : PAD.l + ((t - t0) / (t1 - t0)) * iw);
   const Y = (v) => PAD.t + ih - ((v - y0) / (y1 - y0 || 1)) * ih;
 
+  wrap.ticks = ticks.map((tk) => [Y(tk), tickLabel(tk)]);
   for (const tk of ticks) {
     svg.append(s('line', { class: 'grid', x1: PAD.l, x2: W - PAD.r, y1: Y(tk), y2: Y(tk) }));
     svg.append(s('text', { class: 'axis-text', x: PAD.l - 6, y: Y(tk) + 3.5, 'text-anchor': 'end' }, tickLabel(tk)));
@@ -50,7 +51,14 @@ export function lineChart({ points, height = 190, unit = '', zeroBase = false, l
   svg.append(s('line', { class: 'baseline', x1: PAD.l, x2: W - PAD.r, y1: PAD.t + ih, y2: PAD.t + ih }));
 
   // x labels: first, middle, last (by time)
-  const xl = points.length === 1 ? [points[0]] : [points[0], { t: (t0 + t1) / 2, mid: true }, points[points.length - 1]];
+  if (W > 400 && points.length > 1) {
+    const n = Math.max(2, Math.floor(iw / 90));
+    for (let i = 0; i <= n; i++) {
+      const t = t0 + ((t1 - t0) * i) / n;
+      svg.append(s('text', { class: 'axis-text', x: X(t), y: H - 7, 'text-anchor': i === 0 ? 'start' : i === n ? 'end' : 'middle' }, fmtDate(new Date(t).toISOString())));
+    }
+  }
+  const xl = W > 400 && points.length > 1 ? [] : points.length === 1 ? [points[0]] : [points[0], { t: (t0 + t1) / 2, mid: true }, points[points.length - 1]];
   xl.forEach((p, i) => {
     if (p.mid && points.length < 4) return;
     const anchor = i === 0 ? 'start' : i === xl.length - 1 ? 'end' : 'middle';
@@ -112,7 +120,7 @@ export function lineChart({ points, height = 190, unit = '', zeroBase = false, l
 }
 
 /** points: [{ label, y, title, detail }] in display order (oldest first). */
-export function barChart({ points, height = 170, label = 'Chart', integer = false }) {
+export function barChart({ points, height = 170, label = 'Chart', integer = false, width: W = 340, max = 40 }) {
   const H = height;
   const wrap = h('div', { class: 'chart' });
   const tip = h('div', { class: 'chart-tip' });
@@ -120,7 +128,7 @@ export function barChart({ points, height = 170, label = 'Chart', integer = fals
   wrap.append(tip, svg);
   if (!points.length) { wrap.append(h('div', { class: 'chart-empty', text: 'No data in this range yet.' })); return wrap; }
 
-  const shown = points.slice(-40);
+  const shown = points.slice(-max);
   const { ticks, hi: y1 } = niceScale(0, Math.max(...shown.map((p) => p.y), 1), 4, integer);
   const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
   const slot = iw / shown.length;
@@ -128,13 +136,17 @@ export function barChart({ points, height = 170, label = 'Chart', integer = fals
   const Y = (v) => PAD.t + ih - (v / (y1 || 1)) * ih;
   const base = PAD.t + ih;
 
+  wrap.ticks = ticks.map((tk) => [Y(tk), tickLabel(tk)]);
   for (const tk of ticks) {
     svg.append(s('line', { class: 'grid', x1: PAD.l, x2: W - PAD.r, y1: Y(tk), y2: Y(tk) }));
     svg.append(s('text', { class: 'axis-text', x: PAD.l - 6, y: Y(tk) + 3.5, 'text-anchor': 'end' }, tickLabel(tk)));
   }
   svg.append(s('line', { class: 'baseline', x1: PAD.l, x2: W - PAD.r, y1: base, y2: base }));
-  svg.append(s('text', { class: 'axis-text', x: PAD.l, y: H - 7, 'text-anchor': 'start' }, shown[0].label));
-  if (shown.length > 1) svg.append(s('text', { class: 'axis-text', x: W - PAD.r, y: H - 7, 'text-anchor': 'end' }, shown[shown.length - 1].label));
+  if (W > 400) {
+    const every = Math.max(1, Math.ceil(64 / slot));
+    shown.forEach((p, i) => { if (i % every === 0) svg.append(s('text', { class: 'axis-text', x: PAD.l + slot * i + slot / 2, y: H - 7, 'text-anchor': 'middle' }, p.label)); });
+  } else svg.append(s('text', { class: 'axis-text', x: PAD.l, y: H - 7, 'text-anchor': 'start' }, shown[0].label));
+  if (shown.length > 1 && W <= 400) svg.append(s('text', { class: 'axis-text', x: W - PAD.r, y: H - 7, 'text-anchor': 'end' }, shown[shown.length - 1].label));
 
   const bars = shown.map((p, i) => {
     const x = PAD.l + slot * i + (slot - bw) / 2;
@@ -178,4 +190,29 @@ export function dataTable(head, rows) {
     h('summary', { text: 'View as table' }),
     h('table', {}, h('thead', {}, h('tr', {}, head.map((c) => h('th', { text: c })))),
       h('tbody', {}, rows.map((r) => h('tr', {}, r.map((c) => h('td', { text: c })))))));
+}
+
+/**
+ * A small "expand" button for a chart card. Opens the chart full screen, wide enough to scroll sideways through all of its history.
+ * build(width, height) must return a fresh chart; count is how many points it will draw.
+ */
+export function expandButton(title, count, build) {
+  return h('button', { type: 'button', class: 'btn btn-sm expand-btn', 'aria-label': `Open ${title} full screen`, onclick: () => {
+    const width = Math.max(Math.round(window.innerWidth) - 32, count * 46 + 70);
+    const height = Math.max(240, Math.round(window.innerHeight * 0.5));
+    const chart = build(width, height);
+    const axis = s('svg', { class: 'fs-axis', width: PAD.l, height, viewBox: `0 0 ${PAD.l} ${height}`, 'aria-hidden': 'true' },
+      ...(chart.ticks || []).map(([y, t]) => s('text', { class: 'axis-text', x: PAD.l - 6, y: y + 3.5, 'text-anchor': 'end' }, t)));
+    chart.append(axis);
+    axis.style.marginTop = `-${height}px`;
+    const scroller = h('div', { class: 'fs-scroll no-sheet-drag' }, h('div', { class: 'fs-inner' }, chart));
+    scroller.firstChild.style.width = `${width}px`;
+    sheet(h('div', { class: 'fs-chart' }, h('p', { class: 'card-note', text: count > 12 ? 'Swipe sideways to scroll through your history. Touch the chart to read a point.' : 'Touch the chart to read a point.' }), scroller),
+      { title, wide: true }).panel.classList.add('sheet-full');
+    requestAnimationFrame(() => { scroller.scrollLeft = scroller.scrollWidth; });
+  } }, expandIcon(), h('span', { text: 'Full screen' }));
+}
+function expandIcon() {
+  return s('svg', { class: 'ic', viewBox: '0 0 24 24', width: 16, height: 16, fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' },
+    s('path', { d: 'M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7' }));
 }

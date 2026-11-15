@@ -4,7 +4,7 @@ import { exerciseArt, mascotArt } from './art.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { FORMULAS, repRecords, fmt, fmtW, fmtSign, fmtVol, fmtDate, setLabel, typeInfo } from './calc.js';
-import { lineChart, barChart, dataTable } from './charts.js';
+import { lineChart, barChart, dataTable, expandButton } from './charts.js';
 import { sessionView } from './views-session.js';
 import { calendarView } from './views-calendar.js';
 import { bodyMapView } from './views-bodymap.js';
@@ -42,12 +42,13 @@ export function dashboardView() {
 
   const weeks = S.weeklyCounts(12);
   const unit = (n) => `${n} ${n === 1 ? 'workout' : 'workouts'}`;
+  const allWeeksFull = S.weeklyCounts(104), firstWk = allWeeksFull.findIndex((w) => w.count > 0);
+  const allWeeks = allWeeksFull.slice(firstWk < 0 ? -12 : Math.min(firstWk, 92));
+  const weekPts = (ws) => ws.map((w) => ({ label: fmtDate(w.start.toISOString()), y: w.count, deload: w.deload, title: unit(w.count), detail: `Week of ${fmtDate(w.start.toISOString())}${w.deload ? ` · includes ${w.deload} deload` : ''}` }));
   content.append(card('Workouts per week',
-    h('p', { class: 'card-note', text: 'Weeks start on Monday · last 12 weeks' }),
-    barChart({
-      label: 'Workouts per week', integer: true,
-      points: weeks.map((w) => ({ label: fmtDate(w.start.toISOString()), y: w.count, deload: w.deload, title: unit(w.count), detail: `Week of ${fmtDate(w.start.toISOString())}${w.deload ? ` · includes ${w.deload} deload` : ''}` })),
-    }),
+    h('div', { class: 'note-row' }, h('p', { class: 'card-note', text: 'Weeks start on Monday · last 12 weeks' }),
+      expandButton('Workouts per week', allWeeks.length, (width, height) => barChart({ label: 'Workouts per week', integer: true, width, height, max: 104, points: weekPts(allWeeks) }))),
+    barChart({ label: 'Workouts per week', integer: true, points: weekPts(weeks) }),
     weeks.some((w) => w.deload) ? h('div', { class: 'chart-key' }, h('span', { class: 'key-swatch' }), h('span', { text: 'Workout' }), h('span', { class: 'key-swatch key-deload' }), h('span', { text: 'Deload workout' })) : null,
     dataTable(['Week starting (Mon)', 'Workouts'], weeks.map((w) => [fmtDate(w.start.toISOString()), String(w.count) + (w.deload ? ` (${w.deload} deload)` : '')]))));
 
@@ -82,21 +83,22 @@ export function dashboardView() {
   const name = S.exerciseName(dash.exerciseId);
   const formula = FORMULAS[S.data.settings.formula]?.label || 'Blend';
 
+  const e1Opts = { label: `Estimated 1RM for ${name}`, unit: ' kg', target: S.targetFor(dash.exerciseId), targetNote: S.targetMet(dash.exerciseId) ? ' · reached' : daysNote(S.targetDateFor(dash.exerciseId)), targetMet: S.targetMet(dash.exerciseId) };
+  const e1Pts = (list) => list.map((r) => ({ t: +new Date(r.date), y: r.stats.e1rm, title: `${fmt(r.stats.e1rm)} kg`, detail: `${fmtDate(r.date)} · from ${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}${dash.slotId === 'all' ? ' · ' + S.workoutName(r.session) : ''}` }));
+  const allE = hist.slice().reverse().filter((r) => r.stats.e1rm != null);
   content.append(card('Estimated 1RM',
-    h('p', { class: 'card-note', text: `Best set each session · ${formula} · sets up to ${S.data.settings.maxReps} reps` }),
-    lineChart({
-      label: `Estimated 1RM for ${name}`, unit: ' kg', target: S.targetFor(dash.exerciseId), targetNote: S.targetMet(dash.exerciseId) ? ' · reached' : daysNote(S.targetDateFor(dash.exerciseId)), targetMet: S.targetMet(dash.exerciseId),
-      points: withE.map((r) => ({ t: +new Date(r.date), y: r.stats.e1rm, title: `${fmt(r.stats.e1rm)} kg`, detail: `${fmtDate(r.date)} · from ${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}${dash.slotId === 'all' ? ' · ' + S.workoutName(r.session) : ''}` })),
-    }),
+    h('div', { class: 'note-row' }, h('p', { class: 'card-note', text: `Best set each session · ${formula} · sets up to ${S.data.settings.maxReps} reps` }),
+      expandButton(`Estimated 1RM · ${name}`, allE.length, (width, height) => lineChart({ ...e1Opts, width, height, points: e1Pts(allE) }))),
+    lineChart({ ...e1Opts, points: e1Pts(withE) }),
     dataTable(['Date', 'Est. 1RM (kg)', 'From'], withE.map((r) => [fmtDate(r.date), fmt(r.stats.e1rm), `${fmtW(r.stats.bestSet.weight)}×${fmt(r.stats.bestSet.reps, 0)}`]))));
 
   const topRows = rows.filter((r) => r.stats.top && r.stats.top.weight > 0);
+  const allTop = hist.slice().reverse().filter((r) => r.stats.top && r.stats.top.weight > 0);
+  const topPts = (list) => list.map((r) => ({ t: +new Date(r.date), y: r.stats.top.weight, title: `${fmtW(r.stats.top.weight)} kg × ${fmt(r.stats.top.reps, 0)}`, detail: fmtDate(r.date) }));
   content.append(card('Heaviest set',
-    h('p', { class: 'card-note', text: 'Top weight lifted each session (warm-ups excluded)' }),
-    lineChart({
-      label: `Heaviest set for ${name}`, unit: ' kg',
-      points: topRows.map((r) => ({ t: +new Date(r.date), y: r.stats.top.weight, title: `${fmtW(r.stats.top.weight)} kg × ${fmt(r.stats.top.reps, 0)}`, detail: fmtDate(r.date) })),
-    }),
+    h('div', { class: 'note-row' }, h('p', { class: 'card-note', text: 'Top weight lifted each session (warm-ups excluded)' }),
+      expandButton(`Heaviest set · ${name}`, allTop.length, (width, height) => lineChart({ label: `Heaviest set for ${name}`, unit: ' kg', width, height, points: topPts(allTop) }))),
+    lineChart({ label: `Heaviest set for ${name}`, unit: ' kg', points: topPts(topRows) }),
     dataTable(['Date', 'Weight (kg)', 'Reps'], topRows.map((r) => [fmtDate(r.date), fmtW(r.stats.top.weight), fmt(r.stats.top.reps, 0)]))));
 
   const recs = repRecords(hist.map((r) => ({ date: r.date, sets: r.sets }))).slice(0, 12);

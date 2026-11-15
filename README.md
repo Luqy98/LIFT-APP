@@ -280,3 +280,7 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - The search and body-part tabs now stay fixed at the top of the Exercises list and the Add Exercise sheet while the list scrolls underneath.
 - The Body Map table keeps its Muscle / Primary / Secondary / Sets / Reps header fixed while you scroll.
 - Muscle groups are now Chest, Back, Shoulders, Arms, Forearms, Legs and Core.
+
+## 2.30.0
+- Fixed the Add Exercise sheet glitching when it opens. The search box no longer pops the keyboard up on open, so the sheet stays still. Tap the search box when you want to type.
+- Added a Full screen button on the dashboard charts (Workouts per week, Estimated 1RM, Heaviest set). It opens the chart wide with your whole history, ignoring the time range, and you swipe sideways to scroll through it. The scale stays fixed on the left and touching the chart reads a point.
