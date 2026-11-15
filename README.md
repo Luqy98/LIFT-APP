@@ -235,3 +235,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.24.0
 - Body Map: tap areas now follow the real muscle borders on the artwork (upper/mid/lower chest, delt heads, bicep and tricep heads, the four forearm flexors, quad heads, hamstrings, calf heads) instead of a hand trace.
+
+## 2.24.1
+- Lock screen: the dumbbell now matches the app logo exactly and sits on its own, no purple box. Dark in light mode, white in dark mode.

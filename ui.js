@@ -69,8 +69,9 @@ export function icon(name, size = 22) {
 /** The app-logo dumbbell (solid plates and bar), drawn in the current text colour. */
 export function dumbbellMark(size = 34) {
   const r = (x, y, w, h, rx) => s('rect', { x, y, width: w, height: h, rx });
-  return s('svg', { class: 'ic', viewBox: '0 0 24 24', width: size, height: size, fill: 'currentColor', 'aria-hidden': 'true', focusable: 'false' },
-    r(0.9, 8.4, 2.2, 7.2, 1), r(3.6, 5.2, 3.2, 13.6, 1.3), r(6.8, 10.6, 10.4, 2.8, 0.4), r(17.2, 5.2, 3.2, 13.6, 1.3), r(20.9, 8.4, 2.2, 7.2, 1));
+  return s('svg', { class: 'ic', viewBox: '0 0 646 347', width: size, height: Math.round(size * 347 / 646), fill: 'currentColor', 'aria-hidden': 'true', focusable: 'false' },
+    r(0, 105, 47, 147, 10), r(60, 47, 60, 265, 12), r(135, 0, 74, 347, 14), r(221, 152, 205, 53, 3),
+    r(438, 0, 74, 347, 14), r(526, 47, 60, 265, 12), r(599, 105, 47, 147, 10));
 }
 export const iconBtn = (name, label, onclick, cls = '') =>
   h('button', { class: 'icon-btn ' + cls, 'aria-label': label, title: label, onclick }, icon(name));
