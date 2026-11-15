@@ -255,3 +255,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - The exercise picker now has body-part chips like the library, so you can find exercises by Chest, Back, Quads and so on.
 - Body Map: a smoother turn between front and back. The model swings round in soft focus like a turntable.
 - Dashboard: the Body Map card now sits right under the greeting.
+
+## 2.27.1
+- Body Map: removed the extra note under the legend and the "about x sets per week" line in the muscle detail.

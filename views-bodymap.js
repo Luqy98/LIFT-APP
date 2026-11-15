@@ -91,7 +91,6 @@ function roleBlock(label, b, weeks) {
   if (!b.sets) { kids.push(h('p', { class: 'hint', text: `No ${label.toLowerCase()} work in this selection.` })); return h('div', { class: 'bm-role' }, ...kids); }
   const wo = b.workouts.size;
   kids.push(h('p', { class: 'bm-sum' }, h('strong', { text: `${b.sets} ${b.sets === 1 ? 'set' : 'sets'}` }), h('span', { text: ` · ${fmt(b.reps, 0)} reps · ${wo} ${wo === 1 ? 'workout' : 'workouts'}` })));
-  if (weeks > 1) kids.push(h('p', { class: 'hint', text: `About ${fmt(b.sets / weeks, 1)} sets and ${fmt(wo / weeks, 1)} workouts per week` }));
   kids.push(h('ul', { class: 'bm-ex' }, [...b.ex.values()].sort((a, c) => c.sets - a.sets || a.name.localeCompare(c.name)).map((e) =>
     h('li', {}, h('span', { text: e.name }), h('span', { class: 'bm-n', text: `${e.sets} ${e.sets === 1 ? 'set' : 'sets'} · ${fmt(e.reps, 0)} reps` })))));
   return h('div', { class: 'bm-role' }, ...kids);
@@ -242,8 +241,7 @@ function mapPanel(by, weeks) {
     h('div', { class: 'seg bm-turn', role: 'group', 'aria-label': 'Side' }, ...segBtns),
     stage, status,
     h('div', { class: 'bm-legend' },
-      h('span', { class: 'bm-ramp' }), h('span', { text: 'More work = stronger colour' }),
-      h('span', { class: 'hint', text: 'Each muscle has its own colour. Primary sets count in full, secondary sets count half. Swipe to turn.' })));
+      h('span', { class: 'bm-ramp' }), h('span', { text: 'More work = stronger colour' })));
 }
 
 // ---- Table ------------------------------------------------------------------
