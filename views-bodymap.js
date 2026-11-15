@@ -7,7 +7,7 @@ import { musclesOf, MUSCLES, MUSCLES_BY_GROUP, MUSCLE_HINTS } from './muscles.js
 
 // Painted regions of each view, in the order they are numbered in img/map/<view>-map.png (1, 2, 3, ...).
 const REGIONS = {
-  front: ['Upper Traps', 'Side Delts', 'Front Delts', 'Upper Chest', 'Mid Chest', 'Lower Chest', 'Obliques', 'Upper Abs', 'Lower Abs', 'Biceps Long Head', 'Biceps Short Head', 'Brachialis', 'Triceps Lateral Head', 'Brachioradialis', 'Wrist Flexors', 'Vastus Lateralis', 'Rectus Femoris', 'Adductors', 'Vastus Medialis', 'Tibialis', 'Gastrocnemius'],
+  front: ['Upper Traps', 'Side Delts', 'Front Delts', 'Upper Chest', 'Mid Chest', 'Lower Chest', 'Obliques', 'Upper Abs', 'Lower Abs', 'Biceps Long Head', 'Biceps Short Head', 'Brachialis', 'Triceps Lateral Head', 'Brachioradialis', 'Wrist Flexors', 'Vastus Lateralis', 'Rectus Femoris', 'Adductors', 'Vastus Medialis', 'Tibialis', 'Gastrocnemius', 'Hip Flexors'],
   back: ['Upper Traps', 'Mid Back', 'Side Delts', 'Rear Delts', 'Rotator Cuff', 'Lats', 'Lower Back', 'Triceps Long Head', 'Triceps Lateral Head', 'Triceps Medial Head', 'Wrist Extensors', 'Glutes', 'Glute Medius', 'Outer Hamstrings', 'Inner Hamstrings', 'Gastrocnemius', 'Soleus'],
 };
 // A painted area that covers several muscles (the front of the forearm).
