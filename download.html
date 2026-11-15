@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get LIFT</title>
+<style>
+:root { --bg: #f4f3f8; --fg: #14121c; --muted: #636071; --card: #fff; --line: #e1dfea; --accent: #6d32e6; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0b0a10; --fg: #f1eff8; --muted: #9b97ab; --card: #16141f; --line: #27243a; --accent: #8b5cf6; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 32px 16px; }
+main { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+p { margin: 0; color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+h2 { margin: 0; font-size: 17px; }
+a.btn { display: block; text-align: center; text-decoration: none; background: var(--accent); color: #fff; font-weight: 650; padding: 14px; border-radius: 12px; }
+ol { margin: 0; padding-left: 20px; color: var(--muted); }
+small { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>LIFT</h1>
+  <p>A private gym log. Everything you record stays on your own phone.</p>
+  <section class="card">
+    <h2>Android</h2>
+    <a class="btn" href="https://github.com/Luqy98/LIFT-APP/releases/latest/download/LIFT.apk">Download the latest APK</a>
+    <ol>
+      <li>Open the downloaded file.</li>
+      <li>If asked, allow installing from this source.</li>
+      <li>Tap Install.</li>
+    </ol>
+    <small>This link always gives the newest version. Installing over an older one keeps your data.</small>
+  </section>
+  <section class="card">
+    <h2>iPhone, or no install</h2>
+    <a class="btn" href="./">Open LIFT in the browser</a>
+    <p>Then use Share, Add to Home Screen. It keeps itself up to date.</p>
+  </section>
+</main>
+</body>
+</html>

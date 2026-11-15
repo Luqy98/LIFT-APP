@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir -p apk/www
           rsync -a --exclude='.git' --exclude='.github' --exclude='apk' --exclude='tests' \
-            --exclude='README.md' --exclude='_headers' --exclude='sw.js' ./ apk/www/
+            --exclude='README.md' --exclude='download.html' --exclude='_headers' --exclude='sw.js' ./ apk/www/
           ls apk/www | head -50
 
       - name: Install Capacitor and create the Android project
@@ -172,6 +172,9 @@ jobs:
           sha256sum "LIFT-${{ steps.v.outputs.version }}.apk" | tee sha.txt
           rm -f "$RUNNER_TEMP/lift.jks"
 
+      - name: Fixed-name copy for the download page
+        run: cp "LIFT-${{ steps.v.outputs.version }}.apk" LIFT.apk
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
@@ -180,4 +183,7 @@ jobs:
           body: |
             Download **LIFT-${{ steps.v.outputs.version }}.apk** below, open it on your phone and tap Install.
             Installing over an older version keeps your data.
-          files: LIFT-${{ steps.v.outputs.version }}.apk
+          make_latest: true
+          files: |
+            LIFT-${{ steps.v.outputs.version }}.apk
+            LIFT.apk

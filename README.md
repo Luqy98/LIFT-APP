@@ -288,3 +288,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 ## 2.30.1
 - Removed the "Worked but not drawn on the model" note under the body map.
 - The Body Map table header is now fully solid, including the line under Primary and Secondary, so rows no longer show through it when you scroll.
+
+## 2.31.0
+- Added a download page at luqy98.github.io/LIFT-APP/download.html. Its Android button always gets the newest APK: each build now also publishes a fixed-name LIFT.apk as the latest release.
