@@ -241,3 +241,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.25.0
 - Body Map: new anatomical models (front and back, black for light mode, white for dark mode) with muscle areas stretched to fit each model exactly, so the colour sits on the muscles with a clean edge and no grainy outline.
+
+## 2.25.1
+- Body Map: new muscle map built from the Gray's Anatomy layout. Calf, elbow and thigh areas no longer get mixed up, and muscles on the back now reach the edge of the arms and legs.
