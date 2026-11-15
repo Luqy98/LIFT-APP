@@ -305,3 +305,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.34.1
 - Paused Deadlift now uses the deadlift picture instead of the plain dumbbell. This includes one that's already been imported.
+
+## 2.34.2
+- Pause Squat now uses the same picture as the regular squat.
