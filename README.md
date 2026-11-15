@@ -284,3 +284,7 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 ## 2.30.0
 - Fixed the Add Exercise sheet glitching when it opens. The search box no longer pops the keyboard up on open, so the sheet stays still. Tap the search box when you want to type.
 - Added a Full screen button on the dashboard charts (Workouts per week, Estimated 1RM, Heaviest set). It opens the chart wide with your whole history, ignoring the time range, and you swipe sideways to scroll through it. The scale stays fixed on the left and touching the chart reads a point.
+
+## 2.30.1
+- Removed the "Worked but not drawn on the model" note under the body map.
+- The Body Map table header is now fully solid, including the line under Primary and Secondary, so rows no longer show through it when you scroll.

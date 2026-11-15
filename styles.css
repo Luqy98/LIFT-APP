@@ -1032,3 +1032,9 @@ img, svg, canvas { -webkit-user-drag: none; }
 .fs-axis { position: sticky; left: 0; z-index: 3; background: var(--surface); align-self: flex-start; display: block; flex: none; }
 .fs-inner .chart-tip { padding-left: 6px; z-index: 4; position: sticky; }
 .fs-axis .axis-text { fill: var(--muted); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+
+/* 2.30.1 solid table header: the whole header block sticks as one opaque piece */
+.bm-table thead { position: sticky; top: 0; z-index: 4; background: var(--bg); box-shadow: 0 8px 0 var(--bg); }
+.bm-table thead th, .bm-table thead tr:first-child th, .bm-table thead tr:nth-child(2) th, .bm-table thead tr:first-child th:first-child { position: static; top: auto; height: auto; box-shadow: none; background: var(--bg); }
+.bm-table thead th { border-bottom: 0 !important; }
+.bm-table thead tr:nth-child(2) th, .bm-table thead tr:first-child th:first-child, .bm-table thead th.bm-span { box-shadow: inset 0 -1px 0 var(--line) !important; }

@@ -188,7 +188,7 @@ function mapPanel(by, weeks) {
     const luma = await loadLuma(view, dark);
     paint(canvas, map, view, by, st.pick && REGIONS[view].includes(st.pick) ? st.pick : null, luma, dark);
     const missing = MUSCLES.filter((m) => (by.get(m).p.sets || by.get(m).s.sets) && !REGIONS.front.concat(REGIONS.back).some((r) => musclesIn(r).includes(m)));
-    status.textContent = missing.length ? `Worked but not drawn on the model (see the table): ${missing.join(', ')}` : '';
+    status.textContent = '';
   };
   // The model turns like a turntable: the current side swings away into soft focus while the other swings in and settles.
   const turn = async (view) => {
