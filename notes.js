@@ -49,10 +49,10 @@ export async function addNote(owner, save, refresh) {
 }
 
 /** Edits one free text field on `owner` (e.g. the note on a whole logged workout). Empty text removes it. */
-export async function editFreeNote(owner, field, label, save) {
+export async function editFreeNote(owner, field, label, save, placeholder = 'How did it go? Anything to remember?') {
   const v = await formDialog({
     title: label, message: owner[field] ? 'Clear the text to remove this note.' : null,
-    fields: [{ key: 'text', label, value: owner[field] || '', placeholder: 'How did it go? Anything to remember?', multiline: true, rows: 5 }],
+    fields: [{ key: 'text', label, value: owner[field] || '', placeholder, multiline: true, rows: 5 }],
     ok: 'Save',
   });
   if (!v) return false;

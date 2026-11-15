@@ -1,6 +1,6 @@
 // Workouts tab: routines -> weeks -> workouts -> exercises -> sets (the plan), plus the History segment.
-import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet, modeBanner } from './ui.js';
-import { notesList, addNote, canAddNote } from './notes.js';
+import { h, icon, iconBtn, confirmDialog, formDialog, choiceSheet, toast, segmented, emptyState, colorSheet, modeBanner, pickFile } from './ui.js';
+import { notesList, addNote, canAddNote, editFreeNote } from './notes.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { exerciseArt } from './art.js';
@@ -38,16 +38,38 @@ export function workoutsRoot() {
 function routinesContent() {
   if (!S.data.routines.length) {
     return emptyState('Plan your first programme', 'A programme is made of weeks, each week of workouts, each workout of exercises and sets. You control every level.',
-      h('button', { class: 'btn btn-primary', text: 'Create a programme', onclick: newRoutine }));
+      h('div', { class: 'btn-pair' },
+        h('button', { class: 'btn btn-primary', text: 'Create a programme', onclick: newRoutine }),
+        h('button', { class: 'btn', text: 'Import programme', onclick: importProgrammeFile })));
   }
-  return h('div', { class: 'list' }, S.data.routines.map((r) => {
+  return [h('div', { class: 'list' }, S.data.routines.map((r) => {
     const p = routineProgress(r);
     return h('div', { class: 'row-card' },
       h('button', { class: 'row-main row-btn', onclick: () => nav.push(routineView, { routineId: r.id }) },
         h('span', { class: 'row-title', text: r.name }),
         h('span', { class: 'row-sub', text: `${plural(r.weeks.length, 'week')} · ${plural(p.total, 'workout')}${p.total ? ` · ${p.done} done` : ''}` })),
       iconBtn('more', `Options for ${r.name}`, () => routineMenu(r)));
-  }));
+  })), h('button', { class: 'btn btn-block btn-ghost', onclick: importProgrammeFile }, icon('plus', 18), h('span', { text: 'Import programme' }))];
+}
+
+/** Adds a programme from a .json plan file. Your other programmes, logs and settings are not touched. */
+async function importProgrammeFile() {
+  const file = await pickFile();
+  if (!file) return;
+  let p;
+  try { p = JSON.parse(await file.text()); } catch { toast('That file couldn’t be read'); return; }
+  let res;
+  try { res = S.importProgramme(p); } catch (e) { toast(e.message); return; }
+  toast(`Imported “${res.routine.name}”: ${plural(res.weeks, 'week')}, ${plural(res.workouts, 'workout')}` + (res.newExercises ? ` · ${plural(res.newExercises, 'exercise')} added to your library` : ''));
+  nav.push(routineView, { routineId: res.routine.id });
+}
+
+/** A plan note (on a week or workout) shown as a General Note block; tap to edit. */
+const PLAN_NOTE_HINT = 'e.g. How to approach this, rest times, what to focus on';
+function planNote(owner, label) {
+  if (!owner.note) return null;
+  return h('button', { class: 'note note-general', 'aria-label': `Edit ${label}`, onclick: async () => { if (await editFreeNote(owner, 'note', label, () => S.touch(), PLAN_NOTE_HINT)) nav.refresh(); } },
+    h('span', { class: 'note-label', text: label }), h('span', { class: 'note-text', text: owner.note }));
 }
 
 async function newRoutine() {
@@ -143,11 +165,13 @@ async function weekMenu(r, wk) {
     title: wk.name,
     options: [
       { label: 'Rename', value: 'rename' },
+      { label: wk.note ? 'Edit week notes' : 'Add week notes', value: 'note', sub: 'How to approach this week' },
       { label: 'Duplicate week', value: 'dup' },
       ...(r.weeks.length > 1 ? [{ label: 'Reorder weeks', value: 'reorder', sub: 'Drag them into a new order' }] : []),
       { label: 'Delete week', value: 'del', danger: true },
     ],
   });
+  if (v === 'note') { if (await editFreeNote(wk, 'note', 'Week Notes', () => S.touch(), PLAN_NOTE_HINT)) nav.refresh(); return; }
   if (v === 'rename') {
     const x = await formDialog({ title: 'Rename week', fields: [{ key: 'name', label: 'Week name', value: wk.name, capitalize: 'words' }], validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : null) });
     if (x) { S.renameWeek(r.id, wk.id, x.name); nav.refresh(); }
@@ -173,6 +197,8 @@ export function weekView({ routineId, weekId }) {
   const wk = S.weekById(routineId, weekId);
   if (!r || !wk) return notFound('Week');
   const content = h('div', { class: 'page' });
+  const wn = planNote(wk, 'Week Notes');
+  if (wn) content.append(wn);
   if (!wk.workouts.length) content.append(emptyState('No workouts in this week', 'Add the workouts you’ll do, then fill each with exercises.'));
   else {
     content.append(h('div', { class: 'list' }, wk.workouts.map((w) => {
@@ -215,6 +241,7 @@ async function workoutMenu(r, wk, w) {
     title: w.name,
     options: [
       { label: 'Rename', value: 'rename' },
+      { label: w.note ? 'Edit workout notes' : 'Add workout notes', value: 'note', sub: 'How to run it, rest times' },
       { label: 'Colour', value: 'color', sub: WORKOUT_COLORS[w.color ?? 0] },
       w.deload
         ? { label: 'Remove deload', value: 'deload', sub: 'Make this a normal workout again' }
@@ -225,6 +252,7 @@ async function workoutMenu(r, wk, w) {
       { label: 'Delete workout', value: 'del', danger: true },
     ],
   });
+  if (v === 'note') { if (await editFreeNote(w, 'note', 'Workout Notes', () => S.touch(), PLAN_NOTE_HINT)) nav.refresh(); return; }
   if (v === 'rename') {
     const multi = r.weeks.some((x) => x !== wk && x.workouts.some((o) => o.slotId === w.slotId));
     const x = await formDialog({
@@ -270,6 +298,8 @@ export function workoutView({ routineId, weekId, workoutId }) {
   const content = h('div', { class: 'page' }, modeBanner('plan', 'Planning', 'Set up exercises and target sets. Nothing here is logged until you start the workout.'));
   if (workout.deload) content.append(h('div', { class: 'deload-banner' }, h('span', { class: 'tag-deload', text: 'Deload' }), h('span', { text: 'Starting this workout suggests 60% of your best 1RM for each exercise. It won’t count towards 1RM or exercise charts.' })));
 
+  const won = planNote(workout, 'Workout Notes');
+  if (won) content.append(won);
   if (!workout.items.length) content.append(emptyState('No exercises yet', 'Add the exercises for this workout, then set the sets, reps and any target weight.'));
   workout.items.forEach((item, i) => content.append(itemCard(workout, item, i)));
   content.append(h('button', { class: 'btn btn-block btn-ghost', onclick: async () => {

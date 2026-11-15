@@ -298,3 +298,7 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 ## 2.33.0
 - Added a Programme Goals box at the top of each programme. Tap it to write a sentence about what the programme is for. Duplicating a programme copies it.
 - Added an RIR (reps in reserve) box to each planned set, next to Reps and Kg, which are now a little narrower to fit it. During a workout, the target RIRs show above the sets.
+
+## 2.34.0
+- Added Import Programme on the Programmes screen. Pick a programme file (.json) and it's added as a new programme. Your other programmes, logs and settings aren't touched. Exercises are matched to your library by name; any it doesn't find are added.
+- Weeks and workouts can now have their own notes. Use Add Week Notes or Add Workout Notes from the ⋮ menu. They show at the top as a General Note, and a workout's notes also show while you log it. Copying a week or programme copies its notes.

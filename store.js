@@ -11,7 +11,7 @@ import * as C from './crypto.js';
 import { ICONS } from './icons.js';
 import { catalogNames, CATALOG_ADD, CATALOG_DROP, CATALOG_RENAMES, isCatalogRename } from './catalog.js';
 import { setIconAlias, setPlainIcon } from './icon-match.js';
-import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT } from './calc.js';
+import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT, SET_TYPES } from './calc.js';
 
 export const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
@@ -403,10 +403,10 @@ const mkWorkout = (name, color = 0, slotId = uid()) => ({ id: uid(), slotId, nam
 const mkWeek = (name) => ({ id: uid(), name, workouts: [] });
 
 const cloneWorkout = (w, keepSlot) => ({
-  id: uid(), slotId: keepSlot ? w.slotId : uid(), name: w.name, color: w.color ?? 0,
+  id: uid(), slotId: keepSlot ? w.slotId : uid(), name: w.name, color: w.color ?? 0, ...(w.note ? { note: w.note } : {}),
   items: w.items.map((it) => ({ id: uid(), exerciseId: it.exerciseId, ...(it.notes ? { notes: { ...it.notes } } : {}), sets: it.sets.map((s) => ({ ...s, id: uid() })) })),
 });
-const cloneWeek = (wk, name, keepSlots) => ({ id: uid(), name, workouts: wk.workouts.map((w) => cloneWorkout(w, keepSlots)) });
+const cloneWeek = (wk, name, keepSlots) => ({ id: uid(), name, ...(wk.note ? { note: wk.note } : {}), workouts: wk.workouts.map((w) => cloneWorkout(w, keepSlots)) });
 
 export const routineById = (id) => data.routines.find((r) => r.id === id);
 export const weekById = (routineId, weekId) => routineById(routineId)?.weeks.find((w) => w.id === weekId);
@@ -468,7 +468,7 @@ export function duplicateRoutine(id) {
   const copy = {
     id: uid(), name: r.name + ' (copy)', createdAt: now(), ...(r.goal ? { goal: r.goal } : {}),
     weeks: r.weeks.map((wk) => ({
-      id: uid(), name: wk.name,
+      id: uid(), name: wk.name, ...(wk.note ? { note: wk.note } : {}),
       workouts: wk.workouts.map((w) => {
         if (!slotMap.has(w.slotId)) slotMap.set(w.slotId, uid());
         const c = cloneWorkout(w, false);
@@ -493,6 +493,64 @@ export function addWeek(routineId, { copyFromWeekId = null, name } = {}) {
 }
 export function renameWeek(routineId, weekId, name) { const w = weekById(routineId, weekId); w.name = norm(name) || w.name; touch(); }
 export function deleteWeek(routineId, weekId) { const r = routineById(routineId); r.weeks = r.weeks.filter((w) => w.id !== weekId); touch(); }
+// ---- Programme import -------------------------------------------------------
+// A shareable JSON plan (no logs, no settings) added as a NEW programme. Nothing already on the phone changes.
+// { app: 'lift-programme', v: 1, name, goal?, weeks: [{ name, note?, workouts: [{ name, slot?, color?, deload?, note?,
+//   items: [{ exercise: 'Back Squat', notes?: { cues?, general? }, sets: [{ type?, reps?, weight?, rir? }] }] }] }] }
+// Workouts with the same name (or slot) in different weeks share history, like a copied week.
+const SET_IDS = new Set(SET_TYPES.map((t) => t.id));
+function exerciseForImport(name) {
+  name = norm(name);
+  if (!name) return null;
+  const found = findExerciseByName(name);
+  if (found) { found.archived = false; return found; }
+  if (CATALOG_NAMES().has(name.toLowerCase())) {          // a library exercise you had deleted: comes back with its drawing
+    const e = { id: uid(), name, archived: false };
+    data.exercises.push(e);
+    return e;
+  }
+  return addExercise(name);                                // anything else: your own exercise, plain icon
+}
+export function importProgramme(p) {
+  if (!p || p.app !== 'lift-programme' || !Array.isArray(p.weeks) || !p.weeks.length) throw new Error('That file isn’t a LIFT programme.');
+  const str = (x, max = 4000) => String(x ?? '').trim().slice(0, max);
+  const slots = new Map();
+  const before = data.exercises.length;
+  const goal = str(p.goal, 240);
+  const r = { id: uid(), name: norm(str(p.name, 80)) || 'Imported programme', createdAt: now(), ...(goal ? { goal } : {}), weeks: [] };
+  for (const wk of p.weeks) {
+    const week = mkWeek(norm(str(wk && wk.name, 60)) || `Week ${r.weeks.length + 1}`);
+    if (str(wk && wk.note)) week.note = str(wk.note);
+    for (const w of (wk && Array.isArray(wk.workouts) ? wk.workouts : [])) {
+      const name = norm(str(w.name, 60)) || 'Workout';
+      const key = str(w.slot ?? name).toLowerCase();
+      if (!slots.has(key)) slots.set(key, uid());
+      const color = Number.isInteger(w.color) ? Math.abs(w.color) % WORKOUT_COLORS.length : 0;
+      const wo = mkWorkout(name, color, slots.get(key));
+      if (str(w.note)) wo.note = str(w.note);
+      if (w.deload) wo.deload = true;
+      for (const it of (Array.isArray(w.items) ? w.items : [])) {
+        const ex = exerciseForImport(str(it && it.exercise, 80));
+        if (!ex) continue;
+        const item = { id: uid(), exerciseId: ex.id, sets: [] };
+        const cues = str(it.notes && it.notes.cues), general = str(it.notes && it.notes.general);
+        if (cues || general) item.notes = { ...(cues ? { cues } : {}), ...(general ? { general } : {}) };
+        for (const s of (Array.isArray(it.sets) ? it.sets : [])) {
+          const wt = s.weight == null || s.weight === '' ? null : Number(s.weight);
+          const rir = str(s.rir, 3);
+          item.sets.push(mkSet({ type: SET_IDS.has(s.type) ? s.type : 'normal', reps: str(s.reps, 12), weight: Number.isFinite(wt) ? wt : null, ...(rir ? { rir } : {}) }));
+        }
+        wo.items.push(item);
+      }
+      week.workouts.push(wo);
+    }
+    r.weeks.push(week);
+  }
+  data.routines.push(r);
+  touch();
+  return { routine: r, weeks: r.weeks.length, workouts: r.weeks.reduce((n, x) => n + x.workouts.length, 0), newExercises: data.exercises.length - before };
+}
+
 export function duplicateWeek(routineId, weekId) {
   const r = routineById(routineId);
   const src = r.weeks.find((w) => w.id === weekId);
@@ -593,6 +651,7 @@ export function startSession(workoutId) {
     id: uid(), routineId: routine.id, weekId: week.id, workoutId: workout.id, slotId: workout.slotId,
     routineName: routine.name, weekName: week.name, workoutName: workout.name,
     startedAt: now(), finishedAt: null, color: workout.color ?? 0, deload: !!workout.deload,
+    ...(workout.note ? { planNote: workout.note } : {}),
     entries: workout.items.map((it) => ({
       id: uid(), exerciseId: it.exerciseId, exerciseName: exerciseName(it.exerciseId), notes: it.notes ? { ...it.notes } : {},
       sets: it.sets.map((p) => ({ id: uid(), type: p.type, weight: null, reps: null, done: false, tw: p.weight ?? null, tr: p.reps ?? '', ...(p.rir ? { trir: p.rir } : {}) })),
