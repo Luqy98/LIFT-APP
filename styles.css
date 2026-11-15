@@ -1052,3 +1052,10 @@ img, svg, canvas { -webkit-user-drag: none; }
 .empty-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
 .btn-pill { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; min-height: 44px; padding: 0 22px 0 18px; }
 .btn-outline { background: transparent; box-shadow: none; border: 1.5px solid color-mix(in srgb, var(--accent) 65%, transparent); color: var(--accent); }
+
+/* ---- 2.35.0 searchable choice sheet ---- */
+.choice-search-wrap { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+.choice-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.choice-search-wrap > .search, .choice-search-wrap > .btn { flex: none; }
+.choice-none { text-align: center; color: var(--muted); padding: 24px 8px; margin: 0; }
+.choice[hidden] { display: none; }

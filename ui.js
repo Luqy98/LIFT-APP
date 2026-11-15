@@ -335,7 +335,7 @@ export function formDialog({ title, message, fields = [], checks = [], ok = 'Sav
 }
 
 /** options: [{label, sub, value, danger, selected}] -> chosen value | null */
-export function choiceSheet({ title, message, options, cancel = true, compact = false }) {
+export function choiceSheet({ title, message, options, cancel = true, compact = false, searchable = false }) {
   return new Promise((resolve) => {
     let finished = false;
     const finish = (v) => { if (!finished) { finished = true; resolve(v); } };
@@ -346,9 +346,20 @@ export function choiceSheet({ title, message, options, cancel = true, compact = 
       },
       h('span', { class: 'choice-main' }, h('span', { class: 'choice-label', text: o.label }), o.sub ? h('span', { class: 'choice-sub', text: o.sub }) : null),
       o.selected ? icon('check', 20) : null)));
-    const { close } = sheet(h('div', {}, message ? h('p', { class: 'sheet-msg', text: message }) : null, list,
+    let search = null, none = null;
+    if (searchable) {
+      none = h('p', { class: 'choice-none', text: 'No exercises match that search.', hidden: true });
+      search = h('input', { class: 'search', type: 'search', placeholder: 'Search exercises', 'aria-label': 'Search exercises', autocomplete: 'off', autocapitalize: 'none', spellcheck: 'false',
+        oninput: () => {
+          const q = search.value.trim().toLowerCase(); let shown = 0;
+          [...list.children].forEach((b, i) => { const ok = !q || options[i].label.toLowerCase().includes(q); b.hidden = !ok; if (ok) shown++; });
+          none.hidden = shown > 0; list.scrollTop = 0;
+        } });
+    }
+    const { close, panel } = sheet(h('div', { class: searchable ? 'choice-search-wrap' : '' }, message ? h('p', { class: 'sheet-msg', text: message }) : null, search, searchable ? h('div', { class: 'choice-scroll' }, list, none) : list,
       cancel ? h('button', { class: 'btn btn-block', text: 'Cancel', onclick: () => { finish(null); close(); } }) : null),
     { title, onClose: () => finish(null) });
+    if (searchable) panel.classList.add('sheet-picker');
   });
 }
 

@@ -33,7 +33,7 @@ async function addTarget() {
   const free = S.data.exercises.filter((e) => !e.archived && !have.has(e.id)).sort((a, b) => a.name.localeCompare(b.name));
   if (!free.length) { toast('Every exercise already has a target'); return; }
   const id = await choiceSheet({
-    title: 'Target for which exercise?', compact: true,
+    title: 'Target for which exercise?', compact: true, searchable: true,
     options: free.map((e) => { const b = S.bestE1rm(e.id); return { label: e.name, sub: b != null ? `Best 1RM ${fmt(b)} kg` : 'No 1RM logged yet', value: e.id }; }),
   });
   if (!id) return;

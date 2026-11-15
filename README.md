@@ -319,3 +319,7 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Fixed glutes missing from the body map. Squats, split squats, leg press, deadlifts, RDLs, hip thrusts, sled pushes and every other glute exercise now count them.
 - Deadlifts: glutes, hamstrings and lower back are now primary, and the upper back (traps, lats, mid back) secondary. RDLs: hamstrings and glutes primary, lower back secondary.
 - Leg curls no longer list glutes. Split squats and lunges add glute medius as secondary. Seated calf raises now count the soleus as primary.
+
+## 2.35.0
+- Added a search box to the Targets exercise picker, so you can find an exercise by typing instead of scrolling.
+- Fixed the body map back view: the Adductors area no longer includes a strip at the top of the neck or small slivers at the outer hips. It now covers only the inner thighs.
