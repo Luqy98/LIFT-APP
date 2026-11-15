@@ -266,3 +266,9 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.27.3
 - Exercises without an illustration (such as ones you add yourself) now show just the dumbbell from the app logo, black in light mode and white in dark mode, instead of a stick figure.
+
+## 2.28.0
+- Pictures now only show when an exercise is named exactly like one in the default library. Anything else, including exercises you add yourself or rename, shows the plain dumbbell.
+- You can no longer press and hold to highlight or copy text anywhere in the app. Text can only be selected inside the boxes you type in. This also stops the highlighting when you drag to reorder.
+- Added Overhead Press (Smith Machine) to the library, with its pictures, for new and existing libraries.
+- Removed the Library Changes button. The default list is final.

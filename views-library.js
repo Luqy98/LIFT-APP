@@ -5,7 +5,6 @@ import * as nav from './nav.js';
 import { fmtDate } from './calc.js';
 import { exerciseArt } from './art.js';
 import { groupFor, musclesOf, MUSCLE_GROUPS, MUSCLES_BY_GROUP, MUSCLE_REGIONS, MUSCLE_HINTS } from './muscles.js';
-import { catalogNames, isCatalogRename } from './catalog.js';
 import { selectMovement } from './views-dash.js';
 
 const lib = { q: '', g: 'All' };
@@ -58,32 +57,6 @@ function editMuscles(e) {
       } })));
   const box = sheet(body, { title: `Muscles · ${e.name}`, wide: true });
   draw();
-}
-
-/** Default-library exercises you deleted, and ones you renamed (old -> new), to send over so they change the default for everyone. */
-function libraryChanges() {
-  const have = new Set(S.data.exercises.flatMap((e) => [e.name.toLowerCase(), ...(e.from ? [e.from.toLowerCase()] : [])]));
-  const removed = catalogNames().filter((n) => !have.has(n.toLowerCase())).sort((a, b) => a.localeCompare(b));
-  const renamed = S.data.exercises.filter((e) => e.from && e.from !== e.name && !isCatalogRename(e.from, e.name)).sort((a, b) => a.from.localeCompare(b.from)).map((e) => `${e.from} -> ${e.name}`);
-  return { removed, renamed };
-}
-function showChanges() {
-  const { removed, renamed } = libraryChanges();
-  const parts = [];
-  if (removed.length) parts.push(`REMOVED (${removed.length})`, ...removed);
-  if (renamed.length) parts.push(...(parts.length ? [''] : []), `RENAMED (${renamed.length})`, ...renamed);
-  const text = parts.join('\n');
-  const any = removed.length || renamed.length;
-  const area = h('textarea', { class: 'search removed-list', rows: '10', readonly: 'true', 'aria-label': 'Library changes', text });
-  const box = sheet(h('div', {},
-    h('p', { class: 'sheet-msg', text: any ? `${removed.length} removed, ${renamed.length} renamed. Copy the list and send it over to change the default for everyone.` : 'You haven’t removed or renamed any default exercises yet.' }),
-    any ? area : null,
-    h('div', { class: 'sheet-actions' },
-      h('button', { class: 'btn', text: 'Close', onclick: () => box.close() }),
-      any ? h('button', { class: 'btn btn-primary', text: 'Copy List', onclick: async () => {
-        try { await navigator.clipboard.writeText(text); toast('List copied'); } catch { area.focus(); area.select(); toast('Select the text and copy it'); }
-      } }) : null)),
-  { title: 'Library Changes' });
 }
 
 async function movementMenu(e, stats) {
@@ -155,7 +128,6 @@ export function movementsRoot() {
     content: h('div', { class: 'page' }, search,
       h('div', { class: 'chips-row', role: 'group', 'aria-label': 'Filter by group' }, ['All', ...MUSCLE_GROUPS].map((g) =>
         h('button', { type: 'button', class: 'fchip' + (lib.g === g ? ' is-on' : ''), 'aria-pressed': String(lib.g === g), text: g, onclick: () => { lib.g = g; nav.refresh(); } }))),
-      list, archivedBox,
-      h('button', { class: 'btn btn-block', text: 'Library Changes', onclick: showChanges })),
+      list, archivedBox),
   };
 }

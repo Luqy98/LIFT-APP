@@ -9,7 +9,7 @@
 
 import * as C from './crypto.js';
 import { ICONS } from './icons.js';
-import { catalogNames, CATALOG_DROP, CATALOG_RENAMES, isCatalogRename } from './catalog.js';
+import { catalogNames, CATALOG_ADD, CATALOG_DROP, CATALOG_RENAMES, isCatalogRename } from './catalog.js';
 import { setIconAlias } from './icon-match.js';
 import { setStats, e1rm, weekStart, WORKOUT_COLORS, DELOAD_PCT } from './calc.js';
 
@@ -178,6 +178,14 @@ function migrate() {
       seen.add(name.toLowerCase());
       data.exercises.push({ id: uid(), name, archived: false });
     }
+    planChanged = true;
+  }
+  // Exercises added to the default library later: add each to existing libraries once (a fresh library already has them).
+  data.catalogExtra = data.catalogExtra || [];
+  for (const name of CATALOG_ADD) {
+    if (data.catalogExtra.includes(name)) continue;
+    data.catalogExtra.push(name);
+    if (!data.exercises.some((x) => x.name.toLowerCase() === name.toLowerCase())) data.exercises.push({ id: uid(), name, archived: false });
     planChanged = true;
   }
   // Catalog exercises later dropped from the default: take them out of libraries that got them, unless you've used them.

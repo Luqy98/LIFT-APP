@@ -957,7 +957,6 @@ body { position: fixed; inset: 0; width: 100%; }
 
 .ex-row { content-visibility: auto; contain-intrinsic-size: auto 68px; }
 
-.removed-list { width: 100%; font-size: 13px; resize: none; }
 
 /* Body map */
 .bm-wrap { display: flex; flex-direction: column; gap: 10px; align-items: center; }
@@ -1002,3 +1001,8 @@ body { position: fixed; inset: 0; width: 100%; }
 .sort-item { padding: 10px 6px 10px 12px; gap: 12px; }
 .sort-item .row-main { padding: 4px 4px 4px 0; }
 .art-plain { display: block; fill: currentColor; stroke: none; }
+
+/* ---- 2.28.0: the app is not selectable text; only fields you type in are ---- */
+html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, select, [contenteditable="true"], [contenteditable=""] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+img, svg, canvas { -webkit-user-drag: none; }
