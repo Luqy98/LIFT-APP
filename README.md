@@ -232,3 +232,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.23.1
 - Body Map: new model artwork with no shorts, so the hips and the backs of the legs are visible. Hip Flexors now have their own area at the top of each thigh on the front view.
+
+## 2.24.0
+- Body Map: tap areas now follow the real muscle borders on the artwork (upper/mid/lower chest, delt heads, bicep and tricep heads, the four forearm flexors, quad heads, hamstrings, calf heads) instead of a hand trace.

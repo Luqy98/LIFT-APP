@@ -7,11 +7,11 @@ import { musclesOf, MUSCLES, MUSCLES_BY_GROUP, MUSCLE_HINTS } from './muscles.js
 
 // Painted regions of each view, in the order they are numbered in img/map/<view>-map.png (1, 2, 3, ...).
 const REGIONS = {
-  front: ['Upper Traps', 'Side Delts', 'Front Delts', 'Upper Chest', 'Mid Chest', 'Lower Chest', 'Obliques', 'Upper Abs', 'Lower Abs', 'Biceps Long Head', 'Biceps Short Head', 'Brachialis', 'Triceps Lateral Head', 'Brachioradialis', 'Wrist Flexors', 'Vastus Lateralis', 'Rectus Femoris', 'Adductors', 'Vastus Medialis', 'Tibialis', 'Gastrocnemius', 'Hip Flexors'],
-  back: ['Upper Traps', 'Mid Back', 'Side Delts', 'Rear Delts', 'Rotator Cuff', 'Lats', 'Lower Back', 'Triceps Long Head', 'Triceps Lateral Head', 'Triceps Medial Head', 'Wrist Extensors', 'Glutes', 'Glute Medius', 'Outer Hamstrings', 'Inner Hamstrings', 'Gastrocnemius', 'Soleus'],
+  front: ['Upper Traps', 'Side Delts', 'Front Delts', 'Upper Chest', 'Mid Chest', 'Lower Chest', 'Obliques', 'Upper Abs', 'Lower Abs', 'Biceps Long Head', 'Biceps Short Head', 'Brachialis', 'Triceps Lateral Head', 'Brachioradialis', 'Flexor Carpi Radialis', 'Flexor Carpi Ulnaris', 'Palmaris Longus', 'Flexor Digitorum Superficialis', 'Hip Flexors', 'Vastus Lateralis', 'Rectus Femoris', 'Vastus Medialis', 'Adductors', 'Tibialis', 'Gastrocnemius'],
+  back: ['Upper Traps', 'Mid Back', 'Rear Delts', 'Side Delts', 'Rotator Cuff', 'Lats', 'Lower Back', 'Triceps Long Head', 'Triceps Lateral Head', 'Triceps Medial Head', 'Wrist Extensors', 'Brachioradialis', 'Glutes', 'Glute Medius', 'Adductors', 'Outer Hamstrings', 'Inner Hamstrings', 'Gastrocnemius Medial', 'Gastrocnemius Lateral', 'Soleus'],
 };
-// A painted area that covers several muscles (the front of the forearm).
-const AREA = { 'Wrist Flexors': ['Flexor Carpi Radialis', 'Flexor Carpi Ulnaris', 'Palmaris Longus', 'Flexor Digitorum Superficialis'] };
+// Painted areas that stand for a muscle with another name (the two calf heads are the same muscle).
+const AREA = { 'Gastrocnemius Medial': ['Gastrocnemius'], 'Gastrocnemius Lateral': ['Gastrocnemius'] };
 const musclesIn = (region) => AREA[region] || [region];
 const PRIMARY = [139, 92, 246], SECONDARY = [34, 211, 238], PICK = [250, 204, 21];
 
@@ -198,7 +198,7 @@ function mapPanel(by, weeks) {
     const region = REGIONS[st.view][l - 1];
     st.pick = region; paint(canvas, map, st.view, by, region, luma, dark);
     const note = musclesIn(region).length > 1 ? `Covers: ${musclesIn(region).join(', ')}` : MUSCLE_HINTS[region] || '';
-    showDetail(region === 'Wrist Flexors' ? 'Forearm Flexors' : region, areaStats(by, region), weeks, note);
+    showDetail(musclesIn(region)[0], areaStats(by, region), weeks, note);
   });
   show(st.view);
   return h('div', { class: 'bm-wrap' },
