@@ -27,6 +27,7 @@ const STARTER = [
 // Exercises added to existing libraries by later versions (each is added once, only if you don't already have one by that name).
 const LIBRARY_ADDITIONS = [
   'Dumbbell Press', 'Chest Press Machine', 'Pec Deck', 'Chest Fly High to Low', 'Chest Fly Low to High', 'JM Press', 'JM Press Machine',
+  'Cable Curl (Single Arm)', 'Incline Bench Press (Smith Machine)', 'Triceps Extension Cable (Single-Arm)', 'Triceps Pushdown Single-Arm (Cable)', 'Sulek Curl',
 ];
 
 const DEFAULT_SETTINGS = { name: 'Luqy', weeklyGoal: 4, theme: 'dark', formula: 'blend', maxReps: 10, restSec: 120, autoLockMin: 5, lastBackup: null };

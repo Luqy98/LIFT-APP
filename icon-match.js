@@ -2,6 +2,8 @@
 import { ICONS } from './icons.js';
 
 const ALIASES = {
+  'cable curl single arm': 'Cable Curl (Straight Bar)', 'triceps extension cable single arm': 'Overhead Triceps Extension (Cable)',
+  'triceps pushdown single arm cable': 'Triceps Pushdown (Straight Bar)', 'sulek curl': 'Wrist Curl (Cable)',
   'bench press': 'Bench Press (Barbell)', bench: 'Bench Press (Barbell)', 'flat bench press': 'Bench Press (Barbell)',
   'incline bench press': 'Incline Bench Press (Barbell)', 'incline db press': 'Incline Bench Press (Dumbbell)',
   'incline dumbbell press': 'Incline Bench Press (Dumbbell)', 'dumbbell press': 'Bench Press (Dumbbell)', 'db press': 'Bench Press (Dumbbell)',
@@ -65,7 +67,7 @@ function baseIcon(name) {
   const { byKey, bySorted, byBase, list } = INDEX;
   const k = keyOf(raw);
   const alias = ALIASES[raw.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()];
-  if (alias) return byKey.get(keyOf(alias)) || null;
+  if (alias) return V2.get(alias.toLowerCase()) || byKey.get(keyOf(alias)) || null;
   if (byKey.has(k)) return byKey.get(k);
   const sk = sortedKey(raw);
   if (bySorted.has(sk)) return bySorted.get(sk);

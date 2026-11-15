@@ -4,7 +4,7 @@ import * as S from './store.js';
 import * as nav from './nav.js';
 import { fmtDate } from './calc.js';
 import { exerciseArt } from './art.js';
-import { groupFor, musclesOf, MUSCLE_GROUPS, MUSCLES_BY_GROUP } from './muscles.js';
+import { groupFor, musclesOf, MUSCLE_GROUPS, MUSCLES_BY_GROUP, MUSCLE_REGIONS, MUSCLE_HINTS } from './muscles.js';
 import { catalogNames, isCatalogRename } from './catalog.js';
 import { selectMovement } from './views-dash.js';
 
@@ -32,9 +32,11 @@ function editMuscles(e) {
   const draw = () => rows.forEach((r) => r());
   const body = h('div', { class: 'mus-edit' },
     h('p', { class: 'sheet-msg', text: 'Primary muscles do the main work. Secondary muscles assist. The body map uses these.' }),
-    ...MUSCLES_BY_GROUP.map(([g, list]) => h('div', { class: 'mus-group' },
-      h('h3', { class: 'mus-head', text: g }),
-      ...list.map((name) => {
+    ...MUSCLE_REGIONS.map(([region, groups]) => h('section', { class: 'mus-region' },
+      h('h2', { class: 'mus-region-head', text: region }),
+      ...groups.map((g) => h('div', { class: 'mus-group' },
+      groups.length > 1 || g !== region ? h('h3', { class: 'mus-head', text: g }) : null,
+      ...MUSCLES_BY_GROUP.find(([x]) => x === g)[1].map((name) => {
         const btns = [['', 'Off'], ['primary', 'Primary'], ['secondary', 'Secondary']].map(([val, label]) =>
           h('button', { type: 'button', class: 'fchip', text: label, onclick: () => { if (val) state.set(name, val); else state.delete(name); draw(); } }));
         rows.push(() => btns.forEach((b, i) => {
@@ -42,8 +44,10 @@ function editMuscles(e) {
           b.classList.toggle('is-on', on);
           b.setAttribute('aria-pressed', String(on));
         }));
-        return h('div', { class: 'mus-row' }, h('span', { class: 'mus-name', text: name }), h('div', { class: 'mus-opts' }, ...btns));
-      }))),
+        return h('div', { class: 'mus-row' },
+          h('span', { class: 'mus-name' }, name, MUSCLE_HINTS[name] ? h('small', { class: 'mus-hint', text: MUSCLE_HINTS[name] }) : null),
+          h('div', { class: 'mus-opts' }, ...btns));
+      }))))),
     h('div', { class: 'sheet-actions' },
       h('button', { class: 'btn', text: 'Reset', onclick: () => { S.setExerciseMuscles(e.id, null); box.close(); toast('Back to the default muscles'); nav.refresh(); } }),
       h('button', { class: 'btn btn-primary', text: 'Save', onclick: () => {

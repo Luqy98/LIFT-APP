@@ -6,7 +6,7 @@ export const MUSCLES = [
   'Upper Chest', 'Mid Chest', 'Lower Chest',
   'Front Delts', 'Side Delts', 'Rear Delts', 'Rotator Cuff',
   'Biceps Long Head', 'Biceps Short Head', 'Brachialis', 'Triceps Long Head', 'Triceps Lateral Head', 'Triceps Medial Head',
-  'Wrist Flexors', 'Wrist Extensors', 'Brachioradialis',
+  'Flexor Carpi Radialis', 'Flexor Carpi Ulnaris', 'Palmaris Longus', 'Flexor Digitorum Superficialis', 'Wrist Extensors', 'Brachioradialis',
   'Upper Traps', 'Lats', 'Mid Back', 'Lower Back',
   'Upper Abs', 'Lower Abs', 'Obliques', 'Hip Flexors',
   'Rectus Femoris', 'Vastus Lateralis', 'Vastus Medialis', 'Outer Hamstrings', 'Inner Hamstrings',
@@ -22,7 +22,8 @@ const SIMPLE = {
 // Old (2.13.0) names saved by the user's own choices -> the new, more specific names.
 const LEGACY = {
   Chest: ['Mid Chest'], Biceps: ['Biceps Long Head', 'Biceps Short Head'], Triceps: ['Triceps Long Head', 'Triceps Lateral Head', 'Triceps Medial Head'],
-  Forearms: ['Wrist Flexors'], Traps: ['Upper Traps'], Abs: ['Upper Abs', 'Lower Abs'], Quads: ['Rectus Femoris', 'Vastus Lateralis', 'Vastus Medialis'],
+  Forearms: ['Flexor Carpi Radialis', 'Flexor Carpi Ulnaris', 'Palmaris Longus'],
+  'Wrist Flexors': ['Flexor Carpi Radialis', 'Flexor Carpi Ulnaris', 'Palmaris Longus'], Traps: ['Upper Traps'], Abs: ['Upper Abs', 'Lower Abs'], Quads: ['Rectus Femoris', 'Vastus Lateralis', 'Vastus Medialis'],
   Hamstrings: ['Outer Hamstrings', 'Inner Hamstrings'], Calves: ['Gastrocnemius'], Abductors: ['Glute Medius'],
 };
 
@@ -48,13 +49,15 @@ function detail(n, pk, sk) {
       return put(role, 'Triceps Long Head', 'Triceps Lateral Head', 'Triceps Medial Head');
     }
     if (k === 'fa') {
+      const FLEX = ['Flexor Carpi Radialis', 'Flexor Carpi Ulnaris', 'Palmaris Longus'];
+      if (is(/sulek/)) return put(role, ...FLEX, 'Flexor Digitorum Superficialis');
       if (is(/reverse wrist/)) return put(role, 'Wrist Extensors');
-      if (is(/forearm roller/)) return put(role, 'Wrist Flexors', 'Wrist Extensors');
-      if (is(/wrist curl/)) return put(role, 'Wrist Flexors');
+      if (is(/forearm roller/)) return put(role, ...FLEX, 'Wrist Extensors');
+      if (is(/wrist curl/)) { put(role, ...FLEX); return put('secondary', 'Flexor Digitorum Superficialis'); }
       if (is(/reverse curl/)) return put(role, 'Brachioradialis', 'Wrist Extensors');
       if (is(/hammer|zottman/)) return put(role, 'Brachioradialis');
-      put(role, 'Wrist Flexors');
-      return prim ? put('secondary', 'Wrist Extensors') : undefined;
+      put(role, 'Flexor Digitorum Superficialis');   // grip
+      return prim ? put('secondary', 'Flexor Carpi Ulnaris', 'Flexor Carpi Radialis') : undefined;
     }
     if (k === 'ab') {
       const lower = is(/leg raise|knee raise|knee tuck|toes to bar|reverse crunch|l-sit|v-up|jackknife|scissor|flutter|lying leg|hanging|captains|dead bug/);
@@ -136,6 +139,7 @@ const RULES = [
   // --- arms ---
   [/skull|triceps|tricep|pushdown|push down|kickback \(dumbbell\)|single-arm kickback|overhead extension|overhead triceps|extension \(neutral|jm|rope overhead/, 'tri', ''],
   // --- forearms and carries ---
+  [/sulek/, 'fa', 'bi'],
   [/wrist curl|forearm roller|plate pinch|dead hang/, 'fa', ''],
   [/suitcase/, 'ob fa', 'tr ab gl'],
   [/overhead carry/, 'fd tr', 'ab ob fa rc'],
@@ -211,17 +215,51 @@ export function musclesOf(ex) {
   return r ? { ...r, custom: false } : { primary: [], secondary: [], custom: false };
 }
 
-// High-level groups for filtering. A group is decided by the first primary muscle.
-export const MUSCLE_GROUPS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core'];
+// Groups for filtering and the muscle editor, each inside a body region. A group is decided by the first primary muscle.
+export const MUSCLE_REGIONS = [
+  ['Upper Body', ['Chest', 'Back', 'Shoulders']],
+  ['Arms', ['Biceps', 'Triceps', 'Forearms']],
+  ['Core', ['Core']],
+  ['Legs', ['Quads', 'Hamstrings', 'Glutes', 'Calves']],
+];
+export const MUSCLE_GROUPS = MUSCLE_REGIONS.flatMap(([, g]) => g);
 const GROUP_OF = {
   'Upper Chest': 'Chest', 'Mid Chest': 'Chest', 'Lower Chest': 'Chest',
   'Front Delts': 'Shoulders', 'Side Delts': 'Shoulders', 'Rear Delts': 'Shoulders', 'Rotator Cuff': 'Shoulders',
-  'Biceps Long Head': 'Arms', 'Biceps Short Head': 'Arms', Brachialis: 'Arms', 'Triceps Long Head': 'Arms', 'Triceps Lateral Head': 'Arms', 'Triceps Medial Head': 'Arms',
-  'Wrist Flexors': 'Arms', 'Wrist Extensors': 'Arms', Brachioradialis: 'Arms',
+  'Biceps Long Head': 'Biceps', 'Biceps Short Head': 'Biceps', Brachialis: 'Biceps',
+  'Triceps Long Head': 'Triceps', 'Triceps Lateral Head': 'Triceps', 'Triceps Medial Head': 'Triceps',
+  'Flexor Carpi Radialis': 'Forearms', 'Flexor Carpi Ulnaris': 'Forearms', 'Palmaris Longus': 'Forearms', 'Flexor Digitorum Superficialis': 'Forearms',
+  'Wrist Extensors': 'Forearms', Brachioradialis: 'Forearms',
   'Upper Traps': 'Back', Lats: 'Back', 'Mid Back': 'Back', 'Lower Back': 'Back',
   'Upper Abs': 'Core', 'Lower Abs': 'Core', Obliques: 'Core', 'Hip Flexors': 'Core',
-  'Rectus Femoris': 'Legs', 'Vastus Lateralis': 'Legs', 'Vastus Medialis': 'Legs', 'Outer Hamstrings': 'Legs', 'Inner Hamstrings': 'Legs',
-  Glutes: 'Legs', 'Glute Medius': 'Legs', Adductors: 'Legs', Gastrocnemius: 'Legs', Soleus: 'Legs', Tibialis: 'Legs',
+  'Rectus Femoris': 'Quads', 'Vastus Lateralis': 'Quads', 'Vastus Medialis': 'Quads',
+  'Outer Hamstrings': 'Hamstrings', 'Inner Hamstrings': 'Hamstrings',
+  Glutes: 'Glutes', 'Glute Medius': 'Glutes', Adductors: 'Glutes',
+  Gastrocnemius: 'Calves', Soleus: 'Calves', Tibialis: 'Calves',
+};
+/** Plain-English pointer for the less obvious muscle names. */
+export const MUSCLE_HINTS = {
+  'Rotator Cuff': 'Small shoulder stabilisers',
+  Brachialis: 'Under the biceps',
+  'Flexor Carpi Radialis': 'Inner forearm, thumb side',
+  'Flexor Carpi Ulnaris': 'Inner forearm, little-finger side',
+  'Palmaris Longus': 'Middle of the inner forearm',
+  'Flexor Digitorum Superficialis': 'Deep inner forearm, grip',
+  'Wrist Extensors': 'Top of the forearm',
+  Brachioradialis: 'Top of the forearm, near the elbow',
+  'Upper Traps': 'Between neck and shoulders',
+  'Mid Back': 'Rhomboids and middle traps',
+  'Hip Flexors': 'Front of the hip',
+  'Rectus Femoris': 'Middle of the thigh',
+  'Vastus Lateralis': 'Outer thigh',
+  'Vastus Medialis': 'Inner thigh, above the knee',
+  'Outer Hamstrings': 'Biceps femoris',
+  'Inner Hamstrings': 'Semitendinosus and semimembranosus',
+  'Glute Medius': 'Side of the hip',
+  Adductors: 'Inner thigh',
+  Gastrocnemius: 'Upper calf',
+  Soleus: 'Lower calf, under the gastrocnemius',
+  Tibialis: 'Front of the shin',
 };
 export function groupFor(nameOrExercise) {
   const mm = typeof nameOrExercise === 'string' ? musclesFor(nameOrExercise) : musclesOf(nameOrExercise);
