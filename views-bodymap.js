@@ -8,12 +8,28 @@ import { musclesOf, MUSCLES, MUSCLES_BY_GROUP, MUSCLE_HINTS } from './muscles.js
 // Painted regions of each view, in the order they are numbered in img/map/<view>-map.png (1, 2, 3, ...).
 const REGIONS = {
   front: ['Upper Traps', 'Side Delts', 'Front Delts', 'Upper Chest', 'Mid Chest', 'Lower Chest', 'Obliques', 'Upper Abs', 'Lower Abs', 'Biceps Long Head', 'Biceps Short Head', 'Brachialis', 'Triceps Lateral Head', 'Brachioradialis', 'Flexor Carpi Radialis', 'Flexor Carpi Ulnaris', 'Palmaris Longus', 'Flexor Digitorum Superficialis', 'Hip Flexors', 'Vastus Lateralis', 'Rectus Femoris', 'Vastus Medialis', 'Adductors', 'Tibialis', 'Gastrocnemius'],
-  back: ['Upper Traps', 'Mid Back', 'Rear Delts', 'Side Delts', 'Rotator Cuff', 'Lats', 'Lower Back', 'Triceps Long Head', 'Triceps Lateral Head', 'Triceps Medial Head', 'Wrist Extensors', 'Brachioradialis', 'Glutes', 'Glute Medius', 'Adductors', 'Outer Hamstrings', 'Inner Hamstrings', 'Gastrocnemius Medial', 'Gastrocnemius Lateral', 'Soleus'],
+  back: ['Upper Traps', 'Mid Back', 'Rear Delts', 'Side Delts', 'Lats', 'Lower Back', 'Triceps Long Head', 'Triceps Lateral Head', 'Triceps Medial Head', 'Wrist Extensors', 'Brachioradialis', 'Glutes', 'Glute Medius', 'Adductors', 'Outer Hamstrings', 'Inner Hamstrings', 'Gastrocnemius Medial', 'Gastrocnemius Lateral', 'Soleus'],
 };
 // Painted areas that stand for a muscle with another name (the two calf heads are the same muscle).
 const AREA = { 'Gastrocnemius Medial': ['Gastrocnemius'], 'Gastrocnemius Lateral': ['Gastrocnemius'] };
 const musclesIn = (region) => AREA[region] || [region];
-const PRIMARY = [139, 92, 246], SECONDARY = [34, 211, 238], PICK = [250, 204, 21];
+const PICK = [250, 204, 21];
+// Every muscle has its own colour; how strong it is shows how much work it gets (primary sets count in full, secondary sets count half).
+const HEX = {
+  'Upper Chest': 'ff6b8a', 'Mid Chest': 'e8346b', 'Lower Chest': 'c2185b',
+  'Front Delts': 'ff9f43', 'Side Delts': 'ffc83d', 'Rear Delts': 'ff7043',
+  'Upper Traps': '8b6cff', 'Mid Back': '4f7cff', 'Lats': '29b6f6', 'Lower Back': '1fc8b4',
+  'Biceps Long Head': '7bd957', 'Biceps Short Head': '3fbf6a', 'Brachialis': 'b2e05a', 'Brachioradialis': 'd4e157',
+  'Triceps Lateral Head': 'b36bff', 'Triceps Long Head': '9a4fe8', 'Triceps Medial Head': 'd2a6ff',
+  'Flexor Carpi Radialis': '26c6da', 'Flexor Carpi Ulnaris': '0aa5b5', 'Palmaris Longus': '57d9e6', 'Flexor Digitorum Superficialis': '8fe3ee', 'Wrist Extensors': '00b894',
+  'Upper Abs': 'ffd166', 'Lower Abs': 'f4a261', 'Obliques': 'e76f51',
+  'Hip Flexors': 'd36ae0', 'Adductors': 'ff6fb5',
+  'Vastus Lateralis': '4361ee', 'Rectus Femoris': '4a90f0', 'Vastus Medialis': '4cc9f0',
+  'Outer Hamstrings': '06c996', 'Inner Hamstrings': '1b8f9f', 'Glutes': 'ef476f', 'Glute Medius': 'ff8fa3',
+  'Gastrocnemius': 'ffb300', 'Soleus': 'fb8500', 'Tibialis': '90caf9'
+};
+const rgbOf = (name) => { const hx = HEX[musclesIn(name)[0]] || HEX[name] || '8b6cff'; return [parseInt(hx.slice(0, 2), 16), parseInt(hx.slice(2, 4), 16), parseInt(hx.slice(4, 6), 16)]; };
+const workOf = (x) => x.p.sets + 0.5 * x.s.sets;
 
 const st = { routineId: 'all', weekId: 'all', view: 'front', mode: 'map', pick: null };
 const maps = {};   // view -> { w, h, labels } (loaded once)
@@ -129,14 +145,14 @@ function paint(canvas, map, view, by, pick, luma, dark) {
   if (canvas.width !== map.w) { canvas.width = map.w; canvas.height = map.h; }
   const g = canvas.getContext('2d');
   const names = REGIONS[view];
-  let maxP = 0, maxS = 0;
   const stats = names.map((n) => areaStats(by, n));
-  stats.forEach((x) => { maxP = Math.max(maxP, x.p.sets); maxS = Math.max(maxS, x.s.sets); });
+  let top = 0;
+  for (const m of by.values()) top = Math.max(top, workOf(m));
   const col = new Uint8ClampedArray((names.length + 1) * 4);
   stats.forEach((x, i) => {
-    const o = (i + 1) * 4;
-    if (x.p.sets) { col.set([...PRIMARY, Math.round(255 * (0.4 + 0.5 * x.p.sets / maxP))], o); }
-    else if (x.s.sets) { col.set([...SECONDARY, Math.round(255 * (0.3 + 0.35 * x.s.sets / maxS))], o); }
+    const w = workOf(x);
+    if (!w) return;
+    col.set([...rgbOf(names[i]), Math.round(255 * (0.32 + 0.63 * Math.min(1, w / (top || 1))))], (i + 1) * 4);
   });
   const pickIdx = pick ? names.indexOf(pick) + 1 : 0;
   const { w, h: hh, labels } = map;
@@ -205,9 +221,8 @@ function mapPanel(by, weeks) {
     h('div', { class: 'seg bm-turn', role: 'group', 'aria-label': 'Side' }, ...segBtns),
     stage, status,
     h('div', { class: 'bm-legend' },
-      h('span', { class: 'bm-dot bm-dot-p' }), h('span', { text: 'Primary' }),
-      h('span', { class: 'bm-dot bm-dot-s' }), h('span', { text: 'Secondary' }),
-      h('span', { class: 'hint', text: 'Stronger colour = more sets. Swipe to turn.' })));
+      h('span', { class: 'bm-ramp' }), h('span', { text: 'More work = stronger colour' }),
+      h('span', { class: 'hint', text: 'Each muscle has its own colour. Primary sets count in full, secondary sets count half. Swipe to turn.' })));
 }
 
 // ---- Table ------------------------------------------------------------------

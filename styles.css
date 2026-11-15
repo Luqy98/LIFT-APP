@@ -970,6 +970,7 @@ body { position: fixed; inset: 0; width: 100%; }
 .bm-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 .bm-dot-p { background: rgb(139, 92, 246); }
 .bm-dot-s { background: rgb(34, 211, 238); }
+.bm-ramp { width: 64px; height: 10px; border-radius: 5px; display: inline-block; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 25%, transparent), var(--accent)); }
 .bm-status { text-align: center; }
 .bm-h { margin: 0; font-size: 14px; font-weight: 650; color: var(--muted); }
 .bm-detail { display: flex; flex-direction: column; gap: 14px; max-height: 65vh; overflow-y: auto; }

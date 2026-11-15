@@ -244,3 +244,8 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.25.1
 - Body Map: new muscle map built from the Gray's Anatomy layout. Calf, elbow and thigh areas no longer get mixed up, and muscles on the back now reach the edge of the arms and legs.
+
+## 2.26.0
+- Body Map: every muscle now has its own colour, and the colour gets stronger the more work the muscle gets (primary sets count in full, secondary sets count half). Tap a muscle for the primary and secondary split.
+- Rotator Cuff is no longer on the map, that area now belongs to Mid Back. It stays in the table.
+- The gaps at the back of the knees and on the outer thighs are now coloured in.
