@@ -99,6 +99,10 @@ export function routineView({ routineId }) {
   const r = S.routineById(routineId);
   if (!r) return notFound('Programme');
   const content = h('div', { class: 'page' });
+  content.append(h('button', { type: 'button', class: 'goal-box' + (r.goal ? '' : ' is-empty'), 'aria-label': 'Edit programme goals', onclick: async () => {
+    const v = await formDialog({ title: 'Programme goals', message: 'One sentence on what this programme is for.', ok: 'Save', fields: [{ key: 'goal', label: 'Goal', value: r.goal || '', multiline: true, rows: 3, placeholder: 'e.g. Build strength in the big lifts while adding size to the upper body.' }] });
+    if (v) { S.setRoutineGoal(r.id, v.goal); nav.refresh(); }
+  } }, h('span', { class: 'goal-label', text: 'Programme goals' }), h('span', { class: 'goal-text', text: r.goal || 'Tap to add a sentence describing this programme' })));
   if (!r.weeks.length) content.append(emptyState('No weeks yet', 'Add a week, then add workouts to it.'));
   else {
     content.append(h('div', { class: 'list' }, r.weeks.map((wk) => {
@@ -296,6 +300,7 @@ function itemCard(workout, item, index) {
       h('button', { class: 'pill pill-' + set.type, 'aria-label': `Set ${label}, ${typeInfo(set.type).label}. Change type`, text: label, onclick: () => planSetType(item, set) }),
       h('input', { class: 'num', type: 'text', inputmode: 'text', autocomplete: 'off', placeholder: set.type === 'hold' ? 'seconds' : 'reps', 'aria-label': set.type === 'hold' ? 'Target seconds' : 'Target reps', value: set.reps ?? '', oninput: (e) => { set.reps = e.target.value.trim(); S.touch(); } }),
       h('input', { class: 'num', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'kg', 'aria-label': 'Target weight in kilograms', value: set.weight ?? '', oninput: (e) => { set.weight = e.target.value.trim() === '' ? null : parseNum(e.target.value); S.touch(); } }),
+      h('input', { class: 'num', type: 'text', inputmode: 'numeric', autocomplete: 'off', maxlength: '3', placeholder: 'RIR', 'aria-label': 'Target reps in reserve', value: set.rir ?? '', oninput: (e) => { const v = e.target.value.trim(); if (v) set.rir = v; else delete set.rir; S.touch(); } }),
       iconBtn('x', 'Remove set', () => { item.sets = item.sets.filter((x) => x !== set); S.touch(); nav.refresh(); }, 'icon-btn-sm'));
   });
   return h('section', { class: `card entry entry-plan wk wk-${workout.color ?? 0}` },
@@ -305,11 +310,11 @@ function itemCard(workout, item, index) {
       iconBtn('more', 'Exercise options', () => itemMenu(workout, item, index))),
     notesList(item, () => S.touch(), () => nav.refresh()),
     h('div', { class: 'sets' },
-      h('div', { class: 'srow srow-plan srow-head' }, h('span', { text: 'Set' }), h('span', { text: 'Target reps' }), h('span', { text: 'Target kg' }), h('span', {})),
+      h('div', { class: 'srow srow-plan srow-head' }, h('span', { text: 'Set' }), h('span', { text: 'Reps' }), h('span', { text: 'Kg' }), h('span', { text: 'RIR' }), h('span', {})),
       rows),
     h('button', { class: 'btn btn-block btn-ghost btn-add', text: '+ Add set', onclick: () => {
       const last = item.sets[item.sets.length - 1];
-      item.sets.push(S.mkSet({ type: last?.type || 'normal', reps: last?.reps ?? '', weight: last?.weight ?? null }));
+      item.sets.push(S.mkSet({ type: last?.type || 'normal', reps: last?.reps ?? '', weight: last?.weight ?? null, ...(last?.rir ? { rir: last.rir } : {}) }));
       S.touch(); nav.refresh();
     } }));
 }

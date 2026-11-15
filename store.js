@@ -459,13 +459,14 @@ export function addRoutine(name, { weeks = 0, perWeek = 0 } = {}) {
   touch();
   return r;
 }
+export function setRoutineGoal(id, text) { const r = routineById(id); if (!r) return; const t = String(text || '').trim().slice(0, 240); if (t) r.goal = t; else delete r.goal; touch(); }
 export function renameRoutine(id, name) { const r = routineById(id); r.name = norm(name) || r.name; touch(); }
 export function deleteRoutine(id) { data.routines = data.routines.filter((r) => r.id !== id); touch(); }
 export function duplicateRoutine(id) {
   const r = routineById(id);
   const slotMap = new Map();
   const copy = {
-    id: uid(), name: r.name + ' (copy)', createdAt: now(),
+    id: uid(), name: r.name + ' (copy)', createdAt: now(), ...(r.goal ? { goal: r.goal } : {}),
     weeks: r.weeks.map((wk) => ({
       id: uid(), name: wk.name,
       workouts: wk.workouts.map((w) => {
@@ -594,7 +595,7 @@ export function startSession(workoutId) {
     startedAt: now(), finishedAt: null, color: workout.color ?? 0, deload: !!workout.deload,
     entries: workout.items.map((it) => ({
       id: uid(), exerciseId: it.exerciseId, exerciseName: exerciseName(it.exerciseId), notes: it.notes ? { ...it.notes } : {},
-      sets: it.sets.map((p) => ({ id: uid(), type: p.type, weight: null, reps: null, done: false, tw: p.weight ?? null, tr: p.reps ?? '' })),
+      sets: it.sets.map((p) => ({ id: uid(), type: p.type, weight: null, reps: null, done: false, tw: p.weight ?? null, tr: p.reps ?? '', ...(p.rir ? { trir: p.rir } : {}) })),
     })),
   };
   if (s.deload) applyDeloadWeights(s);
@@ -722,7 +723,7 @@ export function addEntry(s, exerciseId) {
 }
 export function addSessionSet(s, entry) {
   const last = entry.sets[entry.sets.length - 1];
-  const set = { id: uid(), type: last?.type || 'normal', weight: null, reps: null, done: false, tw: last?.tw ?? null, tr: last?.tr ?? '' };
+  const set = { id: uid(), type: last?.type || 'normal', weight: null, reps: null, done: false, tw: last?.tw ?? null, tr: last?.tr ?? '', ...(last?.trir ? { trir: last.trir } : {}) };
   entry.sets.push(set);
   if (s.deload) applyDeloadWeights(s, [{ exerciseId: entry.exerciseId, sets: [set] }]);
   touchSession(s);

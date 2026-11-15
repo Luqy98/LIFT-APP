@@ -294,3 +294,7 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.32.0
 - New installs no longer start with a preset name. The first-run setup asks for your name for the dashboard greeting (optional; it shows "Lifter" if left blank). It can be changed later in Settings. Existing installs keep their name.
+
+## 2.33.0
+- Added a Programme Goals box at the top of each programme. Tap it to write a sentence about what the programme is for. Duplicating a programme copies it.
+- Added an RIR (reps in reserve) box to each planned set, next to Reps and Kg, which are now a little narrower to fit it. During a workout, the target RIRs show above the sets.

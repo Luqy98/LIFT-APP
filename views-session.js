@@ -142,6 +142,7 @@ function entryCard(s, entry, index, prev, active) {
         icon('history', 18), h('span', { text: 'History' }))),
     notesList(entry, () => S.touchSession(s), () => nav.refresh()),
     s.deload ? deloadHint(entry.exerciseId) : null,
+    entry.sets.some((x) => x.trir) ? h('div', { class: 'entry-rir', text: 'Target RIR: ' + entry.sets.map((x) => x.trir || '–').join(' · ') }) : null,
     prev ? h('div', { class: 'entry-prev', text: `Previous: ${fmtDate(prev.session.startedAt)} · ${S.weekName(prev.session)}` }) : null,
     h('div', { class: 'sets' },
       h('div', { class: 'srow srow-head' }, h('span', { text: 'Set' }), h('span', { text: 'Previous' }), h('span', { text: 'kg' }), h('span', { text: 'Reps' }), h('span', {})),
