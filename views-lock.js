@@ -1,5 +1,5 @@
 // Lock screen: first-run passcode setup, and unlock.
-import { h, icon, segmented, formDialog, pickFile, toast } from './ui.js';
+import { h, icon, dumbbellMark, segmented, formDialog, pickFile, toast } from './ui.js';
 import * as S from './store.js';
 import * as WA from './webauthn.js';
 
@@ -58,7 +58,7 @@ function setupForm(onDone) {
       catch (ex) { console.error(ex); err.textContent = 'Could not set up secure storage on this browser.'; btn.disabled = false; btn.textContent = 'Create and encrypt'; }
     },
   },
-  h('div', { class: 'lock-mark' }, icon('lock', 30)),
+  h('div', { class: 'lock-mark' }, dumbbellMark(40)),
   h('h1', { class: 'lock-brand', text: 'LIFT' }),
   h('p', { class: 'lock-lead', text: 'Choose a PIN to lock the app, or skip it. Everything you log stays on this phone and is never sent anywhere.' }),
   segHost, p1, p2, hint, err, btn,
@@ -160,7 +160,7 @@ function unlockForm(onDone) {
       else { msg.textContent = info.numeric ? 'Wrong PIN.' : 'Wrong passcode.'; input.focus(); }
     },
   },
-  h('div', { class: 'lock-mark' }, icon('lock', 30)),
+  h('div', { class: 'lock-mark' }, dumbbellMark(40)),
   h('h1', { class: 'lock-brand', text: 'LIFT' }),
   bioBtn, input, msg, btn,
   info.bio ? h('p', { class: 'lock-fine', text: 'Forgot your PIN? Unlock with your fingerprint, then go to Settings → Change PIN → “I forgot it”.' }) : null);

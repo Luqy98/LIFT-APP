@@ -221,3 +221,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.15.1
 - Exercises tab: a "Removed Exercises" button lists every catalog exercise you have deleted, with a Copy List button.
+
+## 2.22.2
+- Lock screen: the lock icon is replaced by the LIFT dumbbell.
