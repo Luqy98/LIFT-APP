@@ -4,6 +4,7 @@ import { ICONS } from './icons.js';
 
 // Removed from the default library for everyone (Luqy's list, v2.16.0).
 export const CATALOG_DROP = [
+  "Incline Bench Press (Dumbbell)",
   "Arnold Press (Standing)",
   "Barbell Front Raise",
   "Barbell Row (Overhand)",
@@ -243,5 +244,5 @@ export const RENAMED_FROM = new Map(Object.entries(CATALOG_RENAMES).map(([a, b])
 const dropped = new Set(CATALOG_DROP.map((n) => n.toLowerCase()));
 /** Names in the default library, in catalog order, with renames applied. */
 // Exercises added to the default library after it was first handed out: existing libraries get each of these once.
-export const CATALOG_ADD = ['Overhead Press (Smith Machine)'];
+export const CATALOG_ADD = ['Overhead Press (Smith Machine)', 'Tricep Extension (Underhand)', 'Reverse Fly (Cable)', 'Crunch (Machine)'];
 export const catalogNames = () => [...new Set(ICONS.map((i) => i[0]).filter((n) => !dropped.has(n.toLowerCase())).map((n) => CATALOG_RENAMES[n] || n))];

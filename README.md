@@ -323,3 +323,10 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 ## 2.35.0
 - Added a search box to the Targets exercise picker, so you can find an exercise by typing instead of scrolling.
 - Fixed the body map back view: the Adductors area no longer includes a strip at the top of the neck or small slivers at the outer hips. It now covers only the inner thighs.
+
+## 2.36.0
+- Removed Incline Bench Press (Dumbbell) from the default library (Incline DB Press covers it). It disappears from existing libraries unless it is used in a programme, a log or a target.
+- Added three exercises with their pictures: Tricep Extension (Underhand), Reverse Fly (Cable) and Crunch (Machine). Existing libraries get them once.
+- Calendar: the target and trophy icons in the day callouts now have space around them instead of touching the box edge.
+- Logged workouts (the summary after finishing, and history) now have a blue-slate background so they don't look like a live session.
+- During a workout, the Logging banner now stays pinned together with the stopwatch.

@@ -1059,3 +1059,13 @@ img, svg, canvas { -webkit-user-drag: none; }
 .choice-search-wrap > .search, .choice-search-wrap > .btn { flex: none; }
 .choice-none { text-align: center; color: var(--muted); padding: 24px 8px; margin: 0; }
 .choice[hidden] { display: none; }
+
+/* ---- 2.36.0 calendar callouts: breathing room around the icon ---- */
+.row-card.cal-target { padding: 12px 14px; gap: 14px; }
+.row-card.cal-target > .ic, .row-card.cal-target > svg { flex: none; }
+
+/* ---- 2.36.0 logging banner pinned with the stopwatch; logged workouts get their own background ---- */
+.live-head { position: sticky; top: -1px; z-index: 3; display: flex; flex-direction: column; gap: 6px; padding: 6px; margin: -6px -6px 0; border-radius: 16px; background: var(--bg); box-shadow: 0 8px 14px -10px rgba(0,0,0,.55); }
+.live-head .mode { padding: 7px 12px; }
+.live-head .sw-card { position: static; box-shadow: none; }
+#app[data-mode="review"], #app[data-mode="review"] #main { background: color-mix(in srgb, #3b82c4 17%, var(--bg)); }
