@@ -115,6 +115,8 @@ jobs:
           import android.content.Context;
           import android.content.Intent;
           import android.os.Build;
+          import android.os.SystemClock;
+          import android.widget.RemoteViews;
           import androidx.core.app.NotificationCompat;
           import androidx.core.app.NotificationManagerCompat;
           import com.getcapacitor.JSObject;
@@ -170,20 +172,31 @@ jobs:
               if (open != null) open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
               PendingIntent pi = open == null ? null : PendingIntent.getActivity(ctx, 0, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
               int icon = ctx.getResources().getIdentifier("ic_stat_lift", "drawable", ctx.getPackageName());
+              // Custom body: a big countdown and "Tap to open". Android's own header above it shows "LIFT".
+              String pkg = ctx.getPackageName();
+              int layout = ctx.getResources().getIdentifier("lift_rest_notification", "layout", pkg);
+              int timeId = ctx.getResources().getIdentifier("lift_rest_time", "id", pkg);
               NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL)
                 .setSmallIcon(icon != 0 ? icon : ctx.getApplicationInfo().icon)
-                .setContentTitle(call.getString("title", "Rest timer"))
-                .setContentText(call.getString("text", ""))
+                .setContentTitle("LIFT")
+                .setContentText("Tap to open")
                 .setOngoing(true)
                 .setSilent(true)
                 .setOnlyAlertOnce(true)
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setShowWhen(true)
-                .setWhen(endsAt)
-                .setUsesChronometer(true)
-                .setChronometerCountDown(true)
+                .setShowWhen(false)
                 .setTimeoutAfter(left);
+              if (layout != 0 && timeId != 0) {
+                RemoteViews rv = new RemoteViews(pkg, layout);
+                rv.setChronometer(timeId, SystemClock.elapsedRealtime() + (endsAt - now), null, true);
+                if (Build.VERSION.SDK_INT >= 24) rv.setChronometerCountDown(timeId, true);
+                b.setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                  .setCustomContentView(rv)
+                  .setCustomBigContentView(rv);
+              } else {
+                b.setShowWhen(true).setWhen(endsAt).setUsesChronometer(true).setChronometerCountDown(true);
+              }
               if (pi != null) b.setContentIntent(pi);
               try { NotificationManagerCompat.from(ctx).notify(NOTE_ID, b.build()); } catch (SecurityException e) { /* permission refused */ }
               call.resolve();
@@ -220,6 +233,13 @@ jobs:
           grep -q "registerPlugin(LiftNotifyPlugin" "$F"
           cat "$F"
           mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/res/layout
+          cat > app/src/main/res/layout/lift_rest_notification.xml <<XML
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="4dp" android:paddingBottom="4dp">
+            <Chronometer android:id="@+id/lift_rest_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.Compat.Notification.Title" android:textSize="40sp" android:textStyle="bold" android:includeFontPadding="false" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="Tap to open" android:textAppearance="@style/TextAppearance.Compat.Notification.Info" android:textSize="15sp" />
+          </LinearLayout>
+          XML
           cat > app/src/main/res/drawable/ic_stat_lift.xml <<XML
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
             <path android:fillColor="#FFFFFFFF" android:pathData="M1,10h2v4H1z M3.5,7.5h3v9h-3z M7,11h10v2H7z M17.5,7.5h3v9h-3z M21,10h2v4h-2z"/>
