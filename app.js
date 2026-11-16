@@ -11,8 +11,11 @@ import { settingsRoot } from './views-settings.js';
 import { targetsRoot } from './views-targets.js';
 import { bulletinRoot } from './views-bulletin.js';
 import { applyTheme } from './theme.js';
-import { setResume } from './live.js';
-import { sessionView } from './views-session.js';
+import { setResume, restoreLive } from './live.js';
+import { sessionView, movementHistoryView } from './views-session.js';
+import { routineView, weekView, workoutView } from './views-workouts.js';
+import { calendarView } from './views-calendar.js';
+import { bodyMapView } from './views-bodymap.js';
 
 nav.registerRoot('dashboard', dashboardView);
 nav.registerRoot('workouts', workoutsRoot);
@@ -21,6 +24,8 @@ nav.registerRoot('targets', targetsRoot);
 nav.registerRoot('bulletin', bulletinRoot);
 nav.registerRoot('settings', settingsRoot);
 setResume((sessionId) => nav.push(sessionView, { sessionId }));
+nav.registerViews(sessionView, movementHistoryView, routineView, weekView, workoutView, calendarView, bodyMapView);
+let restoredOnce = false;
 
 const $ = (id) => document.getElementById(id);
 
@@ -38,6 +43,7 @@ function onUnlocked() {
   $('lock').replaceChildren();
   $('app').hidden = false;
   applyTheme(S.data.settings.theme);
+  if (!restoredOnce) { restoredOnce = true; nav.restoreState(); restoreLive(); }
   nav.render({ restore: true });
   navigator.storage?.persist?.().catch(() => {});
 }
@@ -59,6 +65,7 @@ document.addEventListener('visibilitychange', async () => {
     if (!S.isUnlocked()) return;
     $('cover').hidden = false;
     hiddenAt = Date.now();
+    nav.saveState();
     S.flush();
     if (S.data.settings.autoLockMin === 0) await lockNow();
   } else {
@@ -67,7 +74,7 @@ document.addEventListener('visibilitychange', async () => {
     hiddenAt = null;
   }
 });
-window.addEventListener('pagehide', () => { S.flush(); });
+window.addEventListener('pagehide', () => { if (S.isUnlocked()) nav.saveState(); S.flush(); });
 
 S.onSaveError(() => toast('Could not save. Storage may be full.', { ms: 8000 }));
 

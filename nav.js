@@ -18,6 +18,47 @@ let tab = 'dashboard';
 const $ = (id) => document.getElementById(id);
 
 export const currentTab = () => tab;
+
+// ---- Remember where you were, so closing the app (or Android killing it) reopens on the same screen ----
+// Only screens registered here are saved, and only with plain-data params (ids). Anything else ends the saved stack.
+const named = new Map();
+export function registerViews(...fns) { for (const f of fns) named.set(f.name, f); }
+const NAV_KEY = 'lift-nav';
+const plainParams = (p) => p && typeof p === 'object' && Object.values(p).every((v) => typeof v !== 'function');
+function persist() {
+  try {
+    const out = {};
+    for (const [k, st] of Object.entries(stacks)) {
+      const list = [];
+      for (const it of st.slice(1)) {
+        if (named.get(it.fn.name) !== it.fn || !plainParams(it.params || {})) break;
+        list.push({ v: it.fn.name, p: JSON.parse(JSON.stringify(it.params || {})), s: it.scroll || 0 });
+      }
+      out[k] = { s0: st[0].scroll || 0, list };
+    }
+    localStorage.setItem(NAV_KEY, JSON.stringify({ tab, stacks: out }));
+  } catch { /* ignore */ }
+}
+/** Save the current screen and scroll position now (called when the app goes to the background). */
+export function saveState() { saveScroll(); persist(); }
+/** Put the saved screens back. Call once, before the first render after opening the app. */
+export function restoreState() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(NAV_KEY) || 'null'); } catch { /* ignore */ }
+  if (!saved || !stacks[saved.tab]) return;
+  for (const [k, st] of Object.entries(saved.stacks || {})) {
+    if (!stacks[k]) continue;
+    stacks[k].length = 1;
+    stacks[k][0].scroll = st.s0 || 0;
+    for (const e of st.list || []) {
+      const fn = named.get(e.v);
+      if (!fn) break;
+      stacks[k].push({ fn, params: e.p || {}, scroll: e.s || 0, restored: true });
+    }
+  }
+  tab = saved.tab;
+  if (tab !== 'dashboard' || stacks[tab].length > 1) ensureGuard();
+}
 export const registerRoot = (tabId, fn) => { stacks[tabId] = [{ fn, params: {}, scroll: 0 }]; };
 const top = () => stacks[tab][stacks[tab].length - 1];
 const saveScroll = () => { const t = top(); if (t) t.scroll = $('main').scrollTop; };
@@ -74,6 +115,8 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
     view = item.fn(item.params || {});
   } catch (e) {
     console.error(e);
+    // A screen put back after a restart whose workout/exercise no longer exists: fall back to the tab's first screen.
+    if (item.restored && depth > 1) { stacks[tab].length = 1; render({ restore: true }); return; }
     view = { title: 'Something went wrong', content: h('div', { class: 'empty' }, h('p', { text: 'This screen could not be drawn. Go back and try again.' })) };
   }
 
@@ -92,6 +135,8 @@ export function render({ keep = false, restore = false, scroll = 0 } = {}) {
 
   main.replaceChildren(view.content);
   main.scrollTop = keep ? kept : restore ? item.scroll || 0 : scroll;
+  if (item.restored) { delete item.restored; requestAnimationFrame(() => { main.scrollTop = item.scroll || 0; }); }
+  persist();
 
   const footer = $('footer');
   const bar = liveBar(view.sessionId);
