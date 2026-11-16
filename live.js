@@ -40,7 +40,7 @@ function syncNotify() {
     if (lastNote !== 'off') { lastNote = 'off'; N.hide().catch(() => {}); }
     return;
   }
-  const msg = { title: 'Rest timer', text: `${S.workoutName(act) || 'Workout'} · tap to open`, endsAt: rest.end };
+  const msg = { title: 'Rest timer', text: `${S.workoutName(act) || 'Workout'} · tap to open`, endsAt: rest.end, leftMs: Math.max(0, rest.end - Date.now()) };
   const key = JSON.stringify([msg.text, msg.endsAt]);
   if (key === lastNote) return;
   lastNote = key;
@@ -67,7 +67,7 @@ export async function testRestNotification() {
     const st = await N.status();
     if (!st.granted || !st.enabled) return 'Notifications are turned off for LIFT. Turn them on in Android Settings → Apps → LIFT → Notifications.';
     if (!st.channelOn) return 'The “Rest timer” notification category is turned off. Turn it on in Android Settings → Apps → LIFT → Notifications.';
-    await N.show({ title: 'Rest timer', text: 'Test · disappears in 15 seconds', endsAt: Date.now() + 15000 });
+    await N.show({ title: 'Rest timer', text: 'Test · disappears in 15 seconds', endsAt: Date.now() + 15000, leftMs: 15000 });
     lastNote = '';
     return 'Sent. Pull down the notification bar: a 15-second rest timer should be counting down.';
   } catch (e) {

@@ -161,8 +161,10 @@ jobs:
             public void show(PluginCall call) {
               Context ctx = getContext();
               ensureChannel(ctx);
-              Double ends = call.getDouble("endsAt");
-              long endsAt = ends != null ? ends.longValue() : System.currentTimeMillis();
+              // Read as a long: a millisecond timestamp is too big for an int, and getDouble() returns null for it.
+              long now = System.currentTimeMillis();
+              long endsAt = call.getData().optLong("endsAt", now);
+              if (call.getData().has("leftMs")) endsAt = now + call.getData().optLong("leftMs", 0);
               long left = Math.max(1000L, endsAt - System.currentTimeMillis());
               Intent open = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
               if (open != null) open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
