@@ -1,6 +1,6 @@
 // Things that must keep running whichever screen you're on: the rest timer (and its bell)
 // and the "Workout in progress" bar shown above the tabs.
-import { h } from './ui.js';
+import { h, toast } from './ui.js';
 import * as S from './store.js';
 import { fmtDuration } from './calc.js';
 import { scheduleBell, buzz } from './sound.js';
@@ -51,7 +51,28 @@ function askNotify() {
   const N = notifier();
   if (!N || asked) return;
   asked = true;
-  N.requestPerm().then(() => { lastNote = ''; syncNotify(); }).catch(() => {});
+  N.requestPerm().then((r) => {
+    lastNote = '';
+    syncNotify();
+    if (r && r.granted === false) toast('Notifications are off for LIFT, so the rest timer can’t show in the notification bar. Settings → Training → Test to check.', { ms: 7000 });
+  }).catch(() => {});
+}
+export const hasNotifier = () => !!notifier();
+/** Settings → Training → Test: asks for permission if needed, shows a 15 s rest timer, and says what got in the way. */
+export async function testRestNotification() {
+  const N = notifier();
+  if (!N) return 'This version of the app has no notification support. Install the latest APK.';
+  try {
+    await N.requestPerm();
+    const st = await N.status();
+    if (!st.granted || !st.enabled) return 'Notifications are turned off for LIFT. Turn them on in Android Settings → Apps → LIFT → Notifications.';
+    if (!st.channelOn) return 'The “Rest timer” notification category is turned off. Turn it on in Android Settings → Apps → LIFT → Notifications.';
+    await N.show({ title: 'Rest timer', text: 'Test · disappears in 15 seconds', endsAt: Date.now() + 15000 });
+    lastNote = '';
+    return 'Sent. Pull down the notification bar: a 15-second rest timer should be counting down.';
+  } catch (e) {
+    return 'Couldn’t show it: ' + (e?.message || e);
+  }
 }
 
 function plan() {

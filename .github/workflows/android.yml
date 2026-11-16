@@ -128,15 +128,19 @@ jobs:
 
           @CapacitorPlugin(name = "LiftNotify", permissions = { @Permission(alias = "notify", strings = { Manifest.permission.POST_NOTIFICATIONS }) })
           public class LiftNotifyPlugin extends Plugin {
-            private static final String CHANNEL = "lift_rest";
+            private static final String CHANNEL = "lift_rest_timer";
             private static final int NOTE_ID = 4711;
 
             private void ensureChannel(Context ctx) {
               if (Build.VERSION.SDK_INT < 26) return;
               NotificationManager nm = ctx.getSystemService(NotificationManager.class);
               nm.deleteNotificationChannel("lift_stopwatch");
-              NotificationChannel ch = new NotificationChannel(CHANNEL, "Rest timer", NotificationManager.IMPORTANCE_LOW);
+              nm.deleteNotificationChannel("lift_rest");
+              // Default importance so the icon shows in the status bar; no sound or vibration from the channel itself.
+              NotificationChannel ch = new NotificationChannel(CHANNEL, "Rest timer", NotificationManager.IMPORTANCE_DEFAULT);
               ch.setShowBadge(false);
+              ch.setSound(null, null);
+              ch.enableVibration(false);
               nm.createNotificationChannel(ch);
             }
 
@@ -181,6 +185,23 @@ jobs:
               if (pi != null) b.setContentIntent(pi);
               try { NotificationManagerCompat.from(ctx).notify(NOTE_ID, b.build()); } catch (SecurityException e) { /* permission refused */ }
               call.resolve();
+            }
+
+            @PluginMethod
+            public void status(PluginCall call) {
+              Context ctx = getContext();
+              ensureChannel(ctx);
+              JSObject r = new JSObject();
+              r.put("granted", Build.VERSION.SDK_INT < 33 || getPermissionState("notify") == PermissionState.GRANTED);
+              r.put("enabled", NotificationManagerCompat.from(ctx).areNotificationsEnabled());
+              int imp = 3;
+              if (Build.VERSION.SDK_INT >= 26) {
+                NotificationChannel ch = ctx.getSystemService(NotificationManager.class).getNotificationChannel(CHANNEL);
+                if (ch != null) imp = ch.getImportance();
+              }
+              r.put("channelOn", imp != NotificationManager.IMPORTANCE_NONE);
+              r.put("sdk", Build.VERSION.SDK_INT);
+              call.resolve(r);
             }
 
             @PluginMethod

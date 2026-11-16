@@ -8,6 +8,7 @@ import { FORMULAS, fmtDateLong } from './calc.js';
 import { applyTheme } from './theme.js';
 import { validateSecret, strengthHint } from './views-lock.js';
 import { VERSION } from './version.js';
+import { hasNotifier, testRestNotification } from './live.js';
 
 const set = (k, v) => { S.data.settings[k] = v; S.touch(); nav.refresh(); };
 
@@ -210,6 +211,10 @@ export function settingsRoot() {
         h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'Round-start bell and vibration' })),
         h('div', { class: 'btn-row' },
           h('button', { class: 'btn btn-sm' + (st.restBell !== false ? ' btn-primary' : ''), 'aria-pressed': String(st.restBell !== false), text: st.restBell !== false ? 'On' : 'Off', onclick: () => set('restBell', st.restBell === false) }))),
+      hasNotifier() ? h('div', { class: 'row-between' },
+        h('div', { class: 'row-main ver' }, h('span', { class: 'row-title', text: 'Rest timer in notification bar' })),
+        h('div', { class: 'btn-row' },
+          h('button', { class: 'btn btn-sm', text: 'Test', onclick: async () => toast(await testRestNotification(), { ms: 9000 }) }))) : null,
       h('p', { class: 'hint', text: 'Estimates get less reliable as reps go up, so sets above the limit are left out of the 1RM chart. Warm-up and drop sets are never used. The blend averages three well-known formulas to smooth out any single formula’s bias.' })),
 
     card('Appearance',

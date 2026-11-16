@@ -1,1 +1,1 @@
-Build 67: LIFT 2.39.1
+Build 68: LIFT 2.39.2
