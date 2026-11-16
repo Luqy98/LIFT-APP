@@ -13,72 +13,18 @@ export const setOnChange = (fn) => { onChange = fn; };
 export const setResume = (fn) => { resumeFn = fn; };
 export const getRest = () => rest;
 
-// Stopwatch: a free timer for the workout in progress, separate from the set-completion rest timer.
-let sw = null; // { sessionId, base:ms, since:ms|null }
-export const getStopwatch = (sessionId) => (sw && sw.sessionId === sessionId ? sw : null);
-export const swElapsed = (x = sw) => (x ? x.base + (x.since != null ? Date.now() - x.since : 0) : 0);
-export function swStart(sessionId) {
-  if (!sw || sw.sessionId !== sessionId) sw = { sessionId, base: 0, since: null };
-  if (sw.since == null) sw.since = Date.now();
-  saveLive();
-}
-export function swPause() { if (sw && sw.since != null) { sw.base += Date.now() - sw.since; sw.since = null; } saveLive(); }
-export function swReset() { sw = null; saveLive(); }
-
-// ---- Survive the app being closed: stopwatch and rest timer are saved as timestamps and picked up on reopening ----
-const LIVE_KEY = 'lift-live';
-function saveLive() {
-  try { localStorage.setItem(LIVE_KEY, JSON.stringify({ sw, restEnd: rest ? rest.end : null })); } catch { /* ignore */ }
-  syncNotify();
-}
-/** Call once after the vault opens. */
-export function restoreLive() {
-  try {
-    const x = JSON.parse(localStorage.getItem(LIVE_KEY) || 'null');
-    const act = S.activeSession();
-    if (x && act) {
-      if (x.sw && x.sw.sessionId === act.id) sw = x.sw;
-      if (x.restEnd && x.restEnd > Date.now()) { rest = { end: x.restEnd, bell: null, rung: false }; plan(); }
-    }
-  } catch { /* ignore */ }
-  saveLive();
-}
-
-// ---- Android app: the rest timer counting down in the notification bar (ticks on its own, even with the app closed) ----
-const notifier = () => (window.Capacitor?.isNativePlatform?.() ? window.Capacitor.Plugins?.LiftNotify : null);
-let lastNote = '';
-function syncNotify() {
-  const N = notifier();
-  if (!N || !S.isUnlocked()) return;
-  const act = S.activeSession();
-  if (!rest || !act || rest.end <= Date.now()) {
-    if (lastNote !== 'off') { lastNote = 'off'; N.hide().catch(() => {}); }
-    return;
-  }
-  const msg = { title: 'Rest timer', text: `${S.workoutName(act) || 'Workout'} · tap to open`, endsAt: rest.end };
-  const key = JSON.stringify([msg.text, msg.endsAt]);
-  if (key === lastNote) return;
-  lastNote = key;
-  N.show(msg).catch(() => {});
-}
-let asked = false;
-function askNotify() {
-  const N = notifier();
-  if (!N || asked) return;
-  asked = true;
-  N.requestPerm().then(() => { lastNote = ''; syncNotify(); }).catch(() => {});
-}
-export const swRunning = () => !!sw && sw.since != null;
 
 function plan() {
   rest.bell?.cancel();
   rest.bell = S.data.settings.restBell === false ? null : scheduleBell(rest.end - Date.now());
 }
 
-export function startRest() {
+/** Ticking a set starts (or restarts) the rest timer, replacing any running one. Manual starts from the
+ *  rest timer card use the same length, falling back to 90 s if automatic rest is switched off. */
+export function startRest({ manual = false } = {}) {
   clearRest();
-  const sec = S.data.settings.restSec;
-  if (!(sec > 0)) return;
+  let sec = S.data.settings.restSec;
+  if (!(sec > 0)) { if (!manual) return; sec = 90; }
   rest = { end: Date.now() + sec * 1000, bell: null, rung: false };
   plan();
   saveLive();
@@ -102,8 +48,6 @@ const left = () => Math.max(0, Math.ceil((rest.end - Date.now()) / 1000));
 setInterval(() => {
   try {
     if (!S.isUnlocked()) return; // locked: keep timers as they are, nothing to draw
-    if (sw && !S.activeSession()) { sw = null; saveLive(); }
-    if (sw) for (const el of document.querySelectorAll('[data-sw-time]')) el.textContent = fmtDuration(swElapsed());
     if (rest) {
       if (!S.activeSession()) { clearRest(); onChange(); return; }
       if (Date.now() >= rest.end) {
@@ -129,7 +73,6 @@ export function liveBar(currentSessionId) {
     h('span', { class: 'livebar-main' },
       h('span', { class: 'livebar-title', text: 'Workout in progress' }),
       h('span', { class: 'livebar-sub', text: `${S.workoutName(act)} · ${S.weekName(act)}` })),
-    sw && sw.since != null ? h('span', { class: 'livebar-rest' }, h('span', { text: 'Timer ' }), h('span', { 'data-sw-time': '', text: fmtDuration(swElapsed()) })) : null,
     rest ? h('span', { class: 'livebar-rest' }, h('span', { text: 'Rest ' }), h('span', { 'data-rest-time': '', text: fmtDuration(left() * 1000) })) : null,
     h('span', { class: 'banner-go', text: 'Resume' }));
 }

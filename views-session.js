@@ -13,7 +13,7 @@ import { notesList, addNote, canAddNote, editFreeNote } from './notes.js';
 import { workoutView } from './views-workouts.js';
 
 // ---- Rest timer (kept across re-renders) --------------------------------------
-import { startRest, adjustRest, clearRest, getRest, getStopwatch, swElapsed, swStart, swPause, swReset } from './live.js';
+import { startRest, adjustRest, clearRest, getRest } from './live.js';
 
 // ---- Starting / resuming -------------------------------------------------------
 export async function startWorkout(workoutId) {
@@ -58,7 +58,7 @@ export function sessionView({ sessionId }) {
   const rest = active ? getRest() : null;
 
   const content = h('div', { class: 'page' });
-  // While logging, the banner scrolls away but the stopwatch stays pinned, with the green live dot in it.
+  // While logging, the banner scrolls away but the rest timer stays pinned, with the green live dot in it.
   // A logged workout keeps its banner pinned instead, so you always know you're editing history.
   content.append(active
     ? modeBanner('log', 'Logging', 'Tick each set as you do it')
@@ -67,7 +67,7 @@ export function sessionView({ sessionId }) {
     h('span', { class: 'tag-deload', text: 'Deload' }),
     h('span', { text: `Weights are suggested at ${Math.round(DELOAD_PCT * 100)}% of your best 1RM. This session does not count towards 1RM, records or exercise charts.` })));
   if (s.planNote) content.append(h('div', { class: 'note note-general' }, h('span', { class: 'note-label', text: 'Workout Notes' }), h('span', { class: 'note-text', text: s.planNote })));
-  if (active) content.append(stopwatchCard(s));
+  if (active) content.append(restCard(rest));
   if (!active) content.append(summaryCard(s));
 
   if (!s.entries.length) content.append(emptyState('No exercises yet', 'Add the first exercise to start logging sets.'));
@@ -83,30 +83,23 @@ export function sessionView({ sessionId }) {
   if (active) actions.push(h('button', { class: 'btn btn-primary btn-sm', text: 'Finish', onclick: () => finish(s) }));
   actions.push(iconBtn('more', 'Workout options', () => sessionMenu(s, active)));
 
-  const footer = active && rest
-    ? h('div', { class: 'rest' },
-      h('div', { class: 'rest-label', text: 'Rest' }),
-      h('div', { class: 'rest-time', 'data-rest-time': '', text: fmtDuration(Math.max(0, rest.end - Date.now())) }),
-      h('button', { class: 'btn btn-sm', text: '−15', onclick: () => { adjustRest(-15000); nav.refresh(); } }),
-      h('button', { class: 'btn btn-sm', text: '+15', onclick: () => { adjustRest(15000); nav.refresh(); } }),
-      h('button', { class: 'btn btn-sm', text: 'Skip', onclick: () => { clearRest(); nav.refresh(); } }))
-    : null;
+  const footer = null; // the rest timer lives in the pinned card at the top
 
   return { title: S.workoutName(s), subtitle: subtitle(), color: S.sessionColor(s), mode: active ? 'log' : 'review', actions, content, footer, sessionId: s.id };
 }
 
-function stopwatchCard(s) {
-  const x = getStopwatch(s.id);
-  const running = !!x && x.since != null;
-  const started = !!x && (running || x.base > 0);
-  return h('div', { class: 'card sw-card' },
+function restCard(rest) {
+  const def = S.data.settings.restSec > 0 ? S.data.settings.restSec : 90;
+  return h('div', { class: 'card sw-card' + (rest ? ' is-resting' : '') },
     h('span', { class: 'banner-dot', title: 'Logging', 'aria-label': 'Logging' }),
     icon('timer', 18),
-    h('span', { class: 'sw-label', text: 'Stopwatch' }),
-    h('span', { class: 'sw-time', 'data-sw-time': '', 'aria-live': 'off', text: fmtDuration(swElapsed(x)) }),
-    h('button', { class: 'btn btn-sm' + (running ? '' : ' btn-primary'), text: running ? 'Pause' : started ? 'Resume' : 'Start',
-      onclick: () => { if (running) swPause(); else swStart(s.id); nav.refresh(); } }),
-    started ? h('button', { class: 'btn btn-sm', text: 'Reset', onclick: () => { swReset(); nav.refresh(); } }) : null);
+    h('span', { class: 'sw-label', text: 'Rest' }),
+    h('span', { class: 'sw-time', 'data-rest-time': rest ? '' : null, 'aria-live': 'off', text: fmtDuration(rest ? Math.max(0, rest.end - Date.now()) : def * 1000) }),
+    ...(rest ? [
+      h('button', { class: 'btn btn-sm', text: '−15', onclick: () => { adjustRest(-15000); nav.refresh(); } }),
+      h('button', { class: 'btn btn-sm', text: '+15', onclick: () => { adjustRest(15000); nav.refresh(); } }),
+      h('button', { class: 'btn btn-sm', text: 'Skip', onclick: () => { clearRest(); nav.refresh(); } }),
+    ] : [h('button', { class: 'btn btn-sm btn-primary', text: 'Start', onclick: () => { startRest({ manual: true }); nav.refresh(); } })]));
 }
 
 function summaryCard(s) {

@@ -1071,3 +1071,8 @@ img, svg, canvas { -webkit-user-drag: none; }
 .sw-card .banner-dot { width: 10px; height: 10px; }
 .cal-target .row-main { flex: 1; min-width: 0; }
 .cal-target .icon-btn { margin: -6px -8px -6px 0; color: var(--muted); }
+
+/* ---- 2.39.0 the pinned card is the rest timer ---- */
+.sw-card .sw-time { color: var(--muted); }
+.sw-card.is-resting .sw-time { color: var(--ink); }
+.sw-card .btn { padding: 0 10px; }
