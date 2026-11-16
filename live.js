@@ -14,6 +14,46 @@ export const setResume = (fn) => { resumeFn = fn; };
 export const getRest = () => rest;
 
 
+// ---- Survive the app being closed: the rest timer is saved as a timestamp and picked up on reopening ----
+const LIVE_KEY = 'lift-live';
+function saveLive() {
+  try { localStorage.setItem(LIVE_KEY, JSON.stringify({ restEnd: rest ? rest.end : null })); } catch { /* ignore */ }
+  syncNotify();
+}
+/** Call once after the vault opens. */
+export function restoreLive() {
+  try {
+    const x = JSON.parse(localStorage.getItem(LIVE_KEY) || 'null');
+    if (x && S.activeSession() && x.restEnd && x.restEnd > Date.now()) { rest = { end: x.restEnd, bell: null, rung: false }; plan(); }
+  } catch { /* ignore */ }
+  saveLive();
+}
+
+// ---- Android app: the rest timer counting down in the notification bar (ticks on its own, even with the app closed) ----
+const notifier = () => (window.Capacitor?.isNativePlatform?.() ? window.Capacitor.Plugins?.LiftNotify : null);
+let lastNote = '';
+function syncNotify() {
+  const N = notifier();
+  if (!N || !S.isUnlocked()) return;
+  const act = S.activeSession();
+  if (!rest || !act || rest.end <= Date.now()) {
+    if (lastNote !== 'off') { lastNote = 'off'; N.hide().catch(() => {}); }
+    return;
+  }
+  const msg = { title: 'Rest timer', text: `${S.workoutName(act) || 'Workout'} · tap to open`, endsAt: rest.end };
+  const key = JSON.stringify([msg.text, msg.endsAt]);
+  if (key === lastNote) return;
+  lastNote = key;
+  N.show(msg).catch(() => {});
+}
+let asked = false;
+function askNotify() {
+  const N = notifier();
+  if (!N || asked) return;
+  asked = true;
+  N.requestPerm().then(() => { lastNote = ''; syncNotify(); }).catch(() => {});
+}
+
 function plan() {
   rest.bell?.cancel();
   rest.bell = S.data.settings.restBell === false ? null : scheduleBell(rest.end - Date.now());
