@@ -21,7 +21,6 @@ export function swStart(sessionId) {
   if (!sw || sw.sessionId !== sessionId) sw = { sessionId, base: 0, since: null };
   if (sw.since == null) sw.since = Date.now();
   saveLive();
-  askNotify();
 }
 export function swPause() { if (sw && sw.since != null) { sw.base += Date.now() - sw.since; sw.since = null; } saveLive(); }
 export function swReset() { sw = null; saveLive(); }
@@ -45,28 +44,28 @@ export function restoreLive() {
   saveLive();
 }
 
-// ---- Android app: the stopwatch in the notification bar (ticks on its own, even with the app closed) ----
+// ---- Android app: the rest timer counting down in the notification bar (ticks on its own, even with the app closed) ----
 const notifier = () => (window.Capacitor?.isNativePlatform?.() ? window.Capacitor.Plugins?.LiftNotify : null);
 let lastNote = '';
 function syncNotify() {
   const N = notifier();
   if (!N || !S.isUnlocked()) return;
   const act = S.activeSession();
-  if (!sw || !act || sw.sessionId !== act.id) {
+  if (!rest || !act || rest.end <= Date.now()) {
     if (lastNote !== 'off') { lastNote = 'off'; N.hide().catch(() => {}); }
     return;
   }
-  const running = sw.since != null;
-  const msg = { title: S.workoutName(act) || 'Workout', running, startedAt: running ? sw.since - sw.base : Date.now(),
-    text: running ? 'Stopwatch running · tap to open' : `Stopwatch paused at ${fmtDuration(swElapsed())}` };
-  const key = JSON.stringify([msg.title, running, running ? msg.startedAt : msg.text]);
+  const msg = { title: 'Rest timer', text: `${S.workoutName(act) || 'Workout'} · tap to open`, endsAt: rest.end };
+  const key = JSON.stringify([msg.text, msg.endsAt]);
   if (key === lastNote) return;
   lastNote = key;
   N.show(msg).catch(() => {});
 }
+let asked = false;
 function askNotify() {
   const N = notifier();
-  if (!N) return;
+  if (!N || asked) return;
+  asked = true;
   N.requestPerm().then(() => { lastNote = ''; syncNotify(); }).catch(() => {});
 }
 export const swRunning = () => !!sw && sw.since != null;
@@ -83,6 +82,7 @@ export function startRest() {
   rest = { end: Date.now() + sec * 1000, bell: null, rung: false };
   plan();
   saveLive();
+  askNotify();
 }
 export function adjustRest(ms) {
   if (!rest) return;

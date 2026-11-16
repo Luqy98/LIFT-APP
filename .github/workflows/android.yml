@@ -99,7 +99,7 @@ jobs:
           esac
           cat "$F"
 
-      - name: Stopwatch notification (small native plugin, registered in MainActivity)
+      - name: Rest timer notification (small native plugin, registered in MainActivity)
         working-directory: apk/android
         run: |
           F=$(find app/src/main/java -name 'MainActivity.*' | head -1)
@@ -128,14 +128,16 @@ jobs:
 
           @CapacitorPlugin(name = "LiftNotify", permissions = { @Permission(alias = "notify", strings = { Manifest.permission.POST_NOTIFICATIONS }) })
           public class LiftNotifyPlugin extends Plugin {
-            private static final String CHANNEL = "lift_stopwatch";
+            private static final String CHANNEL = "lift_rest";
             private static final int NOTE_ID = 4711;
 
             private void ensureChannel(Context ctx) {
               if (Build.VERSION.SDK_INT < 26) return;
-              NotificationChannel ch = new NotificationChannel(CHANNEL, "Workout stopwatch", NotificationManager.IMPORTANCE_LOW);
+              NotificationManager nm = ctx.getSystemService(NotificationManager.class);
+              nm.deleteNotificationChannel("lift_stopwatch");
+              NotificationChannel ch = new NotificationChannel(CHANNEL, "Rest timer", NotificationManager.IMPORTANCE_LOW);
               ch.setShowBadge(false);
-              ctx.getSystemService(NotificationManager.class).createNotificationChannel(ch);
+              nm.createNotificationChannel(ch);
             }
 
             @PluginMethod
@@ -155,24 +157,27 @@ jobs:
             public void show(PluginCall call) {
               Context ctx = getContext();
               ensureChannel(ctx);
-              boolean running = Boolean.TRUE.equals(call.getBoolean("running", true));
-              Double started = call.getDouble("startedAt");
+              Double ends = call.getDouble("endsAt");
+              long endsAt = ends != null ? ends.longValue() : System.currentTimeMillis();
+              long left = Math.max(1000L, endsAt - System.currentTimeMillis());
               Intent open = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
               if (open != null) open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
               PendingIntent pi = open == null ? null : PendingIntent.getActivity(ctx, 0, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
               int icon = ctx.getResources().getIdentifier("ic_stat_lift", "drawable", ctx.getPackageName());
               NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL)
                 .setSmallIcon(icon != 0 ? icon : ctx.getApplicationInfo().icon)
-                .setContentTitle(call.getString("title", "Workout"))
+                .setContentTitle(call.getString("title", "Rest timer"))
                 .setContentText(call.getString("text", ""))
                 .setOngoing(true)
                 .setSilent(true)
                 .setOnlyAlertOnce(true)
-                .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
+                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setShowWhen(running)
-                .setUsesChronometer(running);
-              if (running && started != null) b.setWhen(started.longValue());
+                .setShowWhen(true)
+                .setWhen(endsAt)
+                .setUsesChronometer(true)
+                .setChronometerCountDown(true)
+                .setTimeoutAfter(left);
               if (pi != null) b.setContentIntent(pi);
               try { NotificationManagerCompat.from(ctx).notify(NOTE_ID, b.build()); } catch (SecurityException e) { /* permission refused */ }
               call.resolve();
