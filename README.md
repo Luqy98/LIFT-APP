@@ -330,3 +330,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - Calendar: the target and trophy icons in the day callouts now have space around them instead of touching the box edge.
 - Logged workouts (the summary after finishing, and history) now have a blue-slate background so they don't look like a live session.
 - During a workout, the Logging banner now stays pinned together with the stopwatch.
+
+## 2.37.1
+- Added Pallof Press to the default library with its picture (works the obliques, abs secondary). Existing libraries get it once.
