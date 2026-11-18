@@ -1,7 +1,8 @@
 // Settings: security, training preferences, appearance, backup/restore, install.
 import { h, card, selectField, segmented, formDialog, choiceSheet, confirmDialog, toast, installState, pickFile } from './ui.js';
 import * as WA from './webauthn.js';
-import { runBackup } from './backup.js';
+import { runBackup, deliver } from './backup.js';
+import { buildClaudeFile, claudeFileName } from './share.js';
 import * as S from './store.js';
 import * as nav from './nav.js';
 import { FORMULAS, fmtDateLong } from './calc.js';
@@ -129,6 +130,14 @@ async function disableFingerprint() {
   nav.refresh();
 }
 
+async function shareWithClaude() {
+  const w = S.data.settings.claudeWeeks ?? 12;
+  const text = buildClaudeFile({ detailWeeks: w || null });
+  const how = await deliver(claudeFileName(), text, { title: 'LIFT for Claude', type: 'text/markdown' });
+  if (how === 'shared') toast('Shared. Ask Claude anything about your training');
+  else if (how === 'saved') toast('Saved to your downloads');
+}
+
 async function importBackup() {
   const file = await pickFile();
   if (!file) return;
@@ -214,6 +223,13 @@ export function settingsRoot() {
 
     card('Appearance',
       segmented([['dark', 'Dark'], ['light', 'Light'], ['system', 'Match phone']], st.theme, (v) => { applyTheme(v); set('theme', v); })),
+
+    card('Claude',
+      h('p', { class: 'hint', text: 'Make a file for Claude (or another AI assistant) with your programmes, exercise library and training history, plus instructions so it can analyse your progress and build programmes you can import. It stays on your phone until you choose where to send it.' }),
+      selectField('Every set from', [[12, 'Last 12 weeks'], [26, 'Last 6 months'], [0, 'All history']], st.claudeWeeks ?? 12, (v) => set('claudeWeeks', +v)),
+      h('p', { class: 'hint', text: 'Older workouts are always included as monthly summaries per exercise, with all-time records, so nothing is left out and the file stays small even after years.' }),
+      h('button', { class: 'btn btn-primary btn-block', text: 'Share with Claude', onclick: shareWithClaude }),
+      h('p', { class: 'hint', text: 'Tip: in Claude, create a project called LIFT and add this file to it. Every chat in that project then knows the app and your training. Share a fresh file whenever you want an up-to-date review.' })),
 
     card('Backup and restore',
       h('p', { class: 'hint', text: st.lastBackup ? `Last backup: ${fmtDateLong(st.lastBackup)}` : 'No backup yet.' }),

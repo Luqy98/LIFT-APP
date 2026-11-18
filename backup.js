@@ -4,7 +4,7 @@ import { formDialog, confirmDialog, toast, h } from './ui.js';
 import * as S from './store.js';
 
 function download(name, text) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  const url = URL.createObjectURL(new Blob([text], { type: name.endsWith('.md') ? 'text/markdown' : 'application/json' }));
   const a = h('a', { href: url, download: name });
   document.body.append(a);
   a.click();
@@ -13,14 +13,14 @@ function download(name, text) {
 }
 
 /** Shares if the phone supports file sharing, otherwise downloads. Resolves 'shared' | 'saved' | 'cancelled'. */
-export async function deliver(name, text) {
+export async function deliver(name, text, { title = 'LIFT backup', type = 'application/json' } = {}) {
   const cap = window.Capacitor;
   if (cap?.isNativePlatform?.()) {
     // Android app: write the file to the app's cache and open the system share sheet (Drive, Gmail, Files…).
     try {
       const { Filesystem, Share } = cap.Plugins;
       const r = await Filesystem.writeFile({ path: name, data: text, directory: 'CACHE', encoding: 'utf8' });
-      await Share.share({ title: 'LIFT backup', files: [r.uri] });
+      await Share.share({ title, files: [r.uri] });
       return 'shared';
     } catch (e) {
       if (/cancel/i.test(String(e?.message || e))) return 'cancelled';
@@ -28,9 +28,9 @@ export async function deliver(name, text) {
     }
   }
   try {
-    const file = new File([text], name, { type: 'application/json' });
+    const file = new File([text], name, { type });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Gym Log backup' });
+      await navigator.share({ files: [file], title });
       return 'shared';
     }
   } catch (e) {

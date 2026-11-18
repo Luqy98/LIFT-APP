@@ -6,6 +6,8 @@ import * as nav from './nav.js';
 import { exerciseArt } from './art.js';
 import { SET_TYPES, typeInfo, parseNum, fmtW, fmtDate, WORKOUT_COLORS } from './calc.js';
 import { pickMovement } from './picker.js';
+import { deliver } from './backup.js';
+import { programmeToFile, programmeFileName } from './share.js';
 import { openReorder } from './views-reorder.js';
 import { startWorkout, historyContent, sessionView, movementHistoryView } from './views-session.js';
 
@@ -58,10 +60,45 @@ async function importProgrammeFile() {
   if (!file) return;
   let p;
   try { p = JSON.parse(await file.text()); } catch { toast('That file couldn’t be read'); return; }
+  let pv;
+  try { pv = S.previewProgramme(p); } catch (e) { toast(e.message); return; }
+  if (!(await confirmDialog({ title: 'Import programme?', body: importPreview(pv), ok: 'Import' }))) return;
   let res;
   try { res = S.importProgramme(p); } catch (e) { toast(e.message); return; }
   toast(`Imported “${res.routine.name}”: ${plural(res.weeks, 'week')}, ${plural(res.workouts, 'workout')}` + (res.newExercises ? ` · ${plural(res.newExercises, 'exercise')} added to your library` : ''));
   nav.push(routineView, { routineId: res.routine.id });
+}
+
+/** What an import will add, shown before anything changes. */
+function importPreview(pv) {
+  const nWorkouts = pv.weeks.reduce((n, w) => n + w.workouts.length, 0);
+  return h('div', { class: 'import-preview' },
+    h('div', { class: 'ip-name', text: pv.name }),
+    pv.goal ? h('div', { class: 'ip-goal', text: pv.goal }) : null,
+    h('div', { class: 'ip-count', text: `${plural(pv.weeks.length, 'week')} · ${plural(nWorkouts, 'workout')} · ${plural(pv.sets, 'set')}` }),
+    h('div', { class: 'ip-weeks' }, pv.weeks.map((w) => h('div', { class: 'ip-week' },
+      h('div', { class: 'ip-week-name', text: w.name }),
+      w.workouts.length
+        ? w.workouts.map((x) => h('div', { class: 'ip-workout', text: `${x.name} · ${plural(x.exercises, 'exercise')}${x.deload ? ' · deload' : ''}` }))
+        : h('div', { class: 'ip-workout', text: 'No workouts' })))),
+    pv.newExercises.length ? h('div', { class: 'ip-block' },
+      h('div', { class: 'ip-label', text: `New to your library (${pv.newExercises.length})` }),
+      pv.newExercises.map((e) => h('div', { class: 'ip-item', text: `${e.name}${e.picture ? '' : ' · plain icon'}` })),
+      h('div', { class: 'ip-hint', text: 'Check for typos: a misspelt name becomes a new exercise with no history.' })) : null,
+    pv.restored.length ? h('div', { class: 'ip-block' },
+      h('div', { class: 'ip-label', text: 'Brought back from deleted exercises' }),
+      pv.restored.map((n) => h('div', { class: 'ip-item', text: n }))) : null,
+    pv.fixes.length ? h('div', { class: 'ip-block ip-warn' },
+      h('div', { class: 'ip-label', text: 'Fixed on import' }),
+      pv.fixes.map((f) => h('div', { class: 'ip-item', text: f }))) : null,
+    h('div', { class: 'ip-hint', text: 'It’s added as a new programme. Nothing you already have changes.' }));
+}
+
+/** Saves a programme as a .lift.json plan file (no logs) through the share sheet. */
+async function exportProgramme(r) {
+  const how = await deliver(programmeFileName(r), JSON.stringify(programmeToFile(r), null, 1), { title: r.name });
+  if (how === 'shared') toast('Programme shared');
+  else if (how === 'saved') toast('Programme saved to your downloads');
 }
 
 /** A plan note (on a week or workout) shown as a General Note block; tap to edit. */
@@ -105,12 +142,15 @@ async function routineMenu(r, thenPop = false) {
     options: [
       { label: 'Rename', value: 'rename' },
       { label: 'Duplicate programme', value: 'dup', sub: 'Copies every week and workout. History starts fresh.' },
+      { label: 'Export programme', value: 'export', sub: 'Save or send the plan as a file. No logs included.' },
       { label: 'Delete programme', value: 'del', danger: true },
     ],
   });
   if (v === 'rename') {
     const x = await formDialog({ title: 'Rename programme', fields: [{ key: 'name', label: 'Programme name', value: r.name, capitalize: 'words' }], validate: (f) => (!f.name.trim() ? 'Name can’t be empty.' : null) });
     if (x) { S.renameRoutine(r.id, x.name); nav.refresh(); }
+  } else if (v === 'export') {
+    await exportProgramme(r);
   } else if (v === 'dup') {
     S.duplicateRoutine(r.id);
     toast('Programme duplicated');

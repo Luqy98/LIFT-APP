@@ -1080,3 +1080,18 @@ img, svg, canvas { -webkit-user-drag: none; }
 /* ---- 2.41.0 equipment note ---- */
 .note-equip { --nc: var(--c-hold); }
 .note-equip .note-text { font-size: 15px; color: var(--ink); }
+
+/* ---- 2.42.0 import preview ---- */
+.import-preview { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; max-height: 55vh; overflow-y: auto; }
+.ip-name { font-size: 17px; font-weight: 700; }
+.ip-goal { color: var(--ink2); font-size: 14px; }
+.ip-count { color: var(--muted); font-size: 13px; }
+.ip-weeks { display: flex; flex-direction: column; gap: 8px; }
+.ip-week { background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.ip-week-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.ip-workout, .ip-item { font-size: 13.5px; color: var(--ink2); }
+.ip-block { border-left: 3px solid var(--accent); padding-left: 10px; display: flex; flex-direction: column; gap: 3px; }
+.ip-warn { border-left-color: #f59e0b; }
+.ip-label { font-size: 13px; font-weight: 700; color: var(--accent); }
+.ip-warn .ip-label { color: #f59e0b; }
+.ip-hint { font-size: 12.5px; color: var(--muted); }

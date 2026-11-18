@@ -264,12 +264,13 @@ export function sheet(content, { title: rawTitle, onClose, wide = false } = {}) 
   return { close, panel };
 }
 
-export function confirmDialog({ title, message, ok = 'Confirm', cancel = 'Cancel', danger = false }) {
+export function confirmDialog({ title, message, body = null, ok = 'Confirm', cancel = 'Cancel', danger = false }) {
   return new Promise((resolve) => {
     let finished = false;
     const finish = (v) => { if (!finished) { finished = true; resolve(v); } };
     const { close } = sheet(h('div', {},
       message ? h('p', { class: 'sheet-msg', text: message }) : null,
+      body,
       h('div', { class: 'sheet-actions' },
         h('button', { class: 'btn', text: cancel, onclick: () => { finish(false); close(); } }),
         h('button', { class: 'btn ' + (danger ? 'btn-danger' : 'btn-primary'), text: ok, onclick: () => { finish(true); close(); } }))),

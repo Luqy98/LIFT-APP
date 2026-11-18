@@ -527,6 +527,42 @@ function exerciseForImport(name) {
   }
   return addExercise(name);                                // anything else: your own exercise, plain icon
 }
+/** Dry run of importProgramme: what the file contains and what would change, without touching anything. */
+export function previewProgramme(p) {
+  if (!p || p.app !== 'lift-programme' || !Array.isArray(p.weeks) || !p.weeks.length) throw new Error('That file isn’t a LIFT programme.');
+  const str = (x, max = 4000) => String(x ?? '').trim().slice(0, max);
+  const newEx = new Map(), restored = new Set();
+  let noName = 0, badType = 0, longRir = 0, emptyWorkouts = 0, sets = 0;
+  const weeks = p.weeks.map((wk, i) => {
+    const workouts = (wk && Array.isArray(wk.workouts) ? wk.workouts : []).map((w) => {
+      const items = Array.isArray(w.items) ? w.items : [];
+      if (!items.length) emptyWorkouts++;
+      let n = 0;
+      for (const it of items) {
+        const name = norm(str(it && it.exercise, 80));
+        if (!name) { noName++; continue; }
+        n++;
+        const found = findExerciseByName(name);
+        if (found) { if (found.archived) restored.add(found.name); }
+        else if (!newEx.has(name.toLowerCase())) newEx.set(name.toLowerCase(), { name, picture: CATALOG_NAMES().has(name.toLowerCase()) || !!SHARED_ICONS[name.toLowerCase()] });
+        for (const s of (Array.isArray(it.sets) ? it.sets : [])) {
+          sets++;
+          if (s.type != null && !SET_IDS.has(s.type)) badType++;
+          if (String(s.rir ?? '').trim().length > 3) longRir++;
+        }
+      }
+      return { name: norm(str(w.name, 60)) || 'Workout', exercises: n, deload: !!w.deload };
+    });
+    return { name: norm(str(wk && wk.name, 60)) || `Week ${i + 1}`, workouts };
+  });
+  const fixes = [];
+  if (noName) fixes.push(`${noName} exercise${noName > 1 ? 's' : ''} with no name will be skipped.`);
+  if (badType) fixes.push(`${badType} set${badType > 1 ? 's' : ''} with an unknown set type will become normal sets.`);
+  if (longRir) fixes.push(`${longRir} RIR target${longRir > 1 ? 's' : ''} longer than 3 characters will be shortened.`);
+  if (emptyWorkouts) fixes.push(`${emptyWorkouts} workout${emptyWorkouts > 1 ? 's have' : ' has'} no exercises.`);
+  return { name: norm(str(p.name, 80)) || 'Imported programme', goal: str(p.goal, 240), weeks, sets, newExercises: [...newEx.values()], restored: [...restored], fixes };
+}
+
 export function importProgramme(p) {
   if (!p || p.app !== 'lift-programme' || !Array.isArray(p.weeks) || !p.weeks.length) throw new Error('That file isn’t a LIFT programme.');
   const str = (x, max = 4000) => String(x ?? '').trim().slice(0, max);
