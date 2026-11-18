@@ -1076,3 +1076,7 @@ img, svg, canvas { -webkit-user-drag: none; }
 .sw-card .sw-time { color: var(--muted); }
 .sw-card.is-resting .sw-time { color: var(--ink); }
 .sw-card .btn { padding: 0 10px; }
+
+/* ---- 2.41.0 equipment note ---- */
+.note-equip { --nc: var(--c-hold); }
+.note-equip .note-text { font-size: 15px; color: var(--ink); }

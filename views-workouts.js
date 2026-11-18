@@ -72,6 +72,13 @@ function planNote(owner, label) {
     h('span', { class: 'note-label', text: label }), h('span', { class: 'note-text', text: owner.note }));
 }
 
+const EQUIP_HINT = 'e.g. Weight belt, dip belt, wrist wraps';
+function equipNote(w) {
+  if (!w.equipment) return null;
+  return h('button', { class: 'note note-equip', 'aria-label': 'Edit equipment', onclick: async () => { if (await editFreeNote(w, 'equipment', 'Equipment', () => S.touch(), EQUIP_HINT)) nav.refresh(); } },
+    h('span', { class: 'note-label', text: 'Equipment' }), h('span', { class: 'note-text', text: w.equipment }));
+}
+
 async function newRoutine() {
   const v = await formDialog({
     title: 'New programme',
@@ -242,6 +249,7 @@ async function workoutMenu(r, wk, w) {
     options: [
       { label: 'Rename', value: 'rename' },
       { label: w.note ? 'Edit workout notes' : 'Add workout notes', value: 'note', sub: 'How to run it, rest times' },
+      { label: w.equipment ? 'Edit equipment' : 'Add equipment', value: 'equip', sub: 'What to bring for this workout' },
       { label: 'Colour', value: 'color', sub: WORKOUT_COLORS[w.color ?? 0] },
       w.deload
         ? { label: 'Remove deload', value: 'deload', sub: 'Make this a normal workout again' }
@@ -252,6 +260,7 @@ async function workoutMenu(r, wk, w) {
       { label: 'Delete workout', value: 'del', danger: true },
     ],
   });
+  if (v === 'equip') { if (await editFreeNote(w, 'equipment', 'Equipment', () => S.touch(), EQUIP_HINT)) nav.refresh(); return; }
   if (v === 'note') { if (await editFreeNote(w, 'note', 'Workout Notes', () => S.touch(), PLAN_NOTE_HINT)) nav.refresh(); return; }
   if (v === 'rename') {
     const multi = r.weeks.some((x) => x !== wk && x.workouts.some((o) => o.slotId === w.slotId));
@@ -298,6 +307,8 @@ export function workoutView({ routineId, weekId, workoutId }) {
   const content = h('div', { class: 'page' }, modeBanner('plan', 'Planning', 'Set up exercises and target sets. Nothing here is logged until you start the workout.'));
   if (workout.deload) content.append(h('div', { class: 'deload-banner' }, h('span', { class: 'tag-deload', text: 'Deload' }), h('span', { text: 'Starting this workout suggests 60% of your best 1RM for each exercise. It won’t count towards 1RM or exercise charts.' })));
 
+  const eqn = equipNote(workout);
+  if (eqn) content.append(eqn);
   const won = planNote(workout, 'Workout Notes');
   if (won) content.append(won);
   if (!workout.items.length) content.append(emptyState('No exercises yet', 'Add the exercises for this workout, then set the sets, reps and any target weight.'));

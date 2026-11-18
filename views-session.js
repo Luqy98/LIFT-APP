@@ -66,6 +66,7 @@ export function sessionView({ sessionId }) {
   if (s.deload) content.append(h('div', { class: 'deload-banner' },
     h('span', { class: 'tag-deload', text: 'Deload' }),
     h('span', { text: `Weights are suggested at ${Math.round(DELOAD_PCT * 100)}% of your best 1RM. This session does not count towards 1RM, records or exercise charts.` })));
+  if (s.equipment) content.append(h('div', { class: 'note note-equip' }, h('span', { class: 'note-label', text: 'Equipment' }), h('span', { class: 'note-text', text: s.equipment })));
   if (s.planNote) content.append(h('div', { class: 'note note-general' }, h('span', { class: 'note-label', text: 'Workout Notes' }), h('span', { class: 'note-text', text: s.planNote })));
   if (active) content.append(restCard(rest));
   if (!active) content.append(summaryCard(s));

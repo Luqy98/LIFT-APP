@@ -408,7 +408,7 @@ const mkWorkout = (name, color = 0, slotId = uid()) => ({ id: uid(), slotId, nam
 const mkWeek = (name) => ({ id: uid(), name, workouts: [] });
 
 const cloneWorkout = (w, keepSlot) => ({
-  id: uid(), slotId: keepSlot ? w.slotId : uid(), name: w.name, color: w.color ?? 0, ...(w.note ? { note: w.note } : {}),
+  id: uid(), slotId: keepSlot ? w.slotId : uid(), name: w.name, color: w.color ?? 0, ...(w.note ? { note: w.note } : {}), ...(w.equipment ? { equipment: w.equipment } : {}),
   items: w.items.map((it) => ({ id: uid(), exerciseId: it.exerciseId, ...(it.notes ? { notes: { ...it.notes } } : {}), sets: it.sets.map((s) => ({ ...s, id: uid() })) })),
 });
 const cloneWeek = (wk, name, keepSlots) => ({ id: uid(), name, ...(wk.note ? { note: wk.note } : {}), workouts: wk.workouts.map((w) => cloneWorkout(w, keepSlots)) });
@@ -500,7 +500,7 @@ export function renameWeek(routineId, weekId, name) { const w = weekById(routine
 export function deleteWeek(routineId, weekId) { const r = routineById(routineId); r.weeks = r.weeks.filter((w) => w.id !== weekId); touch(); }
 // ---- Programme import -------------------------------------------------------
 // A shareable JSON plan (no logs, no settings) added as a NEW programme. Nothing already on the phone changes.
-// { app: 'lift-programme', v: 1, name, goal?, weeks: [{ name, note?, workouts: [{ name, slot?, color?, deload?, note?,
+// { app: 'lift-programme', v: 1, name, goal?, weeks: [{ name, note?, workouts: [{ name, slot?, color?, deload?, note?, equipment?,
 //   items: [{ exercise: 'Back Squat', notes?: { cues?, general? }, sets: [{ type?, reps?, weight?, rir? }] }] }] }] }
 // Workouts with the same name (or slot) in different weeks share history, like a copied week.
 const SET_IDS = new Set(SET_TYPES.map((t) => t.id));
@@ -535,6 +535,7 @@ export function importProgramme(p) {
       const color = Number.isInteger(w.color) ? Math.abs(w.color) % WORKOUT_COLORS.length : 0;
       const wo = mkWorkout(name, color, slots.get(key));
       if (str(w.note)) wo.note = str(w.note);
+      if (str(w.equipment, 240)) wo.equipment = str(w.equipment, 240);
       if (w.deload) wo.deload = true;
       for (const it of (Array.isArray(w.items) ? w.items : [])) {
         const ex = exerciseForImport(str(it && it.exercise, 80));
@@ -659,6 +660,7 @@ export function startSession(workoutId) {
     routineName: routine.name, weekName: week.name, workoutName: workout.name,
     startedAt: now(), finishedAt: null, color: workout.color ?? 0, deload: !!workout.deload,
     ...(workout.note ? { planNote: workout.note } : {}),
+    ...(workout.equipment ? { equipment: workout.equipment } : {}),
     entries: workout.items.map((it) => ({
       id: uid(), exerciseId: it.exerciseId, exerciseName: exerciseName(it.exerciseId), notes: it.notes ? { ...it.notes } : {},
       sets: it.sets.map((p) => ({ id: uid(), type: p.type, weight: null, reps: null, done: false, tw: p.weight ?? null, tr: p.reps ?? '', ...(p.rir ? { trir: p.rir } : {}) })),
