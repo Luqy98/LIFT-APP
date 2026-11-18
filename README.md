@@ -336,3 +336,6 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 
 ## 2.41.0
 - Added an optional Equipment note to each workout, for things to bring such as a weight belt, dip belt or wrist wraps. Open the workout's options menu and choose Add equipment. It shows in its own blue box on the workout and again at the top of the live workout. Duplicated workouts and weeks copy it.
+
+## 2.41.1
+- Fixed Pallof Press showing the plain dumbbell. You had already made an exercise with that name, so it stayed plain. Any of your own exercises that share a name with a newer default exercise now get the default picture, once.

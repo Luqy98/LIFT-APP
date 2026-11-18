@@ -188,6 +188,15 @@ function migrate() {
     if (!data.exercises.some((x) => x.name.toLowerCase() === name.toLowerCase())) data.exercises.push({ id: uid(), name, archived: false });
     planChanged = true;
   }
+  // If you had already made an exercise with a name that later became a default one, it gets the default picture (once per name).
+  data.catalogUnplained = data.catalogUnplained || [];
+  for (const name of CATALOG_ADD) {
+    if (data.catalogUnplained.includes(name)) continue;
+    data.catalogUnplained.push(name);
+    const mine = data.exercises.find((x) => x.name.toLowerCase() === name.toLowerCase());
+    if (mine && mine.plain) { delete mine.plain; setPlainIcon(mine.name, false); }
+    planChanged = true;
+  }
   // Catalog exercises later dropped from the default: take them out of libraries that got them, unless you've used them.
   data.catalogDropped = data.catalogDropped || [];
   if (data.catalogDropped.length < CATALOG_DROP.length) {
