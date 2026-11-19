@@ -344,3 +344,7 @@ node tests/e2e.mjs          # drives the real app in headless Chrome at phone si
 - **Share with Claude** (Settings → Claude). Makes one file with instructions for Claude, the programme format, your exercise library with muscles, your current programme, every set from the last 12 weeks (or 6 months, or all history), weekly sets per muscle, monthly summaries of older workouts and all-time records. Send it to Claude, or any AI assistant, to analyse your progress or build a new programme you can import. Nothing leaves the phone until you choose where to send it.
 - **Export programme** on each programme's ⋮ menu saves the plan (no logs) as a .lift.json file you can send to a mate, keep, or give to Claude to edit. Importing it again keeps workouts linked across weeks.
 - **Import preview.** Import programme now shows what's in the file before anything is added: weeks and workouts, new exercises it will add to your library (to spot typos), and anything it had to fix.
+
+## 2.42.1
+- Renamed Rear Delt Row (Cable) to Seated Cable Row (Wide-grip), with a new picture. Your history, targets and programmes stay attached. New libraries get it under the new name.
+- Its target muscles are now Mid Back and Lats, with Rear Delts, Upper Traps, Biceps and Forearms as secondary. If you had set your own muscles on this exercise, those are kept.

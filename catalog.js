@@ -108,7 +108,6 @@ export const CATALOG_DROP = [
   "Prone W Raise",
   "Pull-Up (Overhand)",
   "Rear Delt Fly (Machine)",
-  "Rear Delt Row (Cable)",
   "Reverse Fly (Machine)",
   "Reverse Pec Deck",
   "Sandbag Front Squat",
@@ -215,6 +214,7 @@ export const CATALOG_DROP = [
 
 // Catalog names renamed in the default library: { 'Old Name': 'New Name' }.
 export const CATALOG_RENAMES = {
+  "Rear Delt Row (Cable)": "Seated Cable Row (Wide-grip)",
   "Back Squat": "Barbell Squat",
   "Cable Rear Delt Fly": "Rear Delt Fly (Cable)",
   "Dumbbell Spider Curl": "Spider Curl (Dumbbell)",

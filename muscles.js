@@ -90,6 +90,7 @@ const RULES = [
   [/nordic|glute-ham|ghr/, 'ham', 'gl ca'],
   [/leg curl|hamstring curl/, 'ham', 'ca'],
   // --- rear delts / upper back isolation ---
+  [/seated cable row \(wide|rear delt row/, 'mb la', 'rd tr bi fa'],
   [/face pull/, 'rd rc', 'mb tr sd'],
   [/rear delt|reverse fly|reverse pec deck|pec deck \(reverse\)|bent-over reverse|bent-over lateral|prone w|w raise|incline reverse/, 'rd', 'mb tr rc'],
   // --- olympic lifts ---
@@ -131,7 +132,7 @@ const RULES = [
   [/pull-up|pullup|pulldown|pull down|lat pull|lat row/, 'la', 'bi mb rd fa'],
   [/high pull/, 'tr sd', 'bi mb gl q lb fa'],
   [/rack pull/, 'tr lb mb la', 'gl ham fa'],
-  [/chest-supported|seal row|machine row|low machine row|high machine row|iso-lateral row|rear delt row/, 'mb la', 'rd bi tr fa'],
+  [/chest-supported|seal row|machine row|low machine row|high machine row|iso-lateral row/, 'mb la', 'rd bi tr fa'],
   [/inverted row/, 'mb la', 'rd bi fa ab'],
   [/barbell row|pendlay|t-bar|meadows|landmine row|dumbbell row|db row|one-arm.*row|single-arm.*row|smith.*row/, 'la mb', 'rd bi tr lb fa'],
   [/cable row|seated.*row|row/, 'mb la', 'rd bi tr fa'],
